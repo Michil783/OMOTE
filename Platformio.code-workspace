@@ -1,0 +1,14 @@
+{
+	"folders": [
+		{
+			"name": "Platformio",
+			"path": "Platformio"
+		}
+	],
+	"settings": {
+		"files.associations": {
+			"random": "cpp",
+			"array": "cpp"
+		}
+	}
+}
