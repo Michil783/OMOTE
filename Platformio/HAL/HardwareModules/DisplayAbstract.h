@@ -6,6 +6,7 @@ class DisplayAbstract
     public:
         DisplayAbstract();
         virtual void setBrightness(uint8_t brightness) = 0;
+        virtual uint8_t getBrightness() = 0;
         virtual void turnOff() = 0;
     
     protected:
@@ -22,6 +23,6 @@ class DisplayAbstract
 
         // LVGL Screen Buffers
         lv_disp_draw_buf_t mdraw_buf;
-        lv_color_t mbufA[TFT_WIDTH/*SCREEN_WIDTH*/ * TFT_HEIGHT/*SCREEN_HEIGHT*/ / 10];
-        lv_color_t mbufB[TFT_WIDTH/*SCREEN_WIDTH*/ * TFT_HEIGHT/*SCREEN_HEIGHT*/ / 10];
+        lv_color_t mbufA[SCREEN_WIDTH * SCREEN_HEIGHT / 10];
+        lv_color_t mbufB[SCREEN_WIDTH * SCREEN_HEIGHT / 10];
 };

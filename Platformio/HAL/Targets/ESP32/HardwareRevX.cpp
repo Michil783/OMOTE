@@ -1,9 +1,6 @@
 #include "HardwareRevX.hpp"
 #include "display.hpp"
 #include "wifihandler.hpp"
-#include "driver/ledc.h"
-
-std::shared_ptr<HardwareRevX> HardwareRevX::mInstance = nullptr;
 
 void HardwareRevX::initIO() {
   // Button Pin Definition
@@ -51,9 +48,7 @@ void HardwareRevX::initIO() {
   gpio_deep_sleep_hold_dis();
 }
 
-HardwareRevX::HardwareRevX():
-  HardwareAbstract(){
-  }
+HardwareRevX::HardwareRevX() : HardwareAbstract() {}
 
 HardwareRevX::WakeReason getWakeReason() {
   // Find out wakeup cause
@@ -70,51 +65,47 @@ HardwareRevX::WakeReason getWakeReason() {
 void HardwareRevX::init() {
   // Make sure ESP32 is running at full speed
   setCpuFrequencyMhz(240);
-
-  this->mDisplay = Display::getInstance(std::shared_ptr<HardwareAbstract>(this));
-  this->mBattery = std::make_shared<Battery>(ADC_BAT,CRG_STAT);
-  this->mWifiHandler = wifiHandler::getInstance();
   wakeup_reason = getWakeReason();
   initIO();
-  setupBacklight();
   Serial.begin(115200);
+
+  mDisplay = Display::getInstance();
+  mBattery = std::make_shared<Battery>(ADC_BAT, CRG_STAT);
+  mWifiHandler = wifiHandler::getInstance();
+  mKeys = std::make_shared<Keys>();
   restorePreferences();
-  slowDisplayWakeup();
+
+  mTouchHandler.SetNotification(mDisplay->TouchNotification());
+  mTouchHandler = [this]([[maybe_unused]] auto touchPoint) {
+    standbyTimer = this->getSleepTimeout();
+  };
+
   setupIMU();
   setupIR();
 
-  debugPrint("Finished Hardware Setup in %d", millis());
+  debugPrint("Finished Hardware Setup in %d\n", millis());
 }
 
-#if 0
-void HardwareRevX::debugPrint(std::string aDebugMessage) {
-  Serial.print(aDebugMessage.c_str());
-}
-#else
-void HardwareRevX::debugPrint(const char* fmt, ...)
-{
+void HardwareRevX::debugPrint(const char *fmt, ...) {
   char result[100];
   va_list arguments;
 
   va_start(arguments, fmt);
   vsnprintf(result, 100, fmt, arguments);
-  va_end (arguments);
+  va_end(arguments);
 
   Serial.print(result);
 }
-#endif
 
-std::shared_ptr<HardwareRevX> HardwareRevX::getInstance(){
-  if (!mInstance) {
-    mInstance = std::shared_ptr<HardwareRevX>(new HardwareRevX());
-  }
-  return mInstance;
+std::shared_ptr<wifiHandlerInterface> HardwareRevX::wifi() {
+  return mWifiHandler;
 }
 
-std::shared_ptr<wifiHandlerInterface> HardwareRevX::wifi()
-{
-  return this->mWifiHandler;
-}
+std::shared_ptr<BatteryInterface> HardwareRevX::battery() { return mBattery; }
+
+std::shared_ptr<DisplayAbstract> HardwareRevX::display() { return mDisplay; }
+
+std::shared_ptr<KeyPressAbstract> HardwareRevX::keys() { return mKeys; }
 
 void HardwareRevX::activityDetection() {
   static int accXold;
@@ -132,7 +123,7 @@ void HardwareRevX::activityDetection() {
     standbyTimer = 0;
   // If the motion exceeds the threshold, the standbyTimer is reset
   if (motion > MOTION_THRESHOLD)
-    standbyTimer = SLEEP_TIMEOUT;
+    standbyTimer = sleepTimeout;
 
   // Store the current acceleration and time
   accXold = accX;
@@ -140,11 +131,31 @@ void HardwareRevX::activityDetection() {
   accZold = accZ;
 }
 
+char HardwareRevX::getCurrentDevice() { return currentDevice; }
+
+void HardwareRevX::setCurrentDevice(char currentDevice) {
+  this->currentDevice = currentDevice;
+}
+
+bool HardwareRevX::getWakeupByIMUEnabled() { return wakeupByIMUEnabled; }
+
+void HardwareRevX::setWakeupByIMUEnabled(bool wakeupByIMUEnabled) {
+  this->wakeupByIMUEnabled = wakeupByIMUEnabled;
+}
+
+uint16_t HardwareRevX::getSleepTimeout() { return sleepTimeout; }
+
+void HardwareRevX::setSleepTimeout(uint16_t sleepTimeout) {
+  this->sleepTimeout = sleepTimeout;
+  standbyTimer = sleepTimeout;
+}
+
 void HardwareRevX::enterSleep() {
   // Save settings to internal flash memory
   preferences.putBool("wkpByIMU", wakeupByIMUEnabled);
-  preferences.putUChar("blBrightness", backlight_brightness);
+  preferences.putUChar("blBrightness", mDisplay->getBrightness());
   preferences.putUChar("currentDevice", currentDevice);
+  preferences.putUInt("sleepTimeout", sleepTimeout);
   if (!preferences.getBool("alreadySetUp"))
     preferences.putBool("alreadySetUp", true);
   preferences.end();
@@ -249,39 +260,22 @@ void HardwareRevX::configIMUInterrupts() {
   IMU.writeRegister(LIS3DH_CTRL_REG3, dataToWrite);
 }
 
-void HardwareRevX::setupBacklight() {
-  // Configure the backlight PWM
-  // Manual setup because ledcSetup() briefly turns on the backlight
-  ledc_channel_config_t ledc_channel_left;
-  ledc_channel_left.gpio_num = (gpio_num_t)LCD_BL;
-  ledc_channel_left.speed_mode = LEDC_HIGH_SPEED_MODE;
-  ledc_channel_left.channel = LEDC_CHANNEL_5;
-  ledc_channel_left.intr_type = LEDC_INTR_DISABLE;
-  ledc_channel_left.timer_sel = LEDC_TIMER_1;
-  ledc_channel_left.flags.output_invert = 1; // Can't do this with ledcSetup()
-  ledc_channel_left.duty = 0;
-
-  ledc_timer_config_t ledc_timer;
-  ledc_timer.speed_mode = LEDC_HIGH_SPEED_MODE;
-  ledc_timer.duty_resolution = LEDC_TIMER_8_BIT;
-  ledc_timer.timer_num = LEDC_TIMER_1;
-  ledc_timer.freq_hz = 640;
-
-  ledc_channel_config(&ledc_channel_left);
-  ledc_timer_config(&ledc_timer);
-}
-
 void HardwareRevX::restorePreferences() {
   // Restore settings from internal flash memory
+  int backlight_brightness = 255;
   preferences.begin("settings", false);
   if (preferences.getBool("alreadySetUp")) {
     wakeupByIMUEnabled = preferences.getBool("wkpByIMU");
     backlight_brightness = preferences.getUChar("blBrightness");
     currentDevice = preferences.getUChar("currentDevice");
+    sleepTimeout = preferences.getUInt("sleepTimeout");
+    // setting the default to prevent a 0ms sleep timeout
+    if (sleepTimeout == 0) {
+      sleepTimeout = SLEEP_TIMEOUT;
+    }
   }
+  mDisplay->setBrightness(backlight_brightness);
 }
-
-
 
 void HardwareRevX::setupIMU() {
   // Setup hal
@@ -298,18 +292,6 @@ void HardwareRevX::setupIMU() {
   IMU.readRegister(&intDataRead, LIS3DH_INT1_SRC); // clear interrupt
 }
 
-void HardwareRevX::slowDisplayWakeup() {
-  // Slowly charge the VSW voltage to prevent a brownout
-  // Workaround for hardware rev 1!
-  for (int i = 0; i < 100; i++) {
-    digitalWrite(LCD_EN, HIGH); // LCD Logic off
-    delayMicroseconds(1);
-    digitalWrite(LCD_EN, LOW); // LCD Logic on
-  }
-
-  delay(100); // Wait for the LCD driver to power on
-}
-
 void HardwareRevX::setupIR() {
   // Setup IR
   IrSender.begin();
@@ -317,37 +299,10 @@ void HardwareRevX::setupIR() {
   IrReceiver.enableIRIn();    // Start the receiver
 }
 
-void HardwareRevX::startTasks() {
-  if (xTaskCreate(&HardwareRevX::updateBatteryTask, "Battery Percent Update",
-                  1024, nullptr, 5, &batteryUpdateTskHndl) != pdPASS) {
-    debugPrint("ERROR Could not Create Battery Update Task!");
-  }
-}
-
-void HardwareRevX::updateBatteryTask(void*){
-  while(true){
-    if(auto status = mInstance->getBatteryStatus(); status.has_value()){
-      mInstance->mBatteryNotification.notify(status.value());
-    }
-    vTaskDelay(5000 / portTICK_PERIOD_MS);
-  }
-}
+void HardwareRevX::startTasks() {}
 
 void HardwareRevX::loopHandler() {
-
-  // TODO Move the backlight handling into task that spawns when the backlight
-  // setting changes and then gets deleted when the setting is achieved.
-  // Update Backlight brightness
-  static int fadeInTimer = millis(); // fadeInTimer = time after setup
-  if (millis() <
-      fadeInTimer + backlight_brightness) { // Fade in the backlight brightness
-    ledcWrite(5, millis() - fadeInTimer);
-  } else { // Dim Backlight before entering standby
-    if (standbyTimer < 2000)
-      ledcWrite(5, 85); // Backlight dim
-    else
-      ledcWrite(5, backlight_brightness); // Backlight on
-  }
+  standbyTimer < 2000 ? mDisplay->sleep() : mDisplay->wake();
 
   // TODO move to debug task
   // Blink debug LED at 1 Hz
@@ -363,55 +318,4 @@ void HardwareRevX::loopHandler() {
     }
     IMUTaskTimer = millis();
   }
-
-  // TODO Convert to free RTOS task
-
-  // TODO Create batter change notification for UI
-
-  //   if (battery_ischarging || (!battery_ischarging && battery_voltage >
-  //   4350)) {
-  //     lv_label_set_text(objBattPercentage, "");
-  //     lv_label_set_text(objBattIcon, LV_SYMBOL_USB);
-  //   } else {
-  //     // Update status bar battery indicator
-  //     // lv_label_set_text_fmt(objBattPercentage, "%d%%",
-  //     battery_percentage); if (battery_percentage > 95)
-  //       lv_label_set_text(objBattIcon, LV_SYMBOL_BATTERY_FULL);
-  //     else if (battery_percentage > 75)
-  //       lv_label_set_text(objBattIcon, LV_SYMBOL_BATTERY_3);
-  //     elsse if (battery_percentage > 25)
-  //       lv_label_set_text(objBattIcon, LV_SYMBOL_BATTERY_1);
-  //     e if (battery_percentage > 50)
-  //       lv_label_set_text(objBattIcon, LV_SYMBOL_BATTERY_2);
-  //     elelse
-  //       lv_label_set_text(objBattIcon, LV_SYMBOL_BATTERY_EMPTY);
-  //   }
-  // }
-
-  // Keypad Handling
-  customKeypad.getKey(); // Populate key list
-  for (int i = 0; i < LIST_MAX;
-       i++) { // Handle multiple keys (Not really necessary in this case)
-    if (customKeypad.key[i].kstate == PRESSED ||
-        customKeypad.key[i].kstate == HOLD) {
-      standbyTimer =
-          SLEEP_TIMEOUT; // Reset the sleep timer when a button is pressed
-      int keyCode = customKeypad.key[i].kcode;
-      Serial.println(customKeypad.key[i].kchar);
-      // Send IR codes depending on the current device (tabview page)
-      if (currentDevice == 1) {
-        IrSender.sendRC5(IrSender.encodeRC5X(
-            0x00, keyMapTechnisat[keyCode / ROWS][keyCode % ROWS]));
-      } else if (currentDevice == 2) {
-        IrSender.sendSony((keyCode / ROWS) * (keyCode % ROWS), 15);
-      }
-    }
-  }
-  // IR Test
-  // tft.drawString("IR Command: ", 10, 90, 1);
-  // decode_results results;
-  // if (IrReceiver.decode(&results)) {
-  // IrReceiver.resume(); // Enable receiving of the next value
-  //}  //tft.drawString(String(results.command) + "        ", 80, 90, 1);
-  //
 }

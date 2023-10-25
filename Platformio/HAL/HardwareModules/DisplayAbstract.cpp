@@ -6,13 +6,13 @@ DisplayAbstract::DisplayAbstract(){
     lv_init();
 
     lv_disp_draw_buf_init(&mdraw_buf, mbufA, mbufB,
-                        TFT_WIDTH/*SCREEN_WIDTH*/ * TFT_HEIGHT/*SCREEN_HEIGHT*/ / 10);
+                        SCREEN_WIDTH * SCREEN_HEIGHT / 10);
 
     // Initialize the display driver
     static lv_disp_drv_t disp_drv;
     lv_disp_drv_init(&disp_drv);
-    disp_drv.hor_res = TFT_WIDTH/*SCREEN_WIDTH*/;
-    disp_drv.ver_res = TFT_HEIGHT/*SCREEN_HEIGHT*/;
+    disp_drv.hor_res = SCREEN_WIDTH;
+    disp_drv.ver_res = SCREEN_HEIGHT;
     disp_drv.flush_cb = &DisplayAbstract::flushDisplayImpl;
     disp_drv.draw_buf = &mdraw_buf;
     lv_disp_drv_register(&disp_drv);
