@@ -128,9 +128,9 @@ void Display::setup(){
 
   //TODO: move touchscreen handling out of Display class
   // Setup touchscreen
-  this->touch = Adafruit_FT6206();
+  //this->touch = Adafruit_FT6206();
   Wire.begin(19, 22, 400000); // Configure i2c pins and set frequency to 400kHz
-  this->touch.begin(128); // Initialize touchscreen and set sensitivity threshold
+  //this->touch.begin(128); // Initialize touchscreen and set sensitivity threshold
 
   this->backlight_brightness = preferences.getUChar("blBrightness", DEFAULT_BACKLIGHT_BRIGHTNESS);
 
@@ -165,17 +165,17 @@ void Display::setup_ui(){
 
   this->create_keyboard();
   // Setup a scrollable tabview for devices and settings
-  lv_obj_t* tabview;
-  tabview = lv_tabview_create(lv_scr_act(), LV_DIR_TOP, 0); // Hide tab labels by setting their height to 0
-  lv_obj_set_style_bg_color(tabview, lv_color_black(), LV_PART_MAIN);
-  lv_obj_set_size(tabview, this->width, 270); // 270 = screenHeight(320) - panel(30) - statusbar(20)
-  lv_obj_align(tabview, LV_ALIGN_TOP_MID, 0, 20);
+  //lv_obj_t* tabview;
+  this->tabview = lv_tabview_create(lv_scr_act(), LV_DIR_TOP, 0); // Hide tab labels by setting their height to 0
+  lv_obj_set_style_bg_color(this->tabview, lv_color_black(), LV_PART_MAIN);
+  lv_obj_set_size(this->tabview, this->width, 270); // 270 = screenHeight(320) - panel(30) - statusbar(20)
+  lv_obj_align(this->tabview, LV_ALIGN_TOP_MID, 0, 20);
 
   // Add 4 tabs (names are irrelevant since the labels are hidden)
-  lv_obj_t* tab1 = lv_tabview_add_tab(tabview, "Settings");
-  lv_obj_t* tab2 = lv_tabview_add_tab(tabview, "Technisat");
-  lv_obj_t* tab3 = lv_tabview_add_tab(tabview, "Apple TV");
-  lv_obj_t* tab4 = lv_tabview_add_tab(tabview, "Smart Home");
+  lv_obj_t* tab1 = lv_tabview_add_tab(this->tabview, "Settings");
+  lv_obj_t* tab2 = lv_tabview_add_tab(this->tabview, "Technisat");
+  lv_obj_t* tab3 = lv_tabview_add_tab(this->tabview, "Apple TV");
+  lv_obj_t* tab4 = lv_tabview_add_tab(this->tabview, "Smart Home");
 
   // Configure number button grid 
   static lv_coord_t col_dsc[] = { LV_GRID_FR(1), LV_GRID_FR(1), LV_GRID_FR(1), LV_GRID_TEMPLATE_LAST }; // equal x distribution
@@ -429,9 +429,6 @@ void Display::setup_ui(){
   lv_obj_set_size(img2, 30, 30);
 
   // Create a status bar
-  //Serial.println("init Statusbar");
-  //this->statusbar = new Statusbar(lv_scr_act());
-  //Serial.println("init Statusbar done");
   lv_obj_t* statusbar = lv_btn_create(lv_scr_act());
   lv_obj_set_size(statusbar, 240, 20);
   lv_obj_set_style_shadow_width(statusbar, 0, LV_PART_MAIN);
@@ -460,6 +457,9 @@ void Display::setup_ui(){
   lv_obj_set_style_text_font(this->objUSBIcon, &lv_font_montserrat_16, LV_PART_MAIN);
 }
 
+lv_obj_t* Display::getTabView(){
+  return this->tabview;
+}
 
 lv_obj_t* wifi_subpage;
 static lv_obj_t * kb;

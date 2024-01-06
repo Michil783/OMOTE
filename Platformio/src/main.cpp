@@ -116,6 +116,7 @@ void store_scroll_value_event_cb(lv_event_t* e){
 // Update current device when the tabview page is changes
 void tabview_device_event_cb(lv_event_t* e){
   currentDevice = lv_tabview_get_tab_act(lv_event_get_target(e));
+  Serial.printf("slide to currentDevice %d\n", currentDevice);
 }
 
 /*
@@ -303,6 +304,7 @@ void enterSleep(){
   // Save settings to internal flash memory
   preferences.putBool("wkpByIMU", wakeupByIMUEnabled);
   preferences.putUChar("currentDevice", currentDevice);
+  Serial.printf("save currentDevice %d\n", currentDevice);
   if(!preferences.getBool("alreadySetUp")) preferences.putBool("alreadySetUp", true);
   preferences.end();
   // Prepare IO states
@@ -433,6 +435,7 @@ void setup() {
     wakeupByIMUEnabled = preferences.getBool("wkpByIMU");
     //backlight_brightness = preferences.getUChar("blBrightness");
     currentDevice = preferences.getUChar("currentDevice");
+    Serial.printf("restore currentDevice to %d\n", currentDevice);
   }  
 
   // Setup TFT
@@ -440,6 +443,8 @@ void setup() {
   display.setup();
   // --- LVGL UI Configuration ---  
   display.setup_ui();
+  lv_tabview_set_act(display.getTabView(), currentDevice, LV_ANIM_OFF);
+
   // --- End of LVGL configuration ---
   touch.begin();
 

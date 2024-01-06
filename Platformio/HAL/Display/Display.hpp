@@ -114,6 +114,8 @@ class Display
 
         void turnOff();
 
+        lv_obj_t* getTabView();
+
     private:
         /**
          * @brief Pin used for LCD backlight control
@@ -233,9 +235,11 @@ class Display
          */
         lv_obj_t* objUSBIcon;
 
+        lv_obj_t* tabview;
+        
 /******************************************** Statusbar *************************************************************/
         /**
-         * Variable to store the Statusbar instance
+         * Variable to store the Statusbar container
         */
         lv_obj_t* statusbar;
 
