@@ -116,6 +116,8 @@ class Display
 
         lv_obj_t* getTabView();
 
+        void setActiveTab(byte tab);
+
     private:
         /**
          * @brief Pin used for LCD backlight control

@@ -443,7 +443,7 @@ void setup() {
   display.setup();
   // --- LVGL UI Configuration ---  
   display.setup_ui();
-  lv_tabview_set_act(display.getTabView(), currentDevice, LV_ANIM_OFF);
+  display.setActiveTab(currentDevice);
 
   // --- End of LVGL configuration ---
   touch.begin();

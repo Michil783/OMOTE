@@ -586,3 +586,7 @@ void Display::update_battery(int percentage, bool isCharging, bool isConnected){
     }
   //}
 }
+
+void Display::setActiveTab(byte tab){
+  lv_tabview_set_act(display.getTabView(), tab, LV_ANIM_OFF);
+}

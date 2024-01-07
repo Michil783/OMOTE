@@ -1,5 +1,5 @@
-#include "battery.hpp"
-#include "display.hpp"
+#include <Battery.hpp>
+#include <Display.hpp>
 #include <Arduino.h>
 
 extern Display display;
