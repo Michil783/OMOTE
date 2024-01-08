@@ -6,6 +6,7 @@ LV_IMG_DECLARE(low_brightness);
 
 /*TODO: get rid of global variable and use API functions instead*/
 extern bool wakeupByIMUEnabled;
+void WakeEnableSetting_event_cb(lv_event_t * e);
 
 // Slider Event handler
 void bl_slider_event_cb(lv_event_t * e){
@@ -15,9 +16,11 @@ void bl_slider_event_cb(lv_event_t * e){
 }
 
 // Wakeup by IMU Switch Event handler
+/*
 void WakeEnableSetting_event_cb(lv_event_t * e){
   wakeupByIMUEnabled = lv_obj_has_state(lv_event_get_target(e), LV_STATE_CHECKED);
 }
+*/
 
 void Display::display_settings(lv_obj_t* parent)
 {

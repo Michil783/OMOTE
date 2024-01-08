@@ -114,9 +114,20 @@ class Display
 
         void turnOff();
 
+        lv_obj_t* addTab(String tabName);
+
         lv_obj_t* getTabView();
 
         void setActiveTab(byte tab);
+
+        /**
+         * @brief Get the primary_color
+         * 
+         * @param 
+         */
+        lv_color_t getPrimaryColor();
+
+        unsigned int getBacklightBrightness();
 
     private:
         /**
@@ -172,13 +183,6 @@ class Display
          * 
          */
         lv_color_t primary_color;
-
-        /**
-         * @brief Get the primary_color
-         * 
-         * @param 
-         */
-        lv_color_t getPrimaryColor();
 
         /**
          * @brief Object of the TFT driver
@@ -343,8 +347,6 @@ class Display
          * Variable to store the current backlight brightness level
         */
         unsigned int backlight_brightness;
-
-        unsigned int getBacklightBrightness();
 
         /**
          * @brief Function to create the display settings page.

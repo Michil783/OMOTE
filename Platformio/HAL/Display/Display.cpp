@@ -399,10 +399,10 @@ void Display::setup_ui(){
   lv_obj_set_style_shadow_width(btn, 0, LV_PART_MAIN);
   lv_obj_set_style_bg_color(btn, this->primary_color, LV_PART_MAIN);
   // This small hidden button enables the page indicator to scroll further
-  btn = lv_btn_create(panel);
-  lv_obj_set_size(btn, 50, lv_pct(100));
-  lv_obj_set_style_shadow_width(btn, 0, LV_PART_MAIN);
-  lv_obj_set_style_opa(btn, LV_OPA_TRANSP, LV_PART_MAIN);
+  //btn = lv_btn_create(panel);
+  //lv_obj_set_size(btn, 50, lv_pct(100));
+  //lv_obj_set_style_shadow_width(btn, 0, LV_PART_MAIN);
+  //lv_obj_set_style_opa(btn, LV_OPA_TRANSP, LV_PART_MAIN);
 
   // Make the indicator scroll together with the tabs by creating a scroll event
   lv_obj_add_event_cb(lv_tabview_get_content(tabview), store_scroll_value_event_cb, LV_EVENT_SCROLL, NULL);
@@ -589,4 +589,26 @@ void Display::update_battery(int percentage, bool isCharging, bool isConnected){
 
 void Display::setActiveTab(byte tab){
   lv_tabview_set_act(display.getTabView(), tab, LV_ANIM_OFF);
+}
+
+lv_obj_t* Display::addTab(String tabName){
+  // Add tab (name is irrelevant since the labels are hidden and hidden buttons are used (below))
+  lv_obj_t* tab = lv_tabview_add_tab(this->tabview, tabName.c_str());
+
+  // This small hidden button enables the page indicator to scroll further
+  //lv_obj_t* btn = lv_btn_create(panel);
+  //lv_obj_set_size(btn, 50, lv_pct(100));
+  //lv_obj_set_style_shadow_width(btn, 0, LV_PART_MAIN);
+  //lv_obj_set_style_opa(btn, LV_OPA_TRANSP, LV_PART_MAIN);
+  // Create actual (non-clickable) buttons for every tab
+  lv_obj_t* btn = lv_btn_create(panel);
+  lv_obj_clear_flag(btn, LV_OBJ_FLAG_CLICKABLE);
+  lv_obj_set_size(btn, 150, lv_pct(100));
+  lv_obj_t* label = lv_label_create(btn);
+  lv_label_set_text_fmt(label, tabName.c_str());
+  lv_obj_align(label, LV_ALIGN_CENTER, 0, 0);
+  lv_obj_set_style_shadow_width(btn, 0, LV_PART_MAIN);
+  lv_obj_set_style_bg_color(btn, this->primary_color, LV_PART_MAIN);
+
+  return tab;
 }

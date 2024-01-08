@@ -20,6 +20,7 @@
 #include <Display.hpp>
 #include <WifiHandler.hpp>
 #include <Battery.hpp>
+#include <Settings.hpp>
 
 #define ENABLE_WIFI // Comment out to diable connected features
 
@@ -49,6 +50,7 @@ int backlight_brightness = 255;
 Display display(LCD_BL, LCD_EN, screenWidth, screenHeight);
 WifiHandler wifihandler;
 Battery battery(ADC_BAT, CRG_STAT);
+Settings settings(&display);
 
 // Keypad declarations
 const byte ROWS = 5; //four rows
@@ -143,12 +145,10 @@ void appleKey_event_cb(lv_event_t* e) {
   Serial.println(50 + (int)e->user_data);
 }
 
-/*
 // Wakeup by IMU Switch Event handler
 void WakeEnableSetting_event_cb(lv_event_t * e){
   wakeupByIMUEnabled = lv_obj_has_state(lv_event_get_target(e), LV_STATE_CHECKED);
 }
-*/
 
 // Smart Home Toggle Event handler
 void smartHomeToggle_event_cb(lv_event_t * e){
@@ -443,6 +443,8 @@ void setup() {
   display.setup();
   // --- LVGL UI Configuration ---  
   display.setup_ui();
+  settings.setup();
+  
   display.setActiveTab(currentDevice);
 
   // --- End of LVGL configuration ---
