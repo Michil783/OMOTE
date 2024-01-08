@@ -33,9 +33,10 @@ bool battery_ischarging = false;
 
 // IMU declarations
 int motion = 0;
-#define SLEEP_TIMEOUT 20000 // time until device enters sleep mode in milliseconds
+#define SLEEP_TIMEOUT 10000 // time until device enters sleep mode in milliseconds
 #define MOTION_THRESHOLD 50 // motion above threshold keeps device awake
-int standbyTimer = SLEEP_TIMEOUT;
+long standbyTimerConfigured = SLEEP_TIMEOUT;
+long standbyTimer = standbyTimerConfigured;
 bool wakeupByIMUEnabled = true;
 LIS3DH IMU(I2C_MODE, 0x19); // Default constructor is I2C, addr 0x19.
 
@@ -192,7 +193,7 @@ void my_touchpad_read(lv_indev_drv_t * indev_driver, lv_indev_data_t * data){
   bool touched = false;
   if ((touchX > 0) || (touchY > 0)) {
     touched = true;
-    standbyTimer = SLEEP_TIMEOUT; 
+    standbyTimer = standbyTimerConfigured; 
   }
 
   if( !touched ){
@@ -225,7 +226,7 @@ void activityDetection(){
   standbyTimer -= 100;
   if(standbyTimer < 0) standbyTimer = 0;
   // If the motion exceeds the threshold, the standbyTimer is reset
-  if(motion > MOTION_THRESHOLD) standbyTimer = SLEEP_TIMEOUT;
+  if(motion > MOTION_THRESHOLD) standbyTimer = standbyTimerConfigured;
 
   // Store the current acceleration and time 
   accXold = accX;
@@ -304,7 +305,8 @@ void enterSleep(){
   // Save settings to internal flash memory
   preferences.putBool("wkpByIMU", wakeupByIMUEnabled);
   preferences.putUChar("currentDevice", currentDevice);
-  Serial.printf("save currentDevice %d\n", currentDevice);
+  preferences.putLong("standbyTimer", standbyTimerConfigured);
+  Serial.printf("enterSleep: standbyTimer: %d standbyTimerConfigured: %d", standbyTimer, standbyTimerConfigured);
   if(!preferences.getBool("alreadySetUp")) preferences.putBool("alreadySetUp", true);
   preferences.end();
   // Prepare IO states
@@ -435,7 +437,9 @@ void setup() {
     wakeupByIMUEnabled = preferences.getBool("wkpByIMU");
     //backlight_brightness = preferences.getUChar("blBrightness");
     currentDevice = preferences.getUChar("currentDevice");
-    Serial.printf("restore currentDevice to %d\n", currentDevice);
+    standbyTimerConfigured = preferences.getLong("standbyTimer", 10000);
+    standbyTimer = standbyTimerConfigured;
+    Serial.printf("restore: standbyTimer: %d standbyTimerConfigured: %d", standbyTimer, standbyTimerConfigured);
   }  
 
   // Setup TFT
@@ -544,7 +548,7 @@ void loop() {
   customKeypad.getKey(); // Populate key list
   for(int i=0; i<LIST_MAX; i++){ // Handle multiple keys (Not really necessary in this case)
     if(customKeypad.key[i].kstate == PRESSED || customKeypad.key[i].kstate == HOLD){
-      standbyTimer = SLEEP_TIMEOUT; // Reset the sleep timer when a button is pressed
+      standbyTimer = standbyTimerConfigured; // Reset the sleep timer when a button is pressed
       int keyCode = customKeypad.key[i].kcode;
       Serial.println(customKeypad.key[i].kchar);
       // Send IR codes depending on the current device (tabview page)

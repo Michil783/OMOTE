@@ -7,6 +7,7 @@ LV_IMG_DECLARE(low_brightness);
 
 extern bool wakeupByIMUEnabled;
 extern Display display;
+extern long standbyTimerConfigured;
 
 void WakeEnableSetting_event_cb(lv_event_t *e)
 {
@@ -19,7 +20,33 @@ void bl_slider_event_cb(lv_event_t *e)
     lv_obj_t *slider = lv_event_get_target(e);
     unsigned int *backlight_brightness = (unsigned int *)lv_event_get_user_data(e);
     *backlight_brightness = map(constrain(lv_slider_get_value(slider), 30, 240), 30, 240, 240, 30);
-    Serial.printf("Settings - bl_slider_event_cb(%d) - %d\n", constrain(lv_slider_get_value(slider), 30, 240), *backlight_brightness);
+    //Serial.printf("Settings - bl_slider_event_cb(%d) - %d\n", constrain(lv_slider_get_value(slider), 30, 240), *backlight_brightness);
+}
+
+void to_dropdown_event_cb(lv_event_t *e)
+{
+    lv_event_code_t code = lv_event_get_code(e);
+    lv_obj_t * obj = lv_event_get_target(e);
+    if(code == LV_EVENT_VALUE_CHANGED) {
+        int index = lv_dropdown_get_selected(obj);
+        Serial.printf("new value = %d\n", index);
+        long *standbyTimerConfigured = (long *)lv_event_get_user_data(e);
+        switch (index)
+        {
+        case 1:
+            *standbyTimerConfigured = 30000;
+            break;
+        case 2:
+            *standbyTimerConfigured = 60000;
+            break;
+        case 3:
+            *standbyTimerConfigured = 500000;
+            break;
+        default:
+            *standbyTimerConfigured = 10000;
+            break;
+        }
+    }
 }
 
 Settings::Settings(Display *display)
@@ -123,6 +150,23 @@ void Settings::display_settings(lv_obj_t *parent)
     lv_obj_set_style_bg_color(lv_dropdown_get_list(drop), primary_color, LV_PART_MAIN);
     lv_obj_set_style_border_width(lv_dropdown_get_list(drop), 1, LV_PART_MAIN);
     lv_obj_set_style_border_color(lv_dropdown_get_list(drop), lv_color_hex(0x505050), LV_PART_MAIN);
+    uint16_t selected = 0;
+    switch (standbyTimerConfigured)
+    {
+    case 30000:
+        selected = 1;
+        break;
+    case 60000:
+        selected = 1;
+        break;
+    case 500000:
+        selected = 1;
+        break;
+    default:
+        break;
+    }
+    lv_dropdown_set_selected(drop, selected);
+    lv_obj_add_event_cb(drop, to_dropdown_event_cb, LV_EVENT_ALL, &standbyTimerConfigured);
 }
 
 void Settings::update()
