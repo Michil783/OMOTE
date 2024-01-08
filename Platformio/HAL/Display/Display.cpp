@@ -44,6 +44,11 @@ Display::Display(int backlight_pin, int enable_pin, int width, int height){
 
   /*Initialize the keybard as null*/
   this->kb = NULL;
+
+  /*Initialize tab name array*/
+  for(int i = 0; i < TAB_ARRAY_SIZE; i++) {
+    this->tabNames[i] = nullptr;
+  }
 }
 
 lv_color_t Display::getPrimaryColor(){
@@ -172,10 +177,14 @@ void Display::setup_ui(){
   lv_obj_align(this->tabview, LV_ALIGN_TOP_MID, 0, 20);
 
   // Add 4 tabs (names are irrelevant since the labels are hidden)
-  lv_obj_t* tab1 = lv_tabview_add_tab(this->tabview, "Settings");
-  lv_obj_t* tab2 = lv_tabview_add_tab(this->tabview, "Technisat");
-  lv_obj_t* tab3 = lv_tabview_add_tab(this->tabview, "Apple TV");
-  lv_obj_t* tab4 = lv_tabview_add_tab(this->tabview, "Smart Home");
+  //lv_obj_t* tab1 = lv_tabview_add_tab(this->tabview, "Settings");
+  //lv_obj_t* tab2 = lv_tabview_add_tab(this->tabview, "Technisat");
+  //lv_obj_t* tab3 = lv_tabview_add_tab(this->tabview, "Apple TV");
+  //lv_obj_t* tab4 = lv_tabview_add_tab(this->tabview, "Smart Home");
+  lv_obj_t* tab1 = this->addTab("Settings");
+  lv_obj_t* tab2 = this->addTab("Technisat");
+  lv_obj_t* tab3 = this->addTab("Apple TV");
+  lv_obj_t* tab4 = this->addTab("Smart Home");
 
   // Configure number button grid 
   static lv_coord_t col_dsc[] = { LV_GRID_FR(1), LV_GRID_FR(1), LV_GRID_FR(1), LV_GRID_TEMPLATE_LAST }; // equal x distribution
@@ -350,6 +359,7 @@ void Display::setup_ui(){
   // Set current page according to the current Device
   lv_tabview_set_act(tabview, 0, LV_ANIM_OFF); 
 
+/*
   // Create a page indicator
   panel = lv_obj_create(lv_scr_act());
   lv_obj_clear_flag(panel, LV_OBJ_FLAG_CLICKABLE); // This indicator will not be clickable
@@ -403,6 +413,7 @@ void Display::setup_ui(){
   //lv_obj_set_size(btn, 50, lv_pct(100));
   //lv_obj_set_style_shadow_width(btn, 0, LV_PART_MAIN);
   //lv_obj_set_style_opa(btn, LV_OPA_TRANSP, LV_PART_MAIN);
+*/
 
   // Make the indicator scroll together with the tabs by creating a scroll event
   lv_obj_add_event_cb(lv_tabview_get_content(tabview), store_scroll_value_event_cb, LV_EVENT_SCROLL, NULL);
@@ -591,24 +602,79 @@ void Display::setActiveTab(byte tab){
   lv_tabview_set_act(display.getTabView(), tab, LV_ANIM_OFF);
 }
 
-lv_obj_t* Display::addTab(String tabName){
-  // Add tab (name is irrelevant since the labels are hidden and hidden buttons are used (below))
-  lv_obj_t* tab = lv_tabview_add_tab(this->tabview, tabName.c_str());
+lv_obj_t* Display::addTab(const char* tabName){
+  Serial.printf("addTab(\"%s\")\n", tabName);
+
+  lv_obj_t* tab = nullptr;
+
+  /* search free slot in tab array */
+  Serial.println("loop tabname array");
+  for(int i = 0; i < TAB_ARRAY_SIZE; i++){
+    if( this->tabNames[i] == nullptr ){
+      Serial.printf("found free spot at %d\n", i);
+      // Add tab (name is irrelevant since the labels are hidden and hidden buttons are used (below))
+      tab = lv_tabview_add_tab(this->tabview, tabName);
+      this->tabNames[i] = tabName;
+      break;
+      // Create actual (non-clickable) buttons for every tab
+/*       lv_obj_t* btn = lv_btn_create(panel);
+      lv_obj_clear_flag(btn, LV_OBJ_FLAG_CLICKABLE);
+      lv_obj_set_size(btn, 150, lv_pct(100));
+      lv_obj_t* label = lv_label_create(btn);
+      lv_label_set_text_fmt(label, tabName);
+      lv_obj_align(label, LV_ALIGN_CENTER, 0, 0);
+      lv_obj_set_style_shadow_width(btn, 0, LV_PART_MAIN);
+      lv_obj_set_style_bg_color(btn, this->primary_color, LV_PART_MAIN);
+ */    
+    }
+  }
+  this->createTabviewButtons();
+  return tab;
+}
+
+void Display::createTabviewButtons(){
+  Serial.println("createTabviewButtons()");
+
+  if( panel == nullptr) {
+    Serial.println("create new panel");
+    // Create a page indicator
+    panel = lv_obj_create(lv_scr_act());
+    lv_obj_clear_flag(panel, LV_OBJ_FLAG_CLICKABLE); // This indicator will not be clickable
+    lv_obj_set_size(panel, this->width, 30);
+    lv_obj_set_flex_flow(panel, LV_FLEX_FLOW_ROW);
+    lv_obj_align(panel, LV_ALIGN_BOTTOM_MID, 0, 0);
+    lv_obj_set_scrollbar_mode(panel, LV_SCROLLBAR_MODE_OFF);
+  }
+  // delete old panel
+  Serial.println("delete old buttons from panel");
+  lv_obj_clean(panel);
 
   // This small hidden button enables the page indicator to scroll further
-  //lv_obj_t* btn = lv_btn_create(panel);
-  //lv_obj_set_size(btn, 50, lv_pct(100));
-  //lv_obj_set_style_shadow_width(btn, 0, LV_PART_MAIN);
-  //lv_obj_set_style_opa(btn, LV_OPA_TRANSP, LV_PART_MAIN);
-  // Create actual (non-clickable) buttons for every tab
   lv_obj_t* btn = lv_btn_create(panel);
-  lv_obj_clear_flag(btn, LV_OBJ_FLAG_CLICKABLE);
-  lv_obj_set_size(btn, 150, lv_pct(100));
-  lv_obj_t* label = lv_label_create(btn);
-  lv_label_set_text_fmt(label, tabName.c_str());
-  lv_obj_align(label, LV_ALIGN_CENTER, 0, 0);
+  lv_obj_set_size(btn, 50, lv_pct(100));
   lv_obj_set_style_shadow_width(btn, 0, LV_PART_MAIN);
-  lv_obj_set_style_bg_color(btn, this->primary_color, LV_PART_MAIN);
+  lv_obj_set_style_opa(btn, LV_OPA_TRANSP, LV_PART_MAIN);
 
-  return tab;
+  // Create actual (non-clickable) buttons for every tab
+  Serial.println("rebuild panel buttons");
+  for(int i = 0; i < TAB_ARRAY_SIZE; i++) {
+    if( this->tabNames[i] != nullptr ){
+      Serial.printf("button for %d - %s\n", i, this->tabNames[i]);
+      btn = lv_btn_create(panel);
+      lv_obj_clear_flag(btn, LV_OBJ_FLAG_CLICKABLE);
+      lv_obj_set_size(btn, 150, lv_pct(100));
+      lv_obj_t* label = lv_label_create(btn);
+      lv_label_set_text_fmt(label, this->tabNames[i]);
+      lv_obj_align(label, LV_ALIGN_CENTER, 0, 0);
+      lv_obj_set_style_shadow_width(btn, 0, LV_PART_MAIN);
+      lv_obj_set_style_bg_color(btn, this->primary_color, LV_PART_MAIN);
+    } 
+  }
+
+  // This small hidden button enables the page indicator to scroll further
+  btn = lv_btn_create(panel);
+  lv_obj_set_size(btn, 50, lv_pct(100));
+  lv_obj_set_style_shadow_width(btn, 0, LV_PART_MAIN);
+  lv_obj_set_style_opa(btn, LV_OPA_TRANSP, LV_PART_MAIN);
+
 }

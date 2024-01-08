@@ -26,6 +26,8 @@
 
 #define DEFAULT_BACKLIGHT_BRIGHTNESS 128
 
+#define TAB_ARRAY_SIZE 10
+
 class Display
 {
     public:
@@ -114,7 +116,7 @@ class Display
 
         void turnOff();
 
-        lv_obj_t* addTab(String tabName);
+        lv_obj_t* addTab(const char* tabName);
 
         lv_obj_t* getTabView();
 
@@ -243,6 +245,18 @@ class Display
 
         lv_obj_t* tabview;
         
+        /**
+         * @brief Array of tab names
+         * 
+        */
+       const char *tabNames[TAB_ARRAY_SIZE];
+
+        /**
+         * @brief Function to create the tab view buttons
+         * 
+         */
+        void createTabviewButtons();
+
 /******************************************** Statusbar *************************************************************/
         /**
          * Variable to store the Statusbar container
