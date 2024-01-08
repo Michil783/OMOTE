@@ -46,7 +46,7 @@ TFT_eSPI tft = TFT_eSPI();
 Adafruit_FT6206 touch = Adafruit_FT6206();
 TS_Point touchPoint;
 TS_Point oldPoint;
-int backlight_brightness = 255;
+//int backlight_brightness = 255;
 Display display(LCD_BL, LCD_EN, screenWidth, screenHeight);
 WifiHandler wifihandler;
 Battery battery(ADC_BAT, CRG_STAT);
@@ -146,9 +146,9 @@ void appleKey_event_cb(lv_event_t* e) {
 }
 
 // Wakeup by IMU Switch Event handler
-void WakeEnableSetting_event_cb(lv_event_t * e){
-  wakeupByIMUEnabled = lv_obj_has_state(lv_event_get_target(e), LV_STATE_CHECKED);
-}
+// void WakeEnableSetting_event_cb(lv_event_t * e){
+//   wakeupByIMUEnabled = lv_obj_has_state(lv_event_get_target(e), LV_STATE_CHECKED);
+// }
 
 // Smart Home Toggle Event handler
 void smartHomeToggle_event_cb(lv_event_t * e){
@@ -444,7 +444,7 @@ void setup() {
   // --- LVGL UI Configuration ---  
   display.setup_ui();
   settings.setup();
-  
+
   display.setActiveTab(currentDevice);
 
   // --- End of LVGL configuration ---

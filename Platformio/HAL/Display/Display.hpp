@@ -129,7 +129,7 @@ class Display
          */
         lv_color_t getPrimaryColor();
 
-        unsigned int getBacklightBrightness();
+        unsigned int* getBacklightBrightness();
 
     private:
         /**

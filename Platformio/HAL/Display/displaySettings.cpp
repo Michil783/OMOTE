@@ -7,13 +7,14 @@ LV_IMG_DECLARE(low_brightness);
 /*TODO: get rid of global variable and use API functions instead*/
 extern bool wakeupByIMUEnabled;
 void WakeEnableSetting_event_cb(lv_event_t * e);
+void bl_slider_event_cb(lv_event_t * e);
 
 // Slider Event handler
-void bl_slider_event_cb(lv_event_t * e){
-  lv_obj_t * slider = lv_event_get_target(e);
-  unsigned int* backlight_brightness = (unsigned int*) lv_event_get_user_data(e);
-  *backlight_brightness = map(constrain(lv_slider_get_value(slider), 30, 255), 30, 255, 255, 30);
-}
+// void bl_slider_event_cb(lv_event_t * e){
+//   lv_obj_t * slider = lv_event_get_target(e);
+//   unsigned int* backlight_brightness = (unsigned int*) lv_event_get_user_data(e);
+//   *backlight_brightness = map(constrain(lv_slider_get_value(slider), 30, 255), 30, 255, 255, 30);
+// }
 
 // Wakeup by IMU Switch Event handler
 /*
