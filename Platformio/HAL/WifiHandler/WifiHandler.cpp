@@ -13,13 +13,15 @@
 #include <WifiHandler.hpp>
 #include <Preferences.h>
 #include <WiFi.h>
-#include <Display.hpp>
+//#include <Display.hpp>
+#include <Settings.hpp>
 #include <PubSubClient.h>
 
 /*TODO: rework to not use global variables*/
 extern WifiHandler wifihandler;
 extern Preferences preferences;
-extern Display display;
+//extern Display display;
+extern Settings settings;
 //extern PubSubClient client;
 const char* temporary_ssid;
 const char* temporary_password;
@@ -40,23 +42,23 @@ void WiFiEvent(WiFiEvent_t event){
       }
       else
       {
-        display.clear_wifi_networks();
+        settings.clear_wifi_networks();
         Serial.print(no_networks);
         Serial.print(" found\n");
-        display.wifi_scan_complete( no_networks);
+        settings.wifi_scan_complete( no_networks);
       }
       break;
     case ARDUINO_EVENT_WIFI_STA_GOT_IP:
       //client.setServer(MQTT_SERVER, 1883); // MQTT initialization
       //client.connect("OMOTE"); // Connect using a client id
     case ARDUINO_EVENT_WIFI_STA_GOT_IP6:
-      display.update_wifi(true);
+      settings.update_wifi(true);
       wifihandler.update_credetials(temporary_ssid, temporary_password);
       break;
     case ARDUINO_EVENT_WIFI_STA_DISCONNECTED:
     case ARDUINO_EVENT_WIFI_STA_LOST_IP:
     case ARDUINO_EVENT_WIFI_STA_STOP:
-      display.update_wifi(false);
+      settings.update_wifi(false);
     default:
       break;
   }

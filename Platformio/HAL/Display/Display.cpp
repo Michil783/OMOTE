@@ -13,7 +13,7 @@ LV_IMG_DECLARE(appleTvIcon);
 LV_IMG_DECLARE(appleDisplayIcon);
 LV_IMG_DECLARE(appleBackIcon);
 LV_IMG_DECLARE(lightbulb);
-LV_IMG_DECLARE(WiFi_No_Signal);
+//LV_IMG_DECLARE(WiFi_No_Signal);
 extern lv_obj_t *panel;
 static lv_disp_drv_t disp_drv;
 /*TODO: get rid of global variable and use API functions instead*/
@@ -23,7 +23,7 @@ void smartHomeSlider_event_cb(lv_event_t *e);
 void smartHomeToggle_event_cb(lv_event_t *e);
 void WakeEnableSetting_event_cb(lv_event_t *e);
 void appleKey_event_cb(lv_event_t *e);
-void virtualKeypad_event_cb(lv_event_t *e);
+//void virtualKeypad_event_cb(lv_event_t *e);
 void bl_slider_event_cb(lv_event_t *e);
 void tabview_device_event_cb(lv_event_t *e);
 void store_scroll_value_event_cb(lv_event_t *e);
@@ -194,8 +194,8 @@ void Display::setup_ui()
   // lv_obj_t* tab2 = lv_tabview_add_tab(this->tabview, "Technisat");
   // lv_obj_t* tab3 = lv_tabview_add_tab(this->tabview, "Apple TV");
   // lv_obj_t* tab4 = lv_tabview_add_tab(this->tabview, "Smart Home");
-  lv_obj_t *tab1 = this->addTab("Settings");
-  lv_obj_t *tab2 = this->addTab("Technisat");
+  // lv_obj_t *tab1 = this->addTab("Settings");
+  // lv_obj_t *tab2 = this->addTab("Technisat");
   lv_obj_t *tab3 = this->addTab("Apple TV");
   lv_obj_t *tab4 = this->addTab("Smart Home");
 
@@ -203,53 +203,53 @@ void Display::setup_ui()
   static lv_coord_t col_dsc[] = {LV_GRID_FR(1), LV_GRID_FR(1), LV_GRID_FR(1), LV_GRID_TEMPLATE_LAST}; // equal x distribution
   static lv_coord_t row_dsc[] = {52, 52, 52, 52, LV_GRID_TEMPLATE_LAST};                              // manual y distribution to compress the grid a bit
 
-  // Create a container with grid for tab2
-  lv_obj_set_style_pad_all(tab2, 0, LV_PART_MAIN);
-  lv_obj_t *cont = lv_obj_create(tab2);
-  lv_obj_set_style_shadow_width(cont, 0, LV_PART_MAIN);
-  lv_obj_set_style_bg_color(cont, lv_color_black(), LV_PART_MAIN);
-  lv_obj_set_style_border_width(cont, 0, LV_PART_MAIN);
-  lv_obj_set_style_grid_column_dsc_array(cont, col_dsc, 0);
-  lv_obj_set_style_grid_row_dsc_array(cont, row_dsc, 0);
-  lv_obj_set_size(cont, 240, 270);
-  lv_obj_set_layout(cont, LV_LAYOUT_GRID);
-  lv_obj_align(cont, LV_ALIGN_TOP_MID, 0, 0);
-  lv_obj_set_style_radius(cont, 0, LV_PART_MAIN);
+  // // Create a container with grid for tab2
+  // lv_obj_set_style_pad_all(tab2, 0, LV_PART_MAIN);
+  // lv_obj_t *cont = lv_obj_create(tab2);
+  // lv_obj_set_style_shadow_width(cont, 0, LV_PART_MAIN);
+  // lv_obj_set_style_bg_color(cont, lv_color_black(), LV_PART_MAIN);
+  // lv_obj_set_style_border_width(cont, 0, LV_PART_MAIN);
+  // lv_obj_set_style_grid_column_dsc_array(cont, col_dsc, 0);
+  // lv_obj_set_style_grid_row_dsc_array(cont, row_dsc, 0);
+  // lv_obj_set_size(cont, 240, 270);
+  // lv_obj_set_layout(cont, LV_LAYOUT_GRID);
+  // lv_obj_align(cont, LV_ALIGN_TOP_MID, 0, 0);
+  // lv_obj_set_style_radius(cont, 0, LV_PART_MAIN);
 
-  lv_obj_t *buttonLabel;
-  lv_obj_t *obj;
+  // lv_obj_t *buttonLabel;
+  // lv_obj_t *obj;
 
-  // Iterate through grid buttons configure them
-  for (int i = 0; i < 12; i++)
-  {
-    uint8_t col = i % 3;
-    uint8_t row = i / 3;
-    // Create the button object
-    if ((row == 3) && ((col == 0) || (col == 2)))
-      continue; // Do not create a complete fourth row, only a 0 button
-    obj = lv_btn_create(cont);
-    lv_obj_set_grid_cell(obj, LV_GRID_ALIGN_STRETCH, col, 1, LV_GRID_ALIGN_STRETCH, row, 1);
-    lv_obj_set_style_bg_color(obj, this->primary_color, LV_PART_MAIN);
-    lv_obj_set_style_radius(obj, 14, LV_PART_MAIN);
-    lv_obj_set_style_shadow_color(obj, lv_color_hex(0x404040), LV_PART_MAIN);
-    lv_obj_add_flag(obj, LV_OBJ_FLAG_EVENT_BUBBLE); // Clicking a button causes a event in its container
-    // Create Labels for each button
-    buttonLabel = lv_label_create(obj);
-    if (i < 9)
-    {
-      lv_label_set_text_fmt(buttonLabel, std::to_string(i + 1).c_str(), col, row);
-      lv_obj_set_user_data(obj, (void *)i); // Add user data so we can identify which button caused the container event
-    }
-    else
-    {
-      lv_label_set_text_fmt(buttonLabel, "0", col, row);
-      lv_obj_set_user_data(obj, (void *)9);
-    }
-    lv_obj_set_style_text_font(buttonLabel, &lv_font_montserrat_24, LV_PART_MAIN);
-    lv_obj_center(buttonLabel);
-  }
-  // Create a shared event for all button inside container
-  lv_obj_add_event_cb(cont, virtualKeypad_event_cb, LV_EVENT_CLICKED, NULL);
+  // // Iterate through grid buttons configure them
+  // for (int i = 0; i < 12; i++)
+  // {
+  //   uint8_t col = i % 3;
+  //   uint8_t row = i / 3;
+  //   // Create the button object
+  //   if ((row == 3) && ((col == 0) || (col == 2)))
+  //     continue; // Do not create a complete fourth row, only a 0 button
+  //   obj = lv_btn_create(cont);
+  //   lv_obj_set_grid_cell(obj, LV_GRID_ALIGN_STRETCH, col, 1, LV_GRID_ALIGN_STRETCH, row, 1);
+  //   lv_obj_set_style_bg_color(obj, this->primary_color, LV_PART_MAIN);
+  //   lv_obj_set_style_radius(obj, 14, LV_PART_MAIN);
+  //   lv_obj_set_style_shadow_color(obj, lv_color_hex(0x404040), LV_PART_MAIN);
+  //   lv_obj_add_flag(obj, LV_OBJ_FLAG_EVENT_BUBBLE); // Clicking a button causes a event in its container
+  //   // Create Labels for each button
+  //   buttonLabel = lv_label_create(obj);
+  //   if (i < 9)
+  //   {
+  //     lv_label_set_text_fmt(buttonLabel, std::to_string(i + 1).c_str(), col, row);
+  //     lv_obj_set_user_data(obj, (void *)i); // Add user data so we can identify which button caused the container event
+  //   }
+  //   else
+  //   {
+  //     lv_label_set_text_fmt(buttonLabel, "0", col, row);
+  //     lv_obj_set_user_data(obj, (void *)9);
+  //   }
+  //   lv_obj_set_style_text_font(buttonLabel, &lv_font_montserrat_24, LV_PART_MAIN);
+  //   lv_obj_center(buttonLabel);
+  // }
+  // // Create a shared event for all button inside container
+  // lv_obj_add_event_cb(cont, virtualKeypad_event_cb, LV_EVENT_CLICKED, NULL);
 
   // Add content to the Apple TV tab (3)
   // Add a nice apple tv logo
@@ -283,7 +283,7 @@ void Display::setup_ui()
   lv_obj_set_style_img_recolor_opa(appleImg, LV_OPA_COVER, LV_PART_MAIN);
   lv_obj_align(appleImg, LV_ALIGN_CENTER, 0, 0);
 
-  this->setup_settings(tab1);
+  // this->setup_settings(tab1);
 
   // Add content to the smart home tab (4)
   lv_obj_set_layout(tab4, LV_LAYOUT_FLEX);
@@ -375,62 +375,6 @@ void Display::setup_ui()
   // Set current page according to the current Device
   lv_tabview_set_act(tabview, 0, LV_ANIM_OFF);
 
-  /*
-    // Create a page indicator
-    panel = lv_obj_create(lv_scr_act());
-    lv_obj_clear_flag(panel, LV_OBJ_FLAG_CLICKABLE); // This indicator will not be clickable
-    lv_obj_set_size(panel, this->width, 30);
-    lv_obj_set_flex_flow(panel, LV_FLEX_FLOW_ROW);
-    lv_obj_align(panel, LV_ALIGN_BOTTOM_MID, 0, 0);
-    lv_obj_set_scrollbar_mode(panel, LV_SCROLLBAR_MODE_OFF);
-    // This small hidden button enables the page indicator to scroll further
-    lv_obj_t* btn = lv_btn_create(panel);
-    lv_obj_set_size(btn, 50, lv_pct(100));
-    lv_obj_set_style_shadow_width(btn, 0, LV_PART_MAIN);
-    lv_obj_set_style_opa(btn, LV_OPA_TRANSP, LV_PART_MAIN);
-    // Create actual (non-clickable) buttons for every tab
-    btn = lv_btn_create(panel);
-    lv_obj_clear_flag(btn, LV_OBJ_FLAG_CLICKABLE);
-    lv_obj_set_size(btn, 150, lv_pct(100));
-    lv_obj_t* label = lv_label_create(btn);
-    lv_label_set_text_fmt(label, "Settings");
-    lv_obj_align(label, LV_ALIGN_CENTER, 0, 0);
-    lv_obj_set_style_shadow_width(btn, 0, LV_PART_MAIN);
-    lv_obj_set_style_bg_color(btn, this->primary_color, LV_PART_MAIN);
-
-    btn = lv_btn_create(panel);
-    lv_obj_clear_flag(btn, LV_OBJ_FLAG_CLICKABLE);
-    lv_obj_set_size(btn, 150, lv_pct(100));
-    label = lv_label_create(btn);
-    lv_label_set_text_fmt(label, "Technisat");
-    lv_obj_align(label, LV_ALIGN_CENTER, 0, 0);
-    lv_obj_set_style_shadow_width(btn, 0, LV_PART_MAIN);
-    lv_obj_set_style_bg_color(btn, this->primary_color, LV_PART_MAIN);
-
-    btn = lv_btn_create(panel);
-    lv_obj_clear_flag(btn, LV_OBJ_FLAG_CLICKABLE);
-    lv_obj_set_size(btn, 150, lv_pct(100));
-    label = lv_label_create(btn);
-    lv_label_set_text_fmt(label, "Apple TV");
-    lv_obj_align(label, LV_ALIGN_CENTER, 0, 0);
-    lv_obj_set_style_shadow_width(btn, 0, LV_PART_MAIN);
-    lv_obj_set_style_bg_color(btn, this->primary_color, LV_PART_MAIN);
-
-    btn = lv_btn_create(panel);
-    lv_obj_clear_flag(btn, LV_OBJ_FLAG_CLICKABLE);
-    lv_obj_set_size(btn, 150, lv_pct(100));
-    label = lv_label_create(btn);
-    lv_label_set_text_fmt(label, "Smart Home");
-    lv_obj_align(label, LV_ALIGN_CENTER, 0, 0);
-    lv_obj_set_style_shadow_width(btn, 0, LV_PART_MAIN);
-    lv_obj_set_style_bg_color(btn, this->primary_color, LV_PART_MAIN);
-    // This small hidden button enables the page indicator to scroll further
-    //btn = lv_btn_create(panel);
-    //lv_obj_set_size(btn, 50, lv_pct(100));
-    //lv_obj_set_style_shadow_width(btn, 0, LV_PART_MAIN);
-    //lv_obj_set_style_opa(btn, LV_OPA_TRANSP, LV_PART_MAIN);
-  */
-
   // Make the indicator scroll together with the tabs by creating a scroll event
   lv_obj_add_event_cb(lv_tabview_get_content(tabview), store_scroll_value_event_cb, LV_EVENT_SCROLL, NULL);
   lv_obj_add_event_cb(tabview, tabview_device_event_cb, LV_EVENT_VALUE_CHANGED, NULL);
@@ -489,9 +433,9 @@ lv_obj_t *Display::getTabView()
   return this->tabview;
 }
 
-lv_obj_t *wifi_subpage;
-static lv_obj_t *kb;
-static lv_obj_t *ta;
+// lv_obj_t *wifi_subpage;
+// static lv_obj_t *kb;
+// static lv_obj_t *ta;
 
 /* Callback function to show and hide keybaord for attached textareas */
 static void ta_kb_event_cb(lv_event_t *e)
@@ -533,39 +477,6 @@ void Display::attach_keyboard(lv_obj_t *textarea)
   lv_obj_add_event_cb(textarea, ta_kb_event_cb, LV_EVENT_DEFOCUSED, this->kb);
 }
 
-void Display::setup_settings(lv_obj_t *parent)
-{
-  // Add content to the settings tab
-  // With a flex layout, setting groups/boxes will position themselves automatically
-  lv_obj_set_layout(parent, LV_LAYOUT_FLEX);
-  lv_obj_set_flex_flow(parent, LV_FLEX_FLOW_COLUMN);
-  lv_obj_set_scrollbar_mode(parent, LV_SCROLLBAR_MODE_ACTIVE);
-  // Add a label, then a box for the display settings
-  this->settingsMenu = lv_menu_create(parent);
-  lv_obj_set_width(this->settingsMenu, 210);
-
-  /* Create main page for settings this->settingsMenu*/
-  this->settingsMainPage = lv_menu_page_create(this->settingsMenu, NULL);
-  lv_obj_t *cont = lv_menu_cont_create(this->settingsMainPage);
-  lv_obj_set_layout(cont, LV_LAYOUT_FLEX);
-  lv_obj_set_flex_flow(cont, LV_FLEX_FLOW_COLUMN);
-  lv_obj_set_scrollbar_mode(cont, LV_SCROLLBAR_MODE_ACTIVE);
-  // lv_obj_set_width(cont, lv_obj_get_width(parent));
-  this->display_settings(cont);
-
-  this->create_wifi_settings(this->settingsMenu, cont);
-
-  // Another setting for the battery
-  lv_obj_t *menuLabel = lv_label_create(cont);
-  lv_label_set_text(menuLabel, "Battery");
-  lv_obj_t *menuBox = lv_obj_create(cont);
-  lv_obj_set_size(menuBox, lv_pct(100), 125);
-  lv_obj_set_style_bg_color(menuBox, this->primary_color, LV_PART_MAIN);
-  lv_obj_set_style_border_width(menuBox, 0, LV_PART_MAIN);
-
-  lv_menu_set_page(this->settingsMenu, this->settingsMainPage);
-}
-
 void Display::flush(lv_disp_drv_t *disp, const lv_area_t *area, lv_color_t *color_p)
 {
   uint32_t w = (area->x2 - area->x1 + 1);
@@ -582,7 +493,6 @@ void Display::flush(lv_disp_drv_t *disp, const lv_area_t *area, lv_color_t *colo
 void Display::update()
 {
   static int fadeInTimer = millis(); // fadeInTimer = time after setup
-  //Serial.printf("Display::update fadeInTimer=%d backlight_brightness=%d\n", fadeInTimer, backlight_brightness);
   if (millis() < fadeInTimer + backlight_brightness)
   { // Fade in the backlight brightness
     ledcWrite(5, millis() - fadeInTimer);
@@ -638,6 +548,11 @@ void Display::update_battery(int percentage, bool isCharging, bool isConnected)
   //}
 }
 
+void Display::updateWifi(String symbol)
+{
+  lv_label_set_text(this->WifiLabel, symbol.c_str());
+}
+
 void Display::setActiveTab(byte tab)
 {
   lv_tabview_set_act(display.getTabView(), tab, LV_ANIM_OFF);
@@ -645,15 +560,12 @@ void Display::setActiveTab(byte tab)
 
 lv_obj_t *Display::addTab(const char *tabName)
 {
-  // Serial.printf("addTab(\"%s\")\n", tabName);
   lv_obj_t *tab = nullptr;
   /* search free slot in tab array */
-  // Serial.println("loop tabname array");
   for (int i = 0; i < TAB_ARRAY_SIZE; i++)
   {
     if (this->tabNames[i] == nullptr)
     {
-      // Serial.printf("found free spot at %d\n", i);
       //  Add tab (name is irrelevant since the labels are hidden and hidden buttons are used (below))
       tab = lv_tabview_add_tab(this->tabview, tabName);
       this->tabNames[i] = tabName;
@@ -666,11 +578,8 @@ lv_obj_t *Display::addTab(const char *tabName)
 
 void Display::createTabviewButtons()
 {
-  // Serial.println("createTabviewButtons()");
-
   if (panel == nullptr)
   {
-    // Serial.println("create new panel");
     //  Create a page indicator
     panel = lv_obj_create(lv_scr_act());
     lv_obj_clear_flag(panel, LV_OBJ_FLAG_CLICKABLE); // This indicator will not be clickable
@@ -679,8 +588,7 @@ void Display::createTabviewButtons()
     lv_obj_align(panel, LV_ALIGN_BOTTOM_MID, 0, 0);
     lv_obj_set_scrollbar_mode(panel, LV_SCROLLBAR_MODE_OFF);
   }
-  // delete old panel
-  // Serial.println("delete old buttons from panel");
+  // delete old panel objects
   lv_obj_clean(panel);
 
   // This small hidden button enables the page indicator to scroll further
@@ -690,12 +598,10 @@ void Display::createTabviewButtons()
   lv_obj_set_style_opa(btn, LV_OPA_TRANSP, LV_PART_MAIN);
 
   // Create actual (non-clickable) buttons for every tab
-  // Serial.println("rebuild panel buttons");
   for (int i = 0; i < TAB_ARRAY_SIZE; i++)
   {
     if (this->tabNames[i] != nullptr)
     {
-      // Serial.printf("button for %d - %s\n", i, this->tabNames[i]);
       btn = lv_btn_create(panel);
       lv_obj_clear_flag(btn, LV_OBJ_FLAG_CLICKABLE);
       lv_obj_set_size(btn, 150, lv_pct(100));

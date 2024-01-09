@@ -21,6 +21,7 @@
 #include <WifiHandler.hpp>
 #include <Battery.hpp>
 #include <Settings.hpp>
+#include <Technisat.hpp>
 
 #define ENABLE_WIFI // Comment out to diable connected features
 
@@ -53,6 +54,9 @@ WifiHandler wifihandler;
 Battery battery(ADC_BAT, CRG_STAT);
 Settings settings(&display);
 
+// App instances
+Technisat technisat(&display);
+
 // Keypad declarations
 const byte ROWS = 5; //four rows
 const byte COLS = 5; //four columns
@@ -75,7 +79,6 @@ byte keyMapTechnisat[ROWS][COLS] = {
   {0x34,0x0C,0x22,0x50,0x55},
   {'?' ,0x35,0x2F,0x32,0x36}
 };
-byte virtualKeyMapTechnisat[10] = {0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, 0x9, 0x0};
 byte currentDevice = 1; // Current Device to control (allows switching mappings between devices)
 
 // IR declarations
@@ -90,7 +93,6 @@ Preferences preferences;
 #define WIFI_SSID "YOUR_WIFI_SSID"
 #define WIFI_PASSWORD "YOUR_WIFI_PASSWORD"
 #define MQTT_SERVER "YOUR_MQTT_SERVER_IP"
-//lv_obj_t* WifiLabel;
 WiFiClient espClient;
 PubSubClient client(espClient);
 
@@ -122,34 +124,12 @@ void tabview_device_event_cb(lv_event_t* e){
   Serial.printf("slide to currentDevice %d\n", currentDevice);
 }
 
-/*
-// Slider Event handler
-void bl_slider_event_cb(lv_event_t * e){
-  lv_obj_t * slider = lv_event_get_target(e);
-  backlight_brightness = constrain(lv_slider_get_value(slider), 60, 255);
-}
-*/
-// Virtual Keypad Event handler
-void virtualKeypad_event_cb(lv_event_t* e) {
-  lv_obj_t* target = lv_event_get_target(e);
-  lv_obj_t* cont = lv_event_get_current_target(e);
-  if (target == cont) return; // stop if container was clicked
-  Serial.println(virtualKeyMapTechnisat[(int)target->user_data]);
-  // Send IR command based on the button user data  
-  IrSender.sendRC5(IrSender.encodeRC5X(0x00, virtualKeyMapTechnisat[(int)target->user_data]));
-}
-
 // Apple Key Event handler
 void appleKey_event_cb(lv_event_t* e) {
   // Send IR command based on the event user data  
   IrSender.sendSony(50 + (int)e->user_data, 15);
   Serial.println(50 + (int)e->user_data);
 }
-
-// Wakeup by IMU Switch Event handler
-// void WakeEnableSetting_event_cb(lv_event_t * e){
-//   wakeupByIMUEnabled = lv_obj_has_state(lv_event_get_target(e), LV_STATE_CHECKED);
-// }
 
 // Smart Home Toggle Event handler
 void smartHomeToggle_event_cb(lv_event_t * e){
@@ -172,6 +152,7 @@ void smartHomeSlider_event_cb(lv_event_t * e){
 }
 
 // Display flushing
+/*
 void my_disp_flush( lv_disp_drv_t *disp, const lv_area_t *area, lv_color_t *color_p ){
   uint32_t w = ( area->x2 - area->x1 + 1 );
   uint32_t h = ( area->y2 - area->y1 + 1 );
@@ -183,6 +164,7 @@ void my_disp_flush( lv_disp_drv_t *disp, const lv_area_t *area, lv_color_t *colo
 
   lv_disp_flush_ready( disp );
 }
+*/
 
 // Read the touchpad
 void my_touchpad_read(lv_indev_drv_t * indev_driver, lv_indev_data_t * data){
@@ -206,7 +188,6 @@ void my_touchpad_read(lv_indev_drv_t * indev_driver, lv_indev_data_t * data){
     data->point.x = screenWidth - touchX;
     data->point.y = screenHeight - touchY;
 
-    //Serial.printf( "touchpoint: x=%d y=%d", touchX, touchY );
     //tft.drawFastHLine(0, screenHeight - touchY, screenWidth, TFT_RED);
     //tft.drawFastVLine(screenWidth - touchX, 0, screenHeight, TFT_RED);
   }
@@ -447,6 +428,11 @@ void setup() {
   display.setup();
   // --- LVGL UI Configuration ---  
   display.setup_ui();
+
+  // setup app UIs
+  technisat.setup();
+
+  // Settings Menu in last spot
   settings.setup();
 
   display.setActiveTab(currentDevice);
