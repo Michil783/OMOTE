@@ -26,7 +26,7 @@ extern Settings settings;
 const char* temporary_ssid;
 const char* temporary_password;
 
-//#define MQTT_SERVER "YOUR_MQTT_SERVER_IP"
+WiFiClient espClient;
 
 // WiFi status event
 void WiFiEvent(WiFiEvent_t event){

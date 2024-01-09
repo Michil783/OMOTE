@@ -6,10 +6,6 @@
 #include <Preferences.h>
 #include "SparkFunLIS3DH.h"
 #include "Wire.h"
-#include <IRremoteESP8266.h>
-#include <IRsend.h>
-#include <IRrecv.h>
-#include <IRutils.h>
 #include <lvgl.h>
 #include "WiFi.h"
 #include <Adafruit_FT6206.h>
@@ -20,6 +16,7 @@
 #include <Display.hpp>
 #include <WifiHandler.hpp>
 #include <Battery.hpp>
+#include <IRHandler.hpp>
 #include <Settings.hpp>
 #include <Technisat.hpp>
 #include <AppleTV.hpp>
@@ -50,10 +47,14 @@ TFT_eSPI tft = TFT_eSPI();
 Adafruit_FT6206 touch = Adafruit_FT6206();
 TS_Point touchPoint;
 TS_Point oldPoint;
-// int backlight_brightness = 255;
+
+/* HAL instances */
 Display display(LCD_BL, LCD_EN, screenWidth, screenHeight);
 WifiHandler wifihandler;
 Battery battery(ADC_BAT, CRG_STAT);
+IRHandler irhandler;
+
+/* UI instances */
 Settings settings(&display);
 
 // App instances
@@ -84,10 +85,6 @@ byte keyMapTechnisat[ROWS][COLS] = {
     {'?', 0x35, 0x2F, 0x32, 0x36}};
 byte currentDevice = 1; // Current Device to control (allows switching mappings between devices)
 
-// IR declarations
-IRsend IrSender(IR_LED, true);
-IRrecv IrReceiver(IR_RX);
-
 // Other declarations
 byte wakeup_reason;
 enum Wakeup_reasons
@@ -98,10 +95,10 @@ enum Wakeup_reasons
 };
 Preferences preferences;
 
-#define WIFI_SSID "YOUR_WIFI_SSID"
-#define WIFI_PASSWORD "YOUR_WIFI_PASSWORD"
-#define MQTT_SERVER "YOUR_MQTT_SERVER_IP"
-WiFiClient espClient;
+// #define WIFI_SSID "YOUR_WIFI_SSID"
+// #define WIFI_PASSWORD "YOUR_WIFI_PASSWORD"
+// #define MQTT_SERVER "YOUR_MQTT_SERVER_IP"
+extern WiFiClient espClient;
 PubSubClient client(espClient);
 
 // LVGL declarations
@@ -408,7 +405,7 @@ void setup()
   technisat.setup();
   appletv.setup();
   smarthome.setup();
-  
+
   // Settings Menu in last spot
   settings.setup();
 
@@ -420,13 +417,6 @@ void setup()
 #ifdef ENABLE_WIFI
   // Setup WiFi
   Serial.println("init WIFI");
-  /*
-  WiFi.setHostname("OMOTE"); //define hostname
-  WiFi.onEvent(WiFiEvent);
-  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
-  WiFi.setSleep(true);
-  Serial.println("init Wifi done");
-  */
   wifihandler.begin();
 #endif
 
@@ -445,9 +435,10 @@ void setup()
 
   // Setup IR
   Serial.println("init IR");
-  IrSender.begin();
-  digitalWrite(IR_VCC, HIGH); // Turn on IR receiver
-  IrReceiver.enableIRIn();    // Start the receiver
+  // IrSender.begin();
+  // digitalWrite(IR_VCC, HIGH); // Turn on IR receiver
+  // IrReceiver.enableIRIn();    // Start the receiver
+  irhandler.setup();
 
   Serial.println("lv_timer_handler()");
   lv_timer_handler(); // Run the LVGL UI once before the loop takes over
@@ -520,10 +511,11 @@ void loop()
       int keyCode = customKeypad.key[i].kcode;
       Serial.println(customKeypad.key[i].kchar);
       // Send IR codes depending on the current device (tabview page)
-      if (currentDevice == 1)
-        IrSender.sendRC5(IrSender.encodeRC5X(0x00, keyMapTechnisat[keyCode / ROWS][keyCode % ROWS]));
-      else if (currentDevice == 2)
-        IrSender.sendSony((keyCode / ROWS) * (keyCode % ROWS), 15);
+      // if (currentDevice == 1)
+      //   IrSender.sendRC5(IrSender.encodeRC5X(0x00, keyMapTechnisat[keyCode / ROWS][keyCode % ROWS]));
+      // else if (currentDevice == 2)
+      //   IrSender.sendSony((keyCode / ROWS) * (keyCode % ROWS), 15);
+      irhandler.IRSender(currentDevice, keyCode);
     }
   }
 

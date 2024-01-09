@@ -1,5 +1,8 @@
 #include <Arduino.h>
 
+#ifndef _WIFIHANDLER_HPP_
+#define _WIFIHANDLER_HPP_
+
 class WifiHandler {
     public:
         /// @brief WifiHandler class
@@ -98,3 +101,5 @@ class WifiHandler {
         char SSID[50];
 
 };
+
+#endif
