@@ -1,11 +1,11 @@
 #include <Display.hpp>
 
-#ifndef _TECHNISAT_HPP_
-#define _TECHNISAT_HPP_
+#ifndef _APPLETV_HPP_
+#define _APPLETV_HPP_
 
-class Technisat{
+class AppleTV{
     public:
-    Technisat(Display* display);
+    AppleTV(Display* display);
     void setup();
 
     private:
@@ -26,7 +26,7 @@ class Technisat{
      *
      * @param lv_obj_t* parent
      */
-    void setup_technisat(lv_obj_t *parent);
+    void setup_appletv(lv_obj_t *parent);
 };
 
 #endif

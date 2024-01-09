@@ -22,6 +22,7 @@
 #include <Battery.hpp>
 #include <Settings.hpp>
 #include <Technisat.hpp>
+#include <AppleTV.hpp>
 
 #define ENABLE_WIFI // Comment out to diable connected features
 
@@ -56,6 +57,7 @@ Settings settings(&display);
 
 // App instances
 Technisat technisat(&display);
+AppleTV appletv(&display);
 
 // Keypad declarations
 const byte ROWS = 5; //four rows
@@ -97,39 +99,18 @@ WiFiClient espClient;
 PubSubClient client(espClient);
 
 // LVGL declarations
-LV_IMG_DECLARE(gradientLeft);
-LV_IMG_DECLARE(gradientRight);
-LV_IMG_DECLARE(appleTvIcon);
-LV_IMG_DECLARE(appleDisplayIcon);
-LV_IMG_DECLARE(appleBackIcon);
-LV_IMG_DECLARE(high_brightness);
-LV_IMG_DECLARE(low_brightness);
-LV_IMG_DECLARE(lightbulb);
+// LV_IMG_DECLARE(gradientLeft);
+// LV_IMG_DECLARE(gradientRight);
+// LV_IMG_DECLARE(appleTvIcon);
+// LV_IMG_DECLARE(appleDisplayIcon);
+// LV_IMG_DECLARE(appleBackIcon);
+// LV_IMG_DECLARE(high_brightness);
+// LV_IMG_DECLARE(low_brightness);
+// LV_IMG_DECLARE(lightbulb);
 lv_obj_t* panel;
 
 
 // Helper Functions -----------------------------------------------------------------------------------------------------------------------
-
-// Set the page indicator scroll position relative to the tabview scroll position
-void store_scroll_value_event_cb(lv_event_t* e){
-  float bias = (150.0 + 8.0) / 240.0;
-  int offset = 240 / 2 - 150 / 2 - 8 - 50 - 3;
-  lv_obj_t* screen = lv_event_get_target(e);
-  lv_obj_scroll_to_x(panel, lv_obj_get_scroll_x(screen) * bias - offset, LV_ANIM_OFF);
-}
-
-// Update current device when the tabview page is changes
-void tabview_device_event_cb(lv_event_t* e){
-  currentDevice = lv_tabview_get_tab_act(lv_event_get_target(e));
-  Serial.printf("slide to currentDevice %d\n", currentDevice);
-}
-
-// Apple Key Event handler
-void appleKey_event_cb(lv_event_t* e) {
-  // Send IR command based on the event user data  
-  IrSender.sendSony(50 + (int)e->user_data, 15);
-  Serial.println(50 + (int)e->user_data);
-}
 
 // Smart Home Toggle Event handler
 void smartHomeToggle_event_cb(lv_event_t * e){
@@ -431,6 +412,7 @@ void setup() {
 
   // setup app UIs
   technisat.setup();
+  appletv.setup();
 
   // Settings Menu in last spot
   settings.setup();

@@ -5,29 +5,43 @@
 
 extern bool wakeupByIMUEnabled;
 extern Display display;
+extern byte currentDevice;
 
 // LVGL declarations
 LV_IMG_DECLARE(gradientLeft);
 LV_IMG_DECLARE(gradientRight);
-LV_IMG_DECLARE(appleTvIcon);
-LV_IMG_DECLARE(appleDisplayIcon);
-LV_IMG_DECLARE(appleBackIcon);
 LV_IMG_DECLARE(lightbulb);
-//LV_IMG_DECLARE(WiFi_No_Signal);
+
 extern lv_obj_t *panel;
 static lv_disp_drv_t disp_drv;
+
 /*TODO: get rid of global variable and use API functions instead*/
 extern Preferences preferences;
+
 // TODO: fix callback function structure to pass it in and/or move it out of display class somehow else
 void smartHomeSlider_event_cb(lv_event_t *e);
 void smartHomeToggle_event_cb(lv_event_t *e);
-void WakeEnableSetting_event_cb(lv_event_t *e);
-void appleKey_event_cb(lv_event_t *e);
+//void WakeEnableSetting_event_cb(lv_event_t *e);
+//void appleKey_event_cb(lv_event_t *e);
 //void virtualKeypad_event_cb(lv_event_t *e);
-void bl_slider_event_cb(lv_event_t *e);
-void tabview_device_event_cb(lv_event_t *e);
-void store_scroll_value_event_cb(lv_event_t *e);
+//void bl_slider_event_cb(lv_event_t *e);
+//void tabview_device_event_cb(lv_event_t *e);
+//void store_scroll_value_event_cb(lv_event_t *e);
 void my_touchpad_read(lv_indev_drv_t *indev_driver, lv_indev_data_t *data);
+
+// Set the page indicator scroll position relative to the tabview scroll position
+void store_scroll_value_event_cb(lv_event_t* e){
+  float bias = (150.0 + 8.0) / 240.0;
+  int offset = 240 / 2 - 150 / 2 - 8 - 50 - 3;
+  lv_obj_t* screen = lv_event_get_target(e);
+  lv_obj_scroll_to_x(panel, lv_obj_get_scroll_x(screen) * bias - offset, LV_ANIM_OFF);
+}
+
+// Update current device when the tabview page is changes
+void tabview_device_event_cb(lv_event_t* e){
+  currentDevice = lv_tabview_get_tab_act(lv_event_get_target(e));
+  Serial.printf("slide to currentDevice %d\n", currentDevice);
+}
 
 // Display flushing
 static void my_disp_flush(lv_disp_drv_t *disp, const lv_area_t *area, lv_color_t *color_p)
@@ -196,92 +210,44 @@ void Display::setup_ui()
   // lv_obj_t* tab4 = lv_tabview_add_tab(this->tabview, "Smart Home");
   // lv_obj_t *tab1 = this->addTab("Settings");
   // lv_obj_t *tab2 = this->addTab("Technisat");
-  lv_obj_t *tab3 = this->addTab("Apple TV");
+  //lv_obj_t *tab3 = this->addTab("Apple TV");
   lv_obj_t *tab4 = this->addTab("Smart Home");
 
   // Configure number button grid
   static lv_coord_t col_dsc[] = {LV_GRID_FR(1), LV_GRID_FR(1), LV_GRID_FR(1), LV_GRID_TEMPLATE_LAST}; // equal x distribution
   static lv_coord_t row_dsc[] = {52, 52, 52, 52, LV_GRID_TEMPLATE_LAST};                              // manual y distribution to compress the grid a bit
 
-  // // Create a container with grid for tab2
-  // lv_obj_set_style_pad_all(tab2, 0, LV_PART_MAIN);
-  // lv_obj_t *cont = lv_obj_create(tab2);
-  // lv_obj_set_style_shadow_width(cont, 0, LV_PART_MAIN);
-  // lv_obj_set_style_bg_color(cont, lv_color_black(), LV_PART_MAIN);
-  // lv_obj_set_style_border_width(cont, 0, LV_PART_MAIN);
-  // lv_obj_set_style_grid_column_dsc_array(cont, col_dsc, 0);
-  // lv_obj_set_style_grid_row_dsc_array(cont, row_dsc, 0);
-  // lv_obj_set_size(cont, 240, 270);
-  // lv_obj_set_layout(cont, LV_LAYOUT_GRID);
-  // lv_obj_align(cont, LV_ALIGN_TOP_MID, 0, 0);
-  // lv_obj_set_style_radius(cont, 0, LV_PART_MAIN);
-
-  // lv_obj_t *buttonLabel;
-  // lv_obj_t *obj;
-
-  // // Iterate through grid buttons configure them
-  // for (int i = 0; i < 12; i++)
-  // {
-  //   uint8_t col = i % 3;
-  //   uint8_t row = i / 3;
-  //   // Create the button object
-  //   if ((row == 3) && ((col == 0) || (col == 2)))
-  //     continue; // Do not create a complete fourth row, only a 0 button
-  //   obj = lv_btn_create(cont);
-  //   lv_obj_set_grid_cell(obj, LV_GRID_ALIGN_STRETCH, col, 1, LV_GRID_ALIGN_STRETCH, row, 1);
-  //   lv_obj_set_style_bg_color(obj, this->primary_color, LV_PART_MAIN);
-  //   lv_obj_set_style_radius(obj, 14, LV_PART_MAIN);
-  //   lv_obj_set_style_shadow_color(obj, lv_color_hex(0x404040), LV_PART_MAIN);
-  //   lv_obj_add_flag(obj, LV_OBJ_FLAG_EVENT_BUBBLE); // Clicking a button causes a event in its container
-  //   // Create Labels for each button
-  //   buttonLabel = lv_label_create(obj);
-  //   if (i < 9)
-  //   {
-  //     lv_label_set_text_fmt(buttonLabel, std::to_string(i + 1).c_str(), col, row);
-  //     lv_obj_set_user_data(obj, (void *)i); // Add user data so we can identify which button caused the container event
-  //   }
-  //   else
-  //   {
-  //     lv_label_set_text_fmt(buttonLabel, "0", col, row);
-  //     lv_obj_set_user_data(obj, (void *)9);
-  //   }
-  //   lv_obj_set_style_text_font(buttonLabel, &lv_font_montserrat_24, LV_PART_MAIN);
-  //   lv_obj_center(buttonLabel);
-  // }
-  // // Create a shared event for all button inside container
-  // lv_obj_add_event_cb(cont, virtualKeypad_event_cb, LV_EVENT_CLICKED, NULL);
-
   // Add content to the Apple TV tab (3)
-  // Add a nice apple tv logo
-  lv_obj_t *appleImg = lv_img_create(tab3);
-  lv_img_set_src(appleImg, &appleTvIcon);
-  lv_obj_align(appleImg, LV_ALIGN_CENTER, 0, -60);
-  // create two buttons and add their icons accordingly
-  lv_obj_t *button = lv_btn_create(tab3);
-  lv_obj_align(button, LV_ALIGN_BOTTOM_LEFT, 10, 0);
-  lv_obj_set_size(button, 60, 60);
-  lv_obj_set_style_radius(button, 30, LV_PART_MAIN);
-  lv_obj_set_style_bg_color(button, this->primary_color, LV_PART_MAIN);
-  lv_obj_add_event_cb(button, appleKey_event_cb, LV_EVENT_CLICKED, (void *)1);
+  // // Add a nice apple tv logo
+  // lv_obj_t *appleImg = lv_img_create(tab3);
+  // lv_img_set_src(appleImg, &appleTvIcon);
+  // lv_obj_align(appleImg, LV_ALIGN_CENTER, 0, -60);
+  // // create two buttons and add their icons accordingly
+  // lv_obj_t *button = lv_btn_create(tab3);
+  // lv_obj_align(button, LV_ALIGN_BOTTOM_LEFT, 10, 0);
+  // lv_obj_set_size(button, 60, 60);
+  // lv_obj_set_style_radius(button, 30, LV_PART_MAIN);
+  // lv_obj_set_style_bg_color(button, this->primary_color, LV_PART_MAIN);
+  // lv_obj_add_event_cb(button, appleKey_event_cb, LV_EVENT_CLICKED, (void *)1);
 
-  appleImg = lv_img_create(button);
-  lv_img_set_src(appleImg, &appleBackIcon);
-  lv_obj_set_style_img_recolor(appleImg, lv_color_white(), LV_PART_MAIN);
-  lv_obj_set_style_img_recolor_opa(appleImg, LV_OPA_COVER, LV_PART_MAIN);
-  lv_obj_align(appleImg, LV_ALIGN_CENTER, -3, 0);
+  // appleImg = lv_img_create(button);
+  // lv_img_set_src(appleImg, &appleBackIcon);
+  // lv_obj_set_style_img_recolor(appleImg, lv_color_white(), LV_PART_MAIN);
+  // lv_obj_set_style_img_recolor_opa(appleImg, LV_OPA_COVER, LV_PART_MAIN);
+  // lv_obj_align(appleImg, LV_ALIGN_CENTER, -3, 0);
 
-  button = lv_btn_create(tab3);
-  lv_obj_align(button, LV_ALIGN_BOTTOM_RIGHT, -10, 0);
-  lv_obj_set_size(button, 60, 60);
-  lv_obj_set_style_radius(button, 30, LV_PART_MAIN);
-  lv_obj_set_style_bg_color(button, this->primary_color, LV_PART_MAIN);
-  lv_obj_add_event_cb(button, appleKey_event_cb, LV_EVENT_CLICKED, (void *)2);
+  // button = lv_btn_create(tab3);
+  // lv_obj_align(button, LV_ALIGN_BOTTOM_RIGHT, -10, 0);
+  // lv_obj_set_size(button, 60, 60);
+  // lv_obj_set_style_radius(button, 30, LV_PART_MAIN);
+  // lv_obj_set_style_bg_color(button, this->primary_color, LV_PART_MAIN);
+  // lv_obj_add_event_cb(button, appleKey_event_cb, LV_EVENT_CLICKED, (void *)2);
 
-  appleImg = lv_img_create(button);
-  lv_img_set_src(appleImg, &appleDisplayIcon);
-  lv_obj_set_style_img_recolor(appleImg, lv_color_white(), LV_PART_MAIN);
-  lv_obj_set_style_img_recolor_opa(appleImg, LV_OPA_COVER, LV_PART_MAIN);
-  lv_obj_align(appleImg, LV_ALIGN_CENTER, 0, 0);
+  // appleImg = lv_img_create(button);
+  // lv_img_set_src(appleImg, &appleDisplayIcon);
+  // lv_obj_set_style_img_recolor(appleImg, lv_color_white(), LV_PART_MAIN);
+  // lv_obj_set_style_img_recolor_opa(appleImg, LV_OPA_COVER, LV_PART_MAIN);
+  // lv_obj_align(appleImg, LV_ALIGN_CENTER, 0, 0);
 
   // this->setup_settings(tab1);
 
