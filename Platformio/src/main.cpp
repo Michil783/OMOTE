@@ -2,7 +2,7 @@
 // 2023 Maximilian Kern
 
 #include <TFT_eSPI.h> // Hardware-specific library
-#include <Keypad.h> // modified for inverted logic
+#include <Keypad.h>   // modified for inverted logic
 #include <Preferences.h>
 #include "SparkFunLIS3DH.h"
 #include "Wire.h"
@@ -23,6 +23,7 @@
 #include <Settings.hpp>
 #include <Technisat.hpp>
 #include <AppleTV.hpp>
+#include <SmartHome.hpp>
 
 #define ENABLE_WIFI // Comment out to diable connected features
 
@@ -49,7 +50,7 @@ TFT_eSPI tft = TFT_eSPI();
 Adafruit_FT6206 touch = Adafruit_FT6206();
 TS_Point touchPoint;
 TS_Point oldPoint;
-//int backlight_brightness = 255;
+// int backlight_brightness = 255;
 Display display(LCD_BL, LCD_EN, screenWidth, screenHeight);
 WifiHandler wifihandler;
 Battery battery(ADC_BAT, CRG_STAT);
@@ -58,29 +59,29 @@ Settings settings(&display);
 // App instances
 Technisat technisat(&display);
 AppleTV appletv(&display);
+SmartHome smarthome(&display);
 
 // Keypad declarations
-const byte ROWS = 5; //four rows
-const byte COLS = 5; //four columns
-//define the symbols on the buttons of the keypads
+const byte ROWS = 5; // four rows
+const byte COLS = 5; // four columns
+// define the symbols on the buttons of the keypads
 char hexaKeys[ROWS][COLS] = {
-  {'s','^','-','m','r'}, //  source, channel+, Volume-,   mute, record
-  {'i','r','+','k','d'}, //    info,    right, Volume+,     OK,   down
-  {'4','v','1','3','2'}, //    blue, channel-,     red, yellow,  green
-  {'>','o','b','u','l'}, // forward,      off,    back,     up,   left
-  {'?','p','c','<','='}  //       ?,     play,  config, rewind,   stop
+    {'s', '^', '-', 'm', 'r'}, //  source, channel+, Volume-,   mute, record
+    {'i', 'r', '+', 'k', 'd'}, //    info,    right, Volume+,     OK,   down
+    {'4', 'v', '1', '3', '2'}, //    blue, channel-,     red, yellow,  green
+    {'>', 'o', 'b', 'u', 'l'}, // forward,      off,    back,     up,   left
+    {'?', 'p', 'c', '<', '='}  //       ?,     play,  config, rewind,   stop
 };
-byte rowPins[ROWS] = {SW_A, SW_B, SW_C, SW_D, SW_E}; //connect to the row pinouts of the keypad
-byte colPins[COLS] = {SW_1, SW_2, SW_3, SW_4, SW_5}; //connect to the column pinouts of the keypad
-Keypad customKeypad = Keypad( makeKeymap(hexaKeys), rowPins, colPins, ROWS, COLS); 
-#define BUTTON_PIN_BITMASK 0b1110110000000000000000000010000000000000 //IO34+IO35+IO37+IO38+IO39(+IO13)
+byte rowPins[ROWS] = {SW_A, SW_B, SW_C, SW_D, SW_E}; // connect to the row pinouts of the keypad
+byte colPins[COLS] = {SW_1, SW_2, SW_3, SW_4, SW_5}; // connect to the column pinouts of the keypad
+Keypad customKeypad = Keypad(makeKeymap(hexaKeys), rowPins, colPins, ROWS, COLS);
+#define BUTTON_PIN_BITMASK 0b1110110000000000000000000010000000000000 // IO34+IO35+IO37+IO38+IO39(+IO13)
 byte keyMapTechnisat[ROWS][COLS] = {
-  {0x69,0x20,0x11,0x0D,0x56},
-  {0x4F,0x37,0x10,0x57,0x51},
-  {0x6E,0x21,0x6B,0x6D,0x6C},
-  {0x34,0x0C,0x22,0x50,0x55},
-  {'?' ,0x35,0x2F,0x32,0x36}
-};
+    {0x69, 0x20, 0x11, 0x0D, 0x56},
+    {0x4F, 0x37, 0x10, 0x57, 0x51},
+    {0x6E, 0x21, 0x6B, 0x6D, 0x6C},
+    {0x34, 0x0C, 0x22, 0x50, 0x55},
+    {'?', 0x35, 0x2F, 0x32, 0x36}};
 byte currentDevice = 1; // Current Device to control (allows switching mappings between devices)
 
 // IR declarations
@@ -89,7 +90,12 @@ IRrecv IrReceiver(IR_RX);
 
 // Other declarations
 byte wakeup_reason;
-enum Wakeup_reasons{WAKEUP_BY_RESET, WAKEUP_BY_IMU, WAKEUP_BY_KEYPAD};
+enum Wakeup_reasons
+{
+  WAKEUP_BY_RESET,
+  WAKEUP_BY_IMU,
+  WAKEUP_BY_KEYPAD
+};
 Preferences preferences;
 
 #define WIFI_SSID "YOUR_WIFI_SSID"
@@ -99,38 +105,10 @@ WiFiClient espClient;
 PubSubClient client(espClient);
 
 // LVGL declarations
-// LV_IMG_DECLARE(gradientLeft);
-// LV_IMG_DECLARE(gradientRight);
-// LV_IMG_DECLARE(appleTvIcon);
-// LV_IMG_DECLARE(appleDisplayIcon);
-// LV_IMG_DECLARE(appleBackIcon);
-// LV_IMG_DECLARE(high_brightness);
-// LV_IMG_DECLARE(low_brightness);
-// LV_IMG_DECLARE(lightbulb);
-lv_obj_t* panel;
-
+lv_obj_t *panel;
 
 // Helper Functions -----------------------------------------------------------------------------------------------------------------------
 
-// Smart Home Toggle Event handler
-void smartHomeToggle_event_cb(lv_event_t * e){
-  char payload[8];
-  if(lv_obj_has_state(lv_event_get_target(e), LV_STATE_CHECKED)) strcpy(payload,"true");
-  else strcpy(payload,"false");
-  // Publish an MQTT message based on the event user data  
-  if((int)e->user_data == 1) client.publish("bulb1_set", payload);
-  if((int)e->user_data == 2) client.publish("bulb2_set", payload);
-}
-
-// Smart Home Toggle Event handler
-void smartHomeSlider_event_cb(lv_event_t * e){
-  lv_obj_t * slider = lv_event_get_target(e);
-  char payload[8];
-  dtostrf(lv_slider_get_value(slider), 1, 2, payload);
-  // Publish an MQTT message based on the event user data
-  if((int)e->user_data == 1) client.publish("bulb1_setbrightness", payload);
-  if((int)e->user_data == 2) client.publish("bulb2_setbrightness", payload);
-}
 
 // Display flushing
 /*
@@ -148,49 +126,56 @@ void my_disp_flush( lv_disp_drv_t *disp, const lv_area_t *area, lv_color_t *colo
 */
 
 // Read the touchpad
-void my_touchpad_read(lv_indev_drv_t * indev_driver, lv_indev_data_t * data){
+void my_touchpad_read(lv_indev_drv_t *indev_driver, lv_indev_data_t *data)
+{
   // int16_t touchX, touchY;
   touchPoint = touch.getPoint();
   int16_t touchX = touchPoint.x;
   int16_t touchY = touchPoint.y;
   bool touched = false;
-  if ((touchX > 0) || (touchY > 0)) {
+  if ((touchX > 0) || (touchY > 0))
+  {
     touched = true;
-    standbyTimer = standbyTimerConfigured; 
+    standbyTimer = standbyTimerConfigured;
   }
 
-  if( !touched ){
+  if (!touched)
+  {
     data->state = LV_INDEV_STATE_REL;
   }
-  else{
+  else
+  {
     data->state = LV_INDEV_STATE_PR;
 
     // Set the coordinates
     data->point.x = screenWidth - touchX;
     data->point.y = screenHeight - touchY;
 
-    //tft.drawFastHLine(0, screenHeight - touchY, screenWidth, TFT_RED);
-    //tft.drawFastVLine(screenWidth - touchX, 0, screenHeight, TFT_RED);
+    // tft.drawFastHLine(0, screenHeight - touchY, screenWidth, TFT_RED);
+    // tft.drawFastVLine(screenWidth - touchX, 0, screenHeight, TFT_RED);
   }
 }
 
-void activityDetection(){
+void activityDetection()
+{
   static int accXold;
   static int accYold;
   static int accZold;
-  int accX = IMU.readFloatAccelX()*1000;
-  int accY = IMU.readFloatAccelY()*1000;
-  int accZ = IMU.readFloatAccelZ()*1000;
+  int accX = IMU.readFloatAccelX() * 1000;
+  int accY = IMU.readFloatAccelY() * 1000;
+  int accZ = IMU.readFloatAccelZ() * 1000;
 
   // determine motion value as da/dt
   motion = (abs(accXold - accX) + abs(accYold - accY) + abs(accZold - accZ));
   // Calculate time to standby
   standbyTimer -= 100;
-  if(standbyTimer < 0) standbyTimer = 0;
+  if (standbyTimer < 0)
+    standbyTimer = 0;
   // If the motion exceeds the threshold, the standbyTimer is reset
-  if(motion > MOTION_THRESHOLD) standbyTimer = standbyTimerConfigured;
+  if (motion > MOTION_THRESHOLD)
+    standbyTimer = standbyTimerConfigured;
 
-  // Store the current acceleration and time 
+  // Store the current acceleration and time
   accXold = accX;
   accYold = accY;
   accZold = accZ;
@@ -200,67 +185,69 @@ void configIMUInterrupts()
 {
   uint8_t dataToWrite = 0;
 
-  //LIS3DH_INT1_CFG   
-  //dataToWrite |= 0x80;//AOI, 0 = OR 1 = AND
-  //dataToWrite |= 0x40;//6D, 0 = interrupt source, 1 = 6 direction source
-  //Set these to enable individual axes of generation source (or direction)
-  // -- high and low are used generically
-  dataToWrite |= 0x20;//Z high
-  //dataToWrite |= 0x10;//Z low
-  dataToWrite |= 0x08;//Y high
-  //dataToWrite |= 0x04;//Y low
-  dataToWrite |= 0x02;//X high
-  //dataToWrite |= 0x01;//X low
-  if(wakeupByIMUEnabled) IMU.writeRegister(LIS3DH_INT1_CFG, 0b00101010);
-  else IMU.writeRegister(LIS3DH_INT1_CFG, 0b00000000);
-  
-  //LIS3DH_INT1_THS   
+  // LIS3DH_INT1_CFG
+  // dataToWrite |= 0x80;//AOI, 0 = OR 1 = AND
+  // dataToWrite |= 0x40;//6D, 0 = interrupt source, 1 = 6 direction source
+  // Set these to enable individual axes of generation source (or direction)
+  //  -- high and low are used generically
+  dataToWrite |= 0x20; // Z high
+  // dataToWrite |= 0x10;//Z low
+  dataToWrite |= 0x08; // Y high
+  // dataToWrite |= 0x04;//Y low
+  dataToWrite |= 0x02; // X high
+  // dataToWrite |= 0x01;//X low
+  if (wakeupByIMUEnabled)
+    IMU.writeRegister(LIS3DH_INT1_CFG, 0b00101010);
+  else
+    IMU.writeRegister(LIS3DH_INT1_CFG, 0b00000000);
+
+  // LIS3DH_INT1_THS
   dataToWrite = 0;
-  //Provide 7 bit value, 0x7F always equals max range by accelRange setting
+  // Provide 7 bit value, 0x7F always equals max range by accelRange setting
   dataToWrite |= 0x45;
   IMU.writeRegister(LIS3DH_INT1_THS, dataToWrite);
-  
-  //LIS3DH_INT1_DURATION  
+
+  // LIS3DH_INT1_DURATION
   dataToWrite = 0;
-  //minimum duration of the interrupt
-  //LSB equals 1/(sample rate)
+  // minimum duration of the interrupt
+  // LSB equals 1/(sample rate)
   dataToWrite |= 0x00; // 1 * 1/50 s = 20ms
   IMU.writeRegister(LIS3DH_INT1_DURATION, dataToWrite);
-  
-  //LIS3DH_CTRL_REG5
-  //Int1 latch interrupt and 4D on  int1 (preserve fifo en)
+
+  // LIS3DH_CTRL_REG5
+  // Int1 latch interrupt and 4D on  int1 (preserve fifo en)
   IMU.readRegister(&dataToWrite, LIS3DH_CTRL_REG5);
-  dataToWrite &= 0xF3; //Clear bits of interest
-  dataToWrite |= 0x08; //Latch interrupt (Cleared by reading int1_src)
-  //dataToWrite |= 0x04; //Pipe 4D detection from 6D recognition to int1?
+  dataToWrite &= 0xF3; // Clear bits of interest
+  dataToWrite |= 0x08; // Latch interrupt (Cleared by reading int1_src)
+  // dataToWrite |= 0x04; //Pipe 4D detection from 6D recognition to int1?
   IMU.writeRegister(LIS3DH_CTRL_REG5, dataToWrite);
 
-  //LIS3DH_CTRL_REG3
-  //Choose source for pin 1
+  // LIS3DH_CTRL_REG3
+  // Choose source for pin 1
   dataToWrite = 0;
-  //dataToWrite |= 0x80; //Click detect on pin 1
-  dataToWrite |= 0x40; //AOI1 event (Generator 1 interrupt on pin 1)
-  dataToWrite |= 0x20; //AOI2 event ()
-  //dataToWrite |= 0x10; //Data ready
-  //dataToWrite |= 0x04; //FIFO watermark
-  //dataToWrite |= 0x02; //FIFO overrun
+  // dataToWrite |= 0x80; //Click detect on pin 1
+  dataToWrite |= 0x40; // AOI1 event (Generator 1 interrupt on pin 1)
+  dataToWrite |= 0x20; // AOI2 event ()
+  // dataToWrite |= 0x10; //Data ready
+  // dataToWrite |= 0x04; //FIFO watermark
+  // dataToWrite |= 0x02; //FIFO overrun
   IMU.writeRegister(LIS3DH_CTRL_REG3, dataToWrite);
-  
 }
 
-void enterSleep(){
+void enterSleep()
+{
   Serial.println("enterSleep called");
 
   // Configure IMU
   uint8_t intDataRead;
-  IMU.readRegister(&intDataRead, LIS3DH_INT1_SRC);//clear interrupt
+  IMU.readRegister(&intDataRead, LIS3DH_INT1_SRC); // clear interrupt
   configIMUInterrupts();
-  IMU.readRegister(&intDataRead, LIS3DH_INT1_SRC);//really clear interrupt
+  IMU.readRegister(&intDataRead, LIS3DH_INT1_SRC); // really clear interrupt
 
-  #ifdef ENABLE_WIFI
+#ifdef ENABLE_WIFI
   wifihandler.turnOff();
-  // Power down modem
-  #endif
+// Power down modem
+#endif
 
   display.turnOff();
 
@@ -269,17 +256,18 @@ void enterSleep(){
   preferences.putUChar("currentDevice", currentDevice);
   preferences.putLong("standbyTimer", standbyTimerConfigured);
   Serial.printf("enterSleep: standbyTimer: %d standbyTimerConfigured: %d", standbyTimer, standbyTimerConfigured);
-  if(!preferences.getBool("alreadySetUp")) preferences.putBool("alreadySetUp", true);
+  if (!preferences.getBool("alreadySetUp"))
+    preferences.putBool("alreadySetUp", true);
   preferences.end();
   // Prepare IO states
   digitalWrite(LCD_DC, LOW); // LCD control signals off
   digitalWrite(LCD_CS, LOW);
   digitalWrite(LCD_MOSI, LOW);
   digitalWrite(LCD_SCK, LOW);
-  pinMode(CRG_STAT, INPUT); // Disable Pull-Up
+  pinMode(CRG_STAT, INPUT);  // Disable Pull-Up
   digitalWrite(IR_VCC, LOW); // IR Receiver off
 
-  // Configure button matrix for ext1 interrupt  
+  // Configure button matrix for ext1 interrupt
   pinMode(SW_1, OUTPUT);
   pinMode(SW_2, OUTPUT);
   pinMode(SW_3, OUTPUT);
@@ -298,7 +286,7 @@ void enterSleep(){
   // Force display pins to high impedance
   // Without this the display might not wake up from sleep
   gpio_deep_sleep_hold_en();
-  
+
   esp_sleep_enable_ext1_wakeup(BUTTON_PIN_BITMASK, ESP_EXT1_WAKEUP_ANY_HIGH);
 
   delay(100);
@@ -308,21 +296,26 @@ void enterSleep(){
 
 // Setup ----------------------------------------------------------------------------------------------------------------------------------
 
-void setup() {  
+void setup()
+{
 
   setCpuFrequencyMhz(240); // Make sure ESP32 is running at full speed
 
   // Find out wakeup cause
-  if(esp_sleep_get_wakeup_cause() == ESP_SLEEP_WAKEUP_EXT1){
-    if(log(esp_sleep_get_ext1_wakeup_status())/log(2) == 13) wakeup_reason = WAKEUP_BY_IMU;
-    else wakeup_reason = WAKEUP_BY_KEYPAD;
+  if (esp_sleep_get_wakeup_cause() == ESP_SLEEP_WAKEUP_EXT1)
+  {
+    if (log(esp_sleep_get_ext1_wakeup_status()) / log(2) == 13)
+      wakeup_reason = WAKEUP_BY_IMU;
+    else
+      wakeup_reason = WAKEUP_BY_KEYPAD;
   }
-  else {
+  else
+  {
     wakeup_reason = WAKEUP_BY_RESET;
   }
-  
+
   // --- IO Initialization ---
-  
+
   // Button Pin Definition
   pinMode(SW_1, OUTPUT);
   pinMode(SW_2, OUTPUT);
@@ -355,7 +348,7 @@ void setup() {
   // Other Pin Definition
   pinMode(ACC_INT, INPUT);
   pinMode(USER_LED, OUTPUT);
-  digitalWrite(USER_LED, LOW);  
+  digitalWrite(USER_LED, LOW);
 
   // Release GPIO hold in case we are coming out of standby
   gpio_hold_dis((gpio_num_t)SW_1);
@@ -366,7 +359,7 @@ void setup() {
   gpio_hold_dis((gpio_num_t)LCD_EN);
   gpio_hold_dis((gpio_num_t)LCD_BL);
   gpio_deep_sleep_hold_dis();
-  
+
   // Configure the backlight PWM
   // Manual setup because ledcSetup() briefly turns on the backlight
   ledc_channel_config_t ledc_channel_left;
@@ -377,7 +370,7 @@ void setup() {
   ledc_channel_left.timer_sel = LEDC_TIMER_1;
   ledc_channel_left.flags.output_invert = 1; // Can't do this with ledcSetup()
   ledc_channel_left.duty = 0;
-	
+
   ledc_timer_config_t ledc_timer;
   ledc_timer.speed_mode = LEDC_HIGH_SPEED_MODE;
   ledc_timer.duty_resolution = LEDC_TIMER_8_BIT;
@@ -395,25 +388,27 @@ void setup() {
 
   // Restore settings from internal flash memory
   preferences.begin("settings", false);
-  if(preferences.getBool("alreadySetUp")){
+  if (preferences.getBool("alreadySetUp"))
+  {
     wakeupByIMUEnabled = preferences.getBool("wkpByIMU");
-    //backlight_brightness = preferences.getUChar("blBrightness");
+    // backlight_brightness = preferences.getUChar("blBrightness");
     currentDevice = preferences.getUChar("currentDevice");
     standbyTimerConfigured = preferences.getLong("standbyTimer", 10000);
     standbyTimer = standbyTimerConfigured;
     Serial.printf("restore: standbyTimer: %d standbyTimerConfigured: %d", standbyTimer, standbyTimerConfigured);
-  }  
+  }
 
   // Setup TFT
   Serial.println("init TFT");
   display.setup();
-  // --- LVGL UI Configuration ---  
+  // --- LVGL UI Configuration ---
   display.setup_ui();
 
   // setup app UIs
   technisat.setup();
   appletv.setup();
-
+  smarthome.setup();
+  
   // Settings Menu in last spot
   settings.setup();
 
@@ -422,7 +417,7 @@ void setup() {
   // --- End of LVGL configuration ---
   touch.begin();
 
-  #ifdef ENABLE_WIFI
+#ifdef ENABLE_WIFI
   // Setup WiFi
   Serial.println("init WIFI");
   /*
@@ -433,26 +428,26 @@ void setup() {
   Serial.println("init Wifi done");
   */
   wifihandler.begin();
-  #endif
+#endif
 
   // Setup IMU
   Serial.println("init IMU");
-  IMU.settings.accelSampleRate = 50;  //Hz.  Can be: 0,1,10,25,50,100,200,400,1600,5000 Hz
-  IMU.settings.accelRange = 2;      //Max G force readable.  Can be: 2, 4, 8, 16
+  IMU.settings.accelSampleRate = 50; // Hz.  Can be: 0,1,10,25,50,100,200,400,1600,5000 Hz
+  IMU.settings.accelRange = 2;       // Max G force readable.  Can be: 2, 4, 8, 16
   IMU.settings.adcEnabled = 0;
   IMU.settings.tempEnabled = 0;
   IMU.settings.xAccelEnabled = 1;
   IMU.settings.yAccelEnabled = 1;
   IMU.settings.zAccelEnabled = 1;
-  IMU.begin();  
+  IMU.begin();
   uint8_t intDataRead;
-  IMU.readRegister(&intDataRead, LIS3DH_INT1_SRC);//clear interrupt
-  
+  IMU.readRegister(&intDataRead, LIS3DH_INT1_SRC); // clear interrupt
+
   // Setup IR
   Serial.println("init IR");
   IrSender.begin();
   digitalWrite(IR_VCC, HIGH); // Turn on IR receiver
-  IrReceiver.enableIRIn();  // Start the receiver
+  IrReceiver.enableIRIn();    // Start the receiver
 
   Serial.println("lv_timer_handler()");
   lv_timer_handler(); // Run the LVGL UI once before the loop takes over
@@ -461,11 +456,11 @@ void setup() {
   Serial.print("Setup finised in ");
   Serial.print(millis());
   Serial.println("ms.");
-
 }
 
 // Loop ------------------------------------------------------------------------------------------------------------------------------------
-void loop() { 
+void loop()
+{
 
   display.update();
   // Blink debug LED at 1 Hz
@@ -473,9 +468,11 @@ void loop() {
 
   // Refresh IMU data at 10Hz
   static unsigned long IMUTaskTimer = millis();
-  if(millis() - IMUTaskTimer >= 100){
+  if (millis() - IMUTaskTimer >= 100)
+  {
     activityDetection();
-    if(standbyTimer == 0){
+    if (standbyTimer == 0)
+    {
       Serial.println("Entering Sleep Mode. Goodbye.");
       enterSleep();
     }
@@ -485,7 +482,8 @@ void loop() {
 #if 1
   // Update battery stats at 1Hz
   static unsigned long batteryTaskTimer = millis() + 1000; // add 1s to start immediately
-  if(millis() - batteryTaskTimer >= 1000){
+  if (millis() - batteryTaskTimer >= 1000)
+  {
 #if 0
     battery_voltage = analogRead(ADC_BAT)*2*3300/4095 + 350; // 350mV ADC offset
     battery_percentage = constrain(map(battery_voltage, 3700, 4200, 0, 100), 0, 100);
@@ -510,25 +508,29 @@ void loop() {
     battery.update();
 #endif
   }
-  #endif
+#endif
 
   // Keypad Handling
   customKeypad.getKey(); // Populate key list
-  for(int i=0; i<LIST_MAX; i++){ // Handle multiple keys (Not really necessary in this case)
-    if(customKeypad.key[i].kstate == PRESSED || customKeypad.key[i].kstate == HOLD){
+  for (int i = 0; i < LIST_MAX; i++)
+  { // Handle multiple keys (Not really necessary in this case)
+    if (customKeypad.key[i].kstate == PRESSED || customKeypad.key[i].kstate == HOLD)
+    {
       standbyTimer = standbyTimerConfigured; // Reset the sleep timer when a button is pressed
       int keyCode = customKeypad.key[i].kcode;
       Serial.println(customKeypad.key[i].kchar);
       // Send IR codes depending on the current device (tabview page)
-      if(currentDevice == 1) IrSender.sendRC5(IrSender.encodeRC5X(0x00, keyMapTechnisat[keyCode/ROWS][keyCode%ROWS]));
-      else if(currentDevice == 2) IrSender.sendSony((keyCode/ROWS)*(keyCode%ROWS), 15);
+      if (currentDevice == 1)
+        IrSender.sendRC5(IrSender.encodeRC5X(0x00, keyMapTechnisat[keyCode / ROWS][keyCode % ROWS]));
+      else if (currentDevice == 2)
+        IrSender.sendSony((keyCode / ROWS) * (keyCode % ROWS), 15);
     }
   }
 
   // IR Test
-  //tft.drawString("IR Command: ", 10, 90, 1);
-  //decode_results results;
-  //if (IrReceiver.decode(&results)) {
+  // tft.drawString("IR Command: ", 10, 90, 1);
+  // decode_results results;
+  // if (IrReceiver.decode(&results)) {
   //  //tft.drawString(String(results.command) + "        ", 80, 90, 1);
   //  IrReceiver.resume(); // Enable receiving of the next value
   //}

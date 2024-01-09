@@ -1,12 +1,12 @@
 #include <Display.hpp>
 
-#ifndef _APPLETV_HPP_
-#define _APPLETV_HPP_
+#ifndef _SMARTHOME_HPP_
+#define _SMARTHOME_HPP_
 
-class AppleTV
+class SmartHome
 {
 public:
-    AppleTV(Display *display);
+    SmartHome(Display *display);
     void setup();
 
 private:
@@ -23,11 +23,11 @@ private:
     lv_obj_t *tab;
 
     /**
-     * @brief setup AppleTV main page
+     * @brief setup SmartHome main page
      *
      * @param lv_obj_t* parent
      */
-    void setup_appletv(lv_obj_t *parent);
+    void setup_smarthome(lv_obj_t *parent);
 };
 
 #endif

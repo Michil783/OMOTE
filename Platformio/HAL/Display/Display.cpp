@@ -210,160 +210,21 @@ void Display::setup_ui()
   // lv_obj_t* tab4 = lv_tabview_add_tab(this->tabview, "Smart Home");
   // lv_obj_t *tab1 = this->addTab("Settings");
   // lv_obj_t *tab2 = this->addTab("Technisat");
-  //lv_obj_t *tab3 = this->addTab("Apple TV");
-  lv_obj_t *tab4 = this->addTab("Smart Home");
+  // lv_obj_t *tab3 = this->addTab("Apple TV");
+  // lv_obj_t *tab4 = this->addTab("Smart Home");
 
   // Configure number button grid
   static lv_coord_t col_dsc[] = {LV_GRID_FR(1), LV_GRID_FR(1), LV_GRID_FR(1), LV_GRID_TEMPLATE_LAST}; // equal x distribution
   static lv_coord_t row_dsc[] = {52, 52, 52, 52, LV_GRID_TEMPLATE_LAST};                              // manual y distribution to compress the grid a bit
 
-  // Add content to the Apple TV tab (3)
-  // // Add a nice apple tv logo
-  // lv_obj_t *appleImg = lv_img_create(tab3);
-  // lv_img_set_src(appleImg, &appleTvIcon);
-  // lv_obj_align(appleImg, LV_ALIGN_CENTER, 0, -60);
-  // // create two buttons and add their icons accordingly
-  // lv_obj_t *button = lv_btn_create(tab3);
-  // lv_obj_align(button, LV_ALIGN_BOTTOM_LEFT, 10, 0);
-  // lv_obj_set_size(button, 60, 60);
-  // lv_obj_set_style_radius(button, 30, LV_PART_MAIN);
-  // lv_obj_set_style_bg_color(button, this->primary_color, LV_PART_MAIN);
-  // lv_obj_add_event_cb(button, appleKey_event_cb, LV_EVENT_CLICKED, (void *)1);
-
-  // appleImg = lv_img_create(button);
-  // lv_img_set_src(appleImg, &appleBackIcon);
-  // lv_obj_set_style_img_recolor(appleImg, lv_color_white(), LV_PART_MAIN);
-  // lv_obj_set_style_img_recolor_opa(appleImg, LV_OPA_COVER, LV_PART_MAIN);
-  // lv_obj_align(appleImg, LV_ALIGN_CENTER, -3, 0);
-
-  // button = lv_btn_create(tab3);
-  // lv_obj_align(button, LV_ALIGN_BOTTOM_RIGHT, -10, 0);
-  // lv_obj_set_size(button, 60, 60);
-  // lv_obj_set_style_radius(button, 30, LV_PART_MAIN);
-  // lv_obj_set_style_bg_color(button, this->primary_color, LV_PART_MAIN);
-  // lv_obj_add_event_cb(button, appleKey_event_cb, LV_EVENT_CLICKED, (void *)2);
-
-  // appleImg = lv_img_create(button);
-  // lv_img_set_src(appleImg, &appleDisplayIcon);
-  // lv_obj_set_style_img_recolor(appleImg, lv_color_white(), LV_PART_MAIN);
-  // lv_obj_set_style_img_recolor_opa(appleImg, LV_OPA_COVER, LV_PART_MAIN);
-  // lv_obj_align(appleImg, LV_ALIGN_CENTER, 0, 0);
-
-  // this->setup_settings(tab1);
-
-  // Add content to the smart home tab (4)
-  lv_obj_set_layout(tab4, LV_LAYOUT_FLEX);
-  lv_obj_set_flex_flow(tab4, LV_FLEX_FLOW_COLUMN);
-  lv_obj_set_scrollbar_mode(tab4, LV_SCROLLBAR_MODE_ACTIVE);
-
-  // Add a label, then a box for the light controls
-  lv_obj_t *menuLabel = lv_label_create(tab4);
-  lv_label_set_text(menuLabel, "Living Room");
-
-  lv_obj_t *menuBox = lv_obj_create(tab4);
-  lv_obj_set_size(menuBox, lv_pct(100), 79);
-  lv_obj_set_style_bg_color(menuBox, this->primary_color, LV_PART_MAIN);
-  lv_obj_set_style_border_width(menuBox, 0, LV_PART_MAIN);
-
-  lv_obj_t *bulbIcon = lv_img_create(menuBox);
-  lv_img_set_src(bulbIcon, &lightbulb);
-  lv_obj_set_style_img_recolor(bulbIcon, lv_color_white(), LV_PART_MAIN);
-  lv_obj_set_style_img_recolor_opa(bulbIcon, LV_OPA_COVER, LV_PART_MAIN);
-  lv_obj_align(bulbIcon, LV_ALIGN_TOP_LEFT, 0, 0);
-
-  menuLabel = lv_label_create(menuBox);
-  lv_label_set_text(menuLabel, "Floor Lamp");
-  lv_obj_align(menuLabel, LV_ALIGN_TOP_LEFT, 22, 3);
-  lv_obj_t *lightToggleA = lv_switch_create(menuBox);
-  lv_obj_set_size(lightToggleA, 40, 22);
-  lv_obj_align(lightToggleA, LV_ALIGN_TOP_RIGHT, 0, 0);
-  lv_obj_set_style_bg_color(lightToggleA, lv_color_lighten(this->primary_color, 50), LV_PART_MAIN);
-  lv_obj_set_style_bg_color(lightToggleA, this->primary_color, LV_PART_INDICATOR);
-  lv_obj_add_event_cb(lightToggleA, smartHomeToggle_event_cb, LV_EVENT_VALUE_CHANGED, (void *)1);
-
-  lv_obj_t *slider = lv_slider_create(menuBox);
-  lv_slider_set_range(slider, 0, 100);
-  lv_obj_set_style_bg_color(slider, lv_color_lighten(lv_color_black(), 30), LV_PART_INDICATOR);
-  lv_obj_set_style_bg_grad_color(slider, lv_color_lighten(lv_palette_main(LV_PALETTE_AMBER), 180), LV_PART_INDICATOR);
-  lv_obj_set_style_bg_grad_dir(slider, LV_GRAD_DIR_HOR, LV_PART_INDICATOR);
-  lv_obj_set_style_bg_color(slider, lv_color_white(), LV_PART_KNOB);
-  lv_obj_set_style_bg_opa(slider, 255, LV_PART_MAIN);
-  lv_obj_set_style_bg_color(slider, lv_color_lighten(this->primary_color, 50), LV_PART_MAIN);
-  lv_slider_set_value(slider, 255, LV_ANIM_OFF);
-  lv_obj_set_size(slider, lv_pct(90), 10);
-  lv_obj_align(slider, LV_ALIGN_TOP_MID, 0, 37);
-  lv_obj_add_event_cb(slider, smartHomeSlider_event_cb, LV_EVENT_VALUE_CHANGED, (void *)1);
-
-  // Add another this->settingsMenu box for a second appliance
-  menuBox = lv_obj_create(tab4);
-  lv_obj_set_size(menuBox, lv_pct(100), 79);
-  lv_obj_set_style_bg_color(menuBox, this->primary_color, LV_PART_MAIN);
-  lv_obj_set_style_border_width(menuBox, 0, LV_PART_MAIN);
-
-  bulbIcon = lv_img_create(menuBox);
-  lv_img_set_src(bulbIcon, &lightbulb);
-  lv_obj_set_style_img_recolor(bulbIcon, lv_color_white(), LV_PART_MAIN);
-  lv_obj_set_style_img_recolor_opa(bulbIcon, LV_OPA_COVER, LV_PART_MAIN);
-  lv_obj_align(bulbIcon, LV_ALIGN_TOP_LEFT, 0, 0);
-
-  menuLabel = lv_label_create(menuBox);
-  lv_label_set_text(menuLabel, "Ceiling Light");
-  lv_obj_align(menuLabel, LV_ALIGN_TOP_LEFT, 22, 3);
-  lv_obj_t *lightToggleB = lv_switch_create(menuBox);
-  lv_obj_set_size(lightToggleB, 40, 22);
-  lv_obj_align(lightToggleB, LV_ALIGN_TOP_RIGHT, 0, 0);
-  lv_obj_set_style_bg_color(lightToggleB, lv_color_lighten(this->primary_color, 50), LV_PART_MAIN);
-  lv_obj_set_style_bg_color(lightToggleB, this->primary_color, LV_PART_INDICATOR);
-  lv_obj_add_event_cb(lightToggleB, smartHomeToggle_event_cb, LV_EVENT_VALUE_CHANGED, (void *)2);
-
-  slider = lv_slider_create(menuBox);
-  lv_slider_set_range(slider, 0, 100);
-  lv_obj_set_style_bg_color(slider, lv_color_lighten(lv_color_black(), 30), LV_PART_INDICATOR);
-  lv_obj_set_style_bg_grad_color(slider, lv_color_lighten(lv_palette_main(LV_PALETTE_AMBER), 180), LV_PART_INDICATOR);
-  lv_obj_set_style_bg_grad_dir(slider, LV_GRAD_DIR_HOR, LV_PART_INDICATOR);
-  lv_obj_set_style_bg_color(slider, lv_color_white(), LV_PART_KNOB);
-  lv_obj_set_style_bg_opa(slider, 255, LV_PART_MAIN);
-  lv_obj_set_style_bg_color(slider, lv_color_lighten(this->primary_color, 50), LV_PART_MAIN);
-  lv_slider_set_value(slider, 255, LV_ANIM_OFF);
-  lv_obj_set_size(slider, lv_pct(90), 10);
-  lv_obj_align(slider, LV_ALIGN_TOP_MID, 0, 37);
-  lv_obj_add_event_cb(slider, smartHomeSlider_event_cb, LV_EVENT_VALUE_CHANGED, (void *)2);
-
-  // Add another room (empty for now)
-  menuLabel = lv_label_create(tab4);
-  lv_label_set_text(menuLabel, "Kitchen");
-
-  menuBox = lv_obj_create(tab4);
-  lv_obj_set_size(menuBox, lv_pct(100), 79);
-  lv_obj_set_style_bg_color(menuBox, this->primary_color, LV_PART_MAIN);
-  lv_obj_set_style_border_width(menuBox, 0, LV_PART_MAIN);
-
   // Set current page according to the current Device
-  lv_tabview_set_act(tabview, 0, LV_ANIM_OFF);
+  lv_tabview_set_act(this->tabview, 0, LV_ANIM_OFF);
 
   // Make the indicator scroll together with the tabs by creating a scroll event
   lv_obj_add_event_cb(lv_tabview_get_content(tabview), store_scroll_value_event_cb, LV_EVENT_SCROLL, NULL);
-  lv_obj_add_event_cb(tabview, tabview_device_event_cb, LV_EVENT_VALUE_CHANGED, NULL);
+  lv_obj_add_event_cb(this->tabview, tabview_device_event_cb, LV_EVENT_VALUE_CHANGED, NULL);
   // Initialize scroll position for the indicator
-  lv_event_send(lv_tabview_get_content(tabview), LV_EVENT_SCROLL, NULL);
-
-  // Style the panel background
-  static lv_style_t style_btn;
-  lv_style_init(&style_btn);
-  lv_style_set_pad_all(&style_btn, 3);
-  lv_style_set_border_width(&style_btn, 0);
-  lv_style_set_bg_opa(&style_btn, LV_OPA_TRANSP);
-  lv_obj_add_style(panel, &style_btn, 0);
-
-  // Make the indicator fade out at the sides using gradient bitmaps
-  lv_obj_t *img1 = lv_img_create(lv_scr_act());
-  lv_img_set_src(img1, &gradientLeft);
-  lv_obj_align(img1, LV_ALIGN_BOTTOM_LEFT, 0, 0);
-  lv_obj_set_size(img1, 30, 30); // stretch the 1-pixel high image to 30px
-  lv_obj_t *img2 = lv_img_create(lv_scr_act());
-  lv_img_set_src(img2, &gradientRight);
-  lv_obj_align(img2, LV_ALIGN_BOTTOM_RIGHT, 0, 0);
-  lv_obj_set_size(img2, 30, 30);
+  //lv_event_send(lv_tabview_get_content(this->tabview), LV_EVENT_SCROLL, NULL);
 
   // Create a status bar
   lv_obj_t *statusbar = lv_btn_create(lv_scr_act());
@@ -536,9 +397,13 @@ lv_obj_t *Display::addTab(const char *tabName)
       tab = lv_tabview_add_tab(this->tabview, tabName);
       this->tabNames[i] = tabName;
       this->createTabviewButtons();
+
+      // Initialize scroll position for the indicator
+      //lv_event_send(lv_tabview_get_content(this->tabview), LV_EVENT_SCROLL, NULL);
       break;
     }
   }
+
   return tab;
 }
 
@@ -584,4 +449,12 @@ void Display::createTabviewButtons()
   lv_obj_set_size(btn, 50, lv_pct(100));
   lv_obj_set_style_shadow_width(btn, 0, LV_PART_MAIN);
   lv_obj_set_style_opa(btn, LV_OPA_TRANSP, LV_PART_MAIN);
+
+  // Style the panel background
+  static lv_style_t style_btn;
+  lv_style_init(&style_btn);
+  lv_style_set_pad_all(&style_btn, 3);
+  lv_style_set_border_width(&style_btn, 0);
+  lv_style_set_bg_opa(&style_btn, LV_OPA_TRANSP);
+  lv_obj_add_style(panel, &style_btn, 0);
 }

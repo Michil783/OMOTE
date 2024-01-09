@@ -1,5 +1,4 @@
 #include <AppleTV.hpp>
-#include <Display.hpp>
 #include <Arduino.h>
 
 #include <IRsend.h>
@@ -14,10 +13,11 @@ LV_IMG_DECLARE(appleDisplayIcon);
 LV_IMG_DECLARE(appleBackIcon);
 
 // Apple Key Event handler
-void appleKey_event_cb(lv_event_t* e) {
-  // Send IR command based on the event user data  
-  IrSender.sendSony(50 + (int)e->user_data, 15);
-  Serial.println(50 + (int)e->user_data);
+void appleKey_event_cb(lv_event_t *e)
+{
+    // Send IR command based on the event user data
+    IrSender.sendSony(50 + (int)e->user_data, 15);
+    Serial.println(50 + (int)e->user_data);
 }
 
 AppleTV::AppleTV(Display *display)
