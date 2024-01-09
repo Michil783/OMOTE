@@ -30,7 +30,7 @@ Technisat::Technisat(Display *display)
 void Technisat::setup()
 {
     Serial.println("Technisat::setup()");
-    this->tab = this->display->addTab("Technisat");
+    this->tab = this->display->addTab("Magenta TV");
 
     /* Create main page for settings this->settingsMenu*/
     this->setup_technisat(this->tab);
