@@ -25,10 +25,14 @@ AppleTV::AppleTV(Display *display)
     this->display = display;
 }
 
+String AppleTV::getName(){
+    return "AppleTV";
+}
+
 void AppleTV::setup()
 {
     Serial.println("AppleTV::setup()");
-    this->tab = this->display->addTab("Apple TV");
+    this->tab = this->display->addTab(this);
 
     /* Create main page for settings this->settingsMenu*/
     this->setup_appletv(this->tab);

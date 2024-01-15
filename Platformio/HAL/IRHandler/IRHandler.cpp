@@ -4,9 +4,9 @@
  * @brief IR wrapper
  * @version 0.1
  * @date 2024-01-09
- * 
+ *
  * @copyright Copyright (c) 2024
- * 
+ *
  */
 
 #include <IRHandler.hpp>
@@ -17,35 +17,50 @@
 #include <IRrecv.h>
 #include <IRutils.h>
 
+const uint16_t kCaptureBufferSize = 1024;
+const uint8_t kTimeout = 15;
+const uint16_t kMinUnknownSize = 12;
+const uint8_t kTolerancePercentage = kTolerance; // kTolerance is normally 25%
+
 // IR declarations
 IRsend IrSender(IR_LED, true);
-IRrecv IrReceiver(IR_RX);
+IRrecv IrReceiver(IR_RX, kCaptureBufferSize, kTimeout, true);
+decode_results results;
 
-IRHandler::IRHandler(){
-
+IRHandler::IRHandler()
+{
 }
 
-void IRHandler::setup(){
-  IrSender.begin();
-  digitalWrite(IR_VCC, HIGH); // Turn on IR receiver
-  IrReceiver.enableIRIn();    // Start the receiver
-  /* clear handler list */
-    for(int i = 0; i < NUMBER_OF_HANDLER; i++){
+void IRHandler::setup()
+{
+    IrSender.begin();
+    digitalWrite(IR_VCC, HIGH); // Turn on IR receiver
+    IrReceiver.enableIRIn();    // Start the receiver
+    IrReceiver.setUnknownThreshold(kMinUnknownSize);
+    IrReceiver.setTolerance(kTolerancePercentage); // Override the default tolerance.
+                                                   /* clear handler list */
+    for (int i = 0; i < NUMBER_OF_HANDLER; i++)
+    {
         this->irp[i] = nullptr;
     }
 }
 
-bool IRHandler::addHandler(void (*func)(uint16_t data), int device){
+bool IRHandler::addHandler(void (*func)(uint16_t data), int device)
+{
     /* find free slot in handler list */
-    if( irp[device] != nullptr ) return false;
+    if (irp[device] != nullptr)
+        return false;
     irp[device] = func;
     return true;
 }
 
-void IRHandler::IRSender(int currentDevice, uint16_t data){
+void IRHandler::IRSender(int currentDevice, uint16_t data)
+{
     /* pass data to current active application */
-    if( irp[currentDevice] != nullptr ){
+    if (irp[currentDevice] != nullptr)
+    {
         (irp[currentDevice])(data);
     }
-    else Serial.printf("no current device found for %d\n", currentDevice);
+    else
+        Serial.printf("no current device found for %d\n", currentDevice);
 }

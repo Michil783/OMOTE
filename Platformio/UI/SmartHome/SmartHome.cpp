@@ -42,10 +42,14 @@ SmartHome::SmartHome(Display *display)
     this->display = display;
 }
 
+String SmartHome::getName(){
+  return "SmartHome";
+}
+
 void SmartHome::setup()
 {
     Serial.println("SmartHome::setup()");
-    this->tab = this->display->addTab("Smart Home");
+    this->tab = this->display->addTab(this);
 
     /* Create main page for settings this->settingsMenu*/
     this->setup_smarthome(this->tab);

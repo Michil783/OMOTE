@@ -3,11 +3,13 @@
 #ifndef _SMARTHOME_HPP_
 #define _SMARTHOME_HPP_
 
-class SmartHome
+class SmartHome : public AppInterface
 {
 public:
     SmartHome(Display *display);
     void setup();
+    String getName();
+    void handleCustomKeypad(int keyCode){};
 
 private:
     /**

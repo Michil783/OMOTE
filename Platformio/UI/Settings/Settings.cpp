@@ -3,7 +3,6 @@
 #include <Arduino.h>
 #include <WifiHandler.hpp>
 
-
 #define WIFI_SUBPAGE_SIZE 3
 
 LV_IMG_DECLARE(high_brightness);
@@ -181,6 +180,16 @@ static lv_obj_t *ta;
 Settings::Settings(Display *display)
 {
     this->display = display;
+
+    /*Initialize device array*/
+    for (int i = 0; i < DEVICESLOTS; i++)
+    {
+        this->devices[i] = nullptr;
+    }
+}
+
+String Settings::getName(){
+    return "Settings";
 }
 
 /**
@@ -192,7 +201,7 @@ Settings::Settings(Display *display)
 void Settings::setup()
 {
     Serial.println("Settings::setup()");
-    this->tab = this->display->addTab("Settings");
+    this->tab = this->display->addTab(this);
 
     /* Create main page for settings this->settingsMenu*/
     this->setup_settings(this->tab);
@@ -224,6 +233,8 @@ void Settings::setup_settings(lv_obj_t *parent)
     this->display_settings(cont);
 
     this->create_wifi_settings(this->settingsMenu, cont);
+
+    this->createDeviceSettings(this->settingsMenu, cont);
 
     lv_menu_set_page(this->settingsMenu, this->settingsMainPage);
 }
@@ -302,10 +313,10 @@ void Settings::display_settings(lv_obj_t *parent)
         selected = 1;
         break;
     case 60000:
-        selected = 1;
+        selected = 2;
         break;
     case 500000:
-        selected = 1;
+        selected = 3;
         break;
     default:
         break;
@@ -438,7 +449,7 @@ void Settings::update_wifi(bool connected)
     {
         Serial.println("update_wifi()");
         Serial.printf("WifiLabel: %p\n", this->WifiLabel);
-        //lv_label_set_text(this->WifiLabel, LV_SYMBOL_WIFI);
+        // lv_label_set_text(this->WifiLabel, LV_SYMBOL_WIFI);
         this->display->updateWifi(LV_SYMBOL_WIFI);
         Serial.println("update_wifi() WifiLabel success");
         Serial.printf("ssid_label: %p\n", ssid_label);
@@ -450,7 +461,7 @@ void Settings::update_wifi(bool connected)
     }
     else
     {
-        //lv_label_set_text(this->WifiLabel, "");
+        // lv_label_set_text(this->WifiLabel, "");
         this->display->updateWifi(LV_SYMBOL_WIFI);
         lv_label_set_text(ssid_label, "Disconnected");
         lv_label_set_text(ip_label, "-");
@@ -544,4 +555,61 @@ void Settings::create_wifi_settings(lv_obj_t *menu, lv_obj_t *parent)
     this->wifi_selection_page = this->create_wifi_selection_page(menu);
     this->wifi_password_page = this->create_wifi_password_page(this->settingsMenu);
     this->create_wifi_main_page(parent);
+}
+
+bool Settings::addDevice(DeviceInterface *device)
+{
+    DeviceInterface *currentDevice;
+    /* search free slot in device array */
+    for (int i = 0; i < DEVICESLOTS; i++)
+    {
+        if (this->devices[i] == nullptr)
+        {
+            //  Add tab (name is irrelevant since the labels are hidden and hidden buttons are used (below))
+            this->devices[i] = device;
+            return true;
+        }
+    }
+    return false;
+}
+
+void Settings::createDeviceSettings(lv_obj_t *menu, lv_obj_t *parent)
+{
+    Serial.println("createDeviceSettings");
+
+    lv_color_t primary_color = display->getPrimaryColor();
+
+    /* search device array */
+    for (int i = 0; i < DEVICESLOTS; i++)
+    {
+        if (this->devices[i] != nullptr)
+        {
+            Serial.printf("Device: %s\n", this->devices[i]->getName().c_str());
+            this->devices[i]->displaySettings(parent);
+            /*
+            lv_obj_t *menuLabel = lv_label_create(parent);
+            lv_label_set_text(menuLabel, this->devices[i]->getName().c_str());
+            this->deviceOverview[i] = lv_obj_create(parent);
+            lv_obj_set_size(this->deviceOverview[i], lv_pct(100), 80);
+            lv_obj_set_style_bg_color(this->deviceOverview[i], primary_color, LV_PART_MAIN);
+            lv_obj_set_style_border_width(this->deviceOverview[i], 0, LV_PART_MAIN);
+            menuLabel = lv_label_create(this->deviceOverview[i]);
+            */
+        }
+    }
+}
+
+void Settings::saveDeviceSettings()
+{
+    Serial.println("saveDeviceSettings");
+
+    /* search device array */
+    for (int i = 0; i < DEVICESLOTS; i++)
+    {
+        if (this->devices[i] != nullptr)
+        {
+            Serial.printf("Device: %s\n", this->devices[i]->getName().c_str());
+            this->devices[i]->saveSettings();
+        }
+    }
 }

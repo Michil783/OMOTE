@@ -1,20 +1,22 @@
 #include <Display.hpp>
 #include <WiFi.h>
+#include <DeviceInterface.hpp>
 
 #ifndef _SETTINGS_HPP_
 #define _SETTINGS_HPP_
 
-class Settings
+#define DEVICESLOTS 10
+
+class Settings : public AppInterface
 {
 public:
     Settings(Display *display);
     void setup();
+    String getName();
+    void handleCustomKeypad(int keyCode){};
 
-    /**
-     * @brief Get the Percentage of the battery
-     *
-     * @return int Percentage of the battery
-     */
+    bool addDevice(DeviceInterface* device);
+    void saveDeviceSettings();
 
     /**
      * @brief API function to inform display that wifi scan is completed
@@ -167,6 +169,10 @@ private:
      * @param page index of the page to display
      */
     void update_wifi_selection_subpage(int page);
+
+    DeviceInterface* devices[DEVICESLOTS];
+    lv_obj_t* deviceOverview[DEVICESLOTS];
+    void createDeviceSettings(lv_obj_t *menu, lv_obj_t *parent);
 };
 
 #endif

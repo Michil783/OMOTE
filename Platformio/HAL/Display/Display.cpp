@@ -2,10 +2,12 @@
 #include <Display.hpp>
 #include <Wire.h>
 #include <Preferences.h>
+#include <Settings.hpp>
 
 extern bool wakeupByIMUEnabled;
 extern Display display;
 extern byte currentDevice;
+extern Settings settings;
 
 // LVGL declarations
 LV_IMG_DECLARE(gradientLeft);
@@ -63,7 +65,7 @@ Display::Display(int backlight_pin, int enable_pin, int width, int height)
   /*Initialize tab name array*/
   for (int i = 0; i < TAB_ARRAY_SIZE; i++)
   {
-    this->tabNames[i] = nullptr;
+    this->apps[i] = nullptr;
   }
 }
 
@@ -103,6 +105,8 @@ void Display::turnOff()
   gpio_hold_en((gpio_num_t)this->enable_pin);
   Serial.printf("save blBrightness %d\n", this->backlight_brightness);
   preferences.putUChar("blBrightness", this->backlight_brightness);
+  /* save settings of all devices */
+  settings.saveDeviceSettings();
 }
 
 void Display::setup()
@@ -197,21 +201,10 @@ void Display::setup_ui()
 
   this->create_keyboard();
   // Setup a scrollable tabview for devices and settings
-  // lv_obj_t* tabview;
   this->tabview = lv_tabview_create(lv_scr_act(), LV_DIR_TOP, 0); // Hide tab labels by setting their height to 0
   lv_obj_set_style_bg_color(this->tabview, lv_color_black(), LV_PART_MAIN);
   lv_obj_set_size(this->tabview, this->width, 270); // 270 = screenHeight(320) - panel(30) - statusbar(20)
   lv_obj_align(this->tabview, LV_ALIGN_TOP_MID, 0, 20);
-
-  // Add 4 tabs (names are irrelevant since the labels are hidden)
-  // lv_obj_t* tab1 = lv_tabview_add_tab(this->tabview, "Settings");
-  // lv_obj_t* tab2 = lv_tabview_add_tab(this->tabview, "Technisat");
-  // lv_obj_t* tab3 = lv_tabview_add_tab(this->tabview, "Apple TV");
-  // lv_obj_t* tab4 = lv_tabview_add_tab(this->tabview, "Smart Home");
-  // lv_obj_t *tab1 = this->addTab("Settings");
-  // lv_obj_t *tab2 = this->addTab("Technisat");
-  // lv_obj_t *tab3 = this->addTab("Apple TV");
-  // lv_obj_t *tab4 = this->addTab("Smart Home");
 
   // Configure number button grid
   static lv_coord_t col_dsc[] = {LV_GRID_FR(1), LV_GRID_FR(1), LV_GRID_FR(1), LV_GRID_TEMPLATE_LAST}; // equal x distribution
@@ -352,6 +345,7 @@ void Display::update_battery(int percentage, bool isCharging, bool isConnected)
   // }
   // else {
   //  Serial.println("Running on battery");
+  //this->drawBattery(this->objBattIcon);
   if (percentage > 95)
   {
     lv_label_set_text(this->objBattIcon, LV_SYMBOL_BATTERY_FULL);
@@ -385,17 +379,17 @@ void Display::setActiveTab(byte tab)
   lv_tabview_set_act(display.getTabView(), tab, LV_ANIM_OFF);
 }
 
-lv_obj_t *Display::addTab(const char *tabName)
+lv_obj_t *Display::addTab(AppInterface* app)
 {
   lv_obj_t *tab = nullptr;
   /* search free slot in tab array */
   for (int i = 0; i < TAB_ARRAY_SIZE; i++)
   {
-    if (this->tabNames[i] == nullptr)
+    if (this->apps[i] == nullptr)
     {
       //  Add tab (name is irrelevant since the labels are hidden and hidden buttons are used (below))
-      tab = lv_tabview_add_tab(this->tabview, tabName);
-      this->tabNames[i] = tabName;
+      tab = lv_tabview_add_tab(this->tabview, app->getName().c_str());
+      this->apps[i] = app;
       this->createTabviewButtons();
 
       // Initialize scroll position for the indicator
@@ -405,6 +399,10 @@ lv_obj_t *Display::addTab(const char *tabName)
   }
 
   return tab;
+}
+
+AppInterface* Display::getApp(byte tab){
+  return this->apps[tab];
 }
 
 void Display::createTabviewButtons()
@@ -431,13 +429,14 @@ void Display::createTabviewButtons()
   // Create actual (non-clickable) buttons for every tab
   for (int i = 0; i < TAB_ARRAY_SIZE; i++)
   {
-    if (this->tabNames[i] != nullptr)
+    if (this->apps[i] != nullptr)
     {
+      AppInterface* app = this->apps[i];
       btn = lv_btn_create(panel);
       lv_obj_clear_flag(btn, LV_OBJ_FLAG_CLICKABLE);
       lv_obj_set_size(btn, 150, lv_pct(100));
       lv_obj_t *label = lv_label_create(btn);
-      lv_label_set_text_fmt(label, this->tabNames[i]);
+      lv_label_set_text_fmt(label, app->getName().c_str());
       lv_obj_align(label, LV_ALIGN_CENTER, 0, 0);
       lv_obj_set_style_shadow_width(btn, 0, LV_PART_MAIN);
       lv_obj_set_style_bg_color(btn, this->primary_color, LV_PART_MAIN);

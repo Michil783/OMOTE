@@ -7,6 +7,7 @@
 #include <IRutils.h>
 
 extern IRsend IrSender;
+extern Settings settings;
 
 byte virtualKeyMapTechnisat[10] = {0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, 0x9, 0x0};
 
@@ -25,12 +26,19 @@ void virtualKeypad_event_cb(lv_event_t *e)
 Technisat::Technisat(Display *display)
 {
     this->display = display;
+
+    this->mr401 = new MR401(display);
+    settings.addDevice(this->mr401);
+}
+
+String Technisat::getName() {
+    return "MagentaTV";
 }
 
 void Technisat::setup()
 {
     Serial.println("Technisat::setup()");
-    this->tab = this->display->addTab("Magenta TV");
+    this->tab = this->display->addTab(this);
 
     /* Create main page for settings this->settingsMenu*/
     this->setup_technisat(this->tab);
@@ -93,3 +101,8 @@ void Technisat::setup_technisat(lv_obj_t *parent)
     // Create a shared event for all button inside container
     lv_obj_add_event_cb(cont, virtualKeypad_event_cb, LV_EVENT_CLICKED, NULL);
 }
+
+void Technisat::handleCustomKeypad(int keyCode){
+    this->mr401->handleCustomKeypad(keyCode);
+}
+

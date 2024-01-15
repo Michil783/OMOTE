@@ -16,6 +16,7 @@
 #include <lvgl.h>
 #include <Adafruit_FT6206.h>
 #include <omote.hpp>
+#include <AppInterface.hpp>
 
 /*LEDC Channel to use for the LCD backlight*/
 #define LCD_BACKLIGHT_LEDC_CHANNEL LEDC_CHANNEL_5
@@ -95,11 +96,13 @@ class Display
 
         void turnOff();
 
-        lv_obj_t* addTab(const char* tabName);
+        lv_obj_t* addTab(AppInterface* app);
 
         lv_obj_t* getTabView();
 
         void setActiveTab(byte tab);
+
+        AppInterface* getApp(byte tab);
 
         /**
          * @brief Get the primary_color
@@ -228,7 +231,8 @@ class Display
          * @brief Array of tab names
          * 
         */
-       const char *tabNames[TAB_ARRAY_SIZE];
+        //const char *tabNames[TAB_ARRAY_SIZE];
+        AppInterface* apps[TAB_ARRAY_SIZE];
 
         /**
          * @brief Function to create the tab view buttons
@@ -247,12 +251,10 @@ class Display
          */
         lv_obj_t* WifiLabel;
 
-/************************************** Display settings menu ********************************************************/
         /**
          * Variable to store the current backlight brightness level
         */
         unsigned int backlight_brightness;
-
 };
 
 
