@@ -20,7 +20,7 @@ class DeviceInterface {
     virtual String getName() = 0;
     virtual void displaySettings(lv_obj_t *parent) = 0;
     virtual void saveSettings() = 0;
-    virtual void handleCustomKeypad(int keyCode) = 0;
+    virtual void handleCustomKeypad(int keyCode, char keyChar) = 0;
 };
 
 #endif

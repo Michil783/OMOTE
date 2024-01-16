@@ -2,6 +2,7 @@
 #include <Display.hpp>
 #include <Arduino.h>
 #include <WifiHandler.hpp>
+#include <IRHandler.hpp>
 
 #define WIFI_SUBPAGE_SIZE 3
 
@@ -18,6 +19,7 @@ extern Settings settings;
 extern long standbyTimerConfigured;
 extern WifiHandler wifihandler;
 static char *ssid;
+extern IRHandler irhandler;
 
 /**
  * @brief Textarea callback function for the password field. In case the enter key is pressed in the text area, the
@@ -54,6 +56,17 @@ void WakeEnableSetting_event_cb(lv_event_t *e)
 {
     // Serial.println("Settings - WakeEnableSetting_event_cb");
     wakeupByIMUEnabled = lv_obj_has_state(lv_event_get_target(e), LV_STATE_CHECKED);
+}
+
+/**
+ * @brief Checkbox callback function for the IR receiver option
+ *
+ * @param e Pointer to event object for the event where this callback is called
+ */
+void IREnableSetting_event_cb(lv_event_t *e)
+{
+    Serial.println("Settings - IREnableSetting_event_cb");
+    irhandler.IRReceiverEnable(lv_obj_has_state(lv_event_get_target(e), LV_STATE_CHECKED));
 }
 
 /**
@@ -229,8 +242,10 @@ void Settings::setup_settings(lv_obj_t *parent)
     lv_obj_set_layout(cont, LV_LAYOUT_FLEX);
     lv_obj_set_flex_flow(cont, LV_FLEX_FLOW_COLUMN);
     lv_obj_set_scrollbar_mode(cont, LV_SCROLLBAR_MODE_ACTIVE);
-    // lv_obj_set_width(cont, lv_obj_get_width(parent));
+
     this->display_settings(cont);
+
+    this->ir_settings(cont);
 
     this->create_wifi_settings(this->settingsMenu, cont);
 
@@ -268,7 +283,7 @@ void Settings::display_settings(lv_obj_t *parent)
     lv_obj_set_style_bg_opa(slider, LV_OPA_COVER, LV_PART_MAIN);
     lv_obj_set_style_bg_color(slider, lv_color_lighten(primary_color, 50), LV_PART_MAIN);
     lv_slider_set_value(slider, map(*backlight_brightness, 240, 30, 30, 240), LV_ANIM_OFF);
-    Serial.printf("set blSlider to %d\n", map(*backlight_brightness, 240, 30, 30, 240));
+    //Serial.printf("set blSlider to %d\n", map(*backlight_brightness, 240, 30, 30, 240));
     lv_obj_set_size(slider, lv_pct(66), 10);
     lv_obj_align(slider, LV_ALIGN_TOP_MID, 0, 3);
     brightnessIcon = lv_img_create(menuBox);
@@ -323,6 +338,36 @@ void Settings::display_settings(lv_obj_t *parent)
     }
     lv_dropdown_set_selected(drop, selected);
     lv_obj_add_event_cb(drop, to_dropdown_event_cb, LV_EVENT_ALL, &standbyTimerConfigured);
+}
+
+/**
+ * @brief IR the settings
+ *
+ * @param lv_obj_t* parent
+ */
+void Settings::ir_settings(lv_obj_t *parent)
+{
+    lv_color_t primary_color = this->display->getPrimaryColor();
+    unsigned int *backlight_brightness = this->display->getBacklightBrightness();
+
+    lv_obj_t *menuLabel = lv_label_create(parent);
+    lv_label_set_text(menuLabel, "IR");
+
+    lv_obj_t *menuBox = lv_obj_create(parent);
+    lv_obj_set_size(menuBox, lv_pct(100), 54);
+    lv_obj_set_style_bg_color(menuBox, primary_color, LV_PART_MAIN);
+    lv_obj_set_style_border_width(menuBox, 0, LV_PART_MAIN);
+
+    menuLabel = lv_label_create(menuBox);
+    lv_label_set_text(menuLabel, "IR Receiver");
+    lv_obj_align(menuLabel, LV_ALIGN_TOP_LEFT, 0, 0);
+    lv_obj_t *irToggle = lv_switch_create(menuBox);
+    lv_obj_set_size(irToggle, 40, 22);
+    lv_obj_align(irToggle, LV_ALIGN_TOP_RIGHT, 0, -3);
+    lv_obj_set_style_bg_color(irToggle, lv_color_hex(0x505050), LV_PART_MAIN);
+    lv_obj_add_event_cb(irToggle, IREnableSetting_event_cb, LV_EVENT_VALUE_CHANGED, NULL);
+    if (irhandler.IRReceiver())
+        lv_obj_add_state(irToggle, LV_STATE_CHECKED); // set default state
 }
 
 void Settings::clear_wifi_networks()

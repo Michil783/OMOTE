@@ -9,7 +9,7 @@ public:
     AppleTV(Display *display);
     void setup();
     String getName();
-    void handleCustomKeypad(int keyCode){};
+    void handleCustomKeypad(int keyCode, char keyChar){};
 
 private:
     /**

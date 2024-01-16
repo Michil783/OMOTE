@@ -18,7 +18,7 @@
 #include <Battery.hpp>
 #include <IRHandler.hpp>
 #include <Settings.hpp>
-#include <Technisat.hpp>
+#include <MagentaTV.hpp>
 #include <AppleTV.hpp>
 #include <SmartHome.hpp>
 
@@ -67,7 +67,7 @@ IRHandler irhandler;
 Settings settings(&display);
 
 // App instances
-Technisat technisat(&display);
+MagentaTV magentaTV(&display);
 AppleTV appletv(&display);
 SmartHome smarthome(&display);
 
@@ -86,12 +86,12 @@ byte rowPins[ROWS] = {SW_A, SW_B, SW_C, SW_D, SW_E}; // connect to the row pinou
 byte colPins[COLS] = {SW_1, SW_2, SW_3, SW_4, SW_5}; // connect to the column pinouts of the keypad
 Keypad customKeypad = Keypad(makeKeymap(hexaKeys), rowPins, colPins, ROWS, COLS);
 #define BUTTON_PIN_BITMASK 0b1110110000000000000000000010000000000000 // IO34+IO35+IO37+IO38+IO39(+IO13)
-byte keyMapTechnisat[ROWS][COLS] = {
-    {0x69, 0x20, 0x11, 0x0D, 0x56},
-    {0x4F, 0x37, 0x10, 0x57, 0x51},
-    {0x6E, 0x21, 0x6B, 0x6D, 0x6C},
-    {0x34, 0x0C, 0x22, 0x50, 0x55},
-    {'?', 0x35, 0x2F, 0x32, 0x36}};
+// byte keyMapMagentaTV[ROWS][COLS] = {
+//     {0x69, 0x20, 0x11, 0x0D, 0x56},
+//     {0x4F, 0x37, 0x10, 0x57, 0x51},
+//     {0x6E, 0x21, 0x6B, 0x6D, 0x6C},
+//     {0x34, 0x0C, 0x22, 0x50, 0x55},
+//     {'?', 0x35, 0x2F, 0x32, 0x36}};
 byte currentDevice = 1; // Current Device to control (allows switching mappings between devices)
 
 // Other declarations
@@ -404,6 +404,13 @@ void setup()
     Serial.printf("restore: standbyTimer: %d standbyTimerConfigured: %d", standbyTimer, standbyTimerConfigured);
   }
 
+  // Setup IR
+  Serial.println("init IR");
+  // IrSender.begin();
+  // digitalWrite(IR_VCC, HIGH); // Turn on IR receiver
+  // IrReceiver.enableIRIn();    // Start the receiver
+  irhandler.setup();
+
   // Setup TFT
   Serial.println("init TFT");
   display.setup();
@@ -411,7 +418,7 @@ void setup()
   display.setup_ui();
 
   // setup app UIs
-  technisat.setup();
+  magentaTV.setup();
   appletv.setup();
   smarthome.setup();
 
@@ -441,13 +448,6 @@ void setup()
   IMU.begin();
   uint8_t intDataRead;
   IMU.readRegister(&intDataRead, LIS3DH_INT1_SRC); // clear interrupt
-
-  // Setup IR
-  Serial.println("init IR");
-  // IrSender.begin();
-  // digitalWrite(IR_VCC, HIGH); // Turn on IR receiver
-  // IrReceiver.enableIRIn();    // Start the receiver
-  irhandler.setup();
 
   Serial.println("lv_timer_handler()");
   lv_timer_handler(); // Run the LVGL UI once before the loop takes over
@@ -514,17 +514,15 @@ void loop()
   customKeypad.getKey(); // Populate key list
   for (int i = 0; i < LIST_MAX; i++)
   { // Handle multiple keys (Not really necessary in this case)
-    if (customKeypad.key[i].kstate == PRESSED || customKeypad.key[i].kstate == HOLD)
+    if (customKeypad.key[i].kstate == PRESSED) // || customKeypad.key[i].kstate == HOLD)
     {
       standbyTimer = standbyTimerConfigured; // Reset the sleep timer when a button is pressed
-      int keyCode = customKeypad.key[i].kcode;
-      Serial.println(customKeypad.key[i].kchar);
+      //int keyCode = customKeypad.key[i].kcode;
+      Serial.printf("pressed: %c\n", customKeypad.key[i].kchar);
       // Send IR codes depending on the current device (tabview page)
-      // if (currentDevice == 1)
-      //   IrSender.sendRC5(IrSender.encodeRC5X(0x00, keyMapTechnisat[keyCode / ROWS][keyCode % ROWS]));
-      // else if (currentDevice == 2)
-      //   IrSender.sendSony((keyCode / ROWS) * (keyCode % ROWS), 15);
-      display.getApp(currentDevice)->handleCustomKeypad(keyCode);
+      display.getApp(currentDevice)->handleCustomKeypad(customKeypad.key[i].kcode, customKeypad.key[i].kchar);
+    } else if (customKeypad.key[i].kstate == RELEASED) {
+      Serial.printf("released: %c\n", customKeypad.key[i].kchar);
     }
   }
 

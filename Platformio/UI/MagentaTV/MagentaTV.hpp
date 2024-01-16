@@ -2,16 +2,17 @@
 #include <DeviceInterface.hpp>
 #include <Settings.hpp>
 #include <MR401.hpp>
+#include <SamsungTV.hpp>
 
-#ifndef _TECHNISAT_HPP_
-#define _TECHNISAT_HPP_
+#ifndef _MAGENTATV_HPP_
+#define _MAGENTATV_HPP_
 
-class Technisat : public AppInterface {
+class MagentaTV : public AppInterface {
     public:
-    Technisat(Display* display);
+    MagentaTV(Display* display);
     void setup();
-    void handleCustomKeypad(int kexCode);
-    String getName();
+    void handleCustomKeypad(int keyCode, char keyChar);
+    String getName(){return "MagentaTV";};
 
     private:
     /**
@@ -27,13 +28,14 @@ class Technisat : public AppInterface {
     lv_obj_t *tab;
 
     /**
-     * @brief setup Technisat main page
+     * @brief setup MagentaTV main page
      *
      * @param lv_obj_t* parent
      */
-    void setup_technisat(lv_obj_t *parent);
+    void setup_MagentaTV(lv_obj_t *parent);
 
     MR401* mr401;
+    SamsungTV* samsung;
 };
 
 #endif

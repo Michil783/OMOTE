@@ -17,6 +17,8 @@
 #include <IRrecv.h>
 #include <IRutils.h>
 
+extern Preferences preferences;
+
 const uint16_t kCaptureBufferSize = 1024;
 const uint8_t kTimeout = 15;
 const uint16_t kMinUnknownSize = 12;
@@ -29,20 +31,49 @@ decode_results results;
 
 IRHandler::IRHandler()
 {
+    this->IRReceiverEnabled = false;
 }
 
 void IRHandler::setup()
 {
+    Serial.println("IRHanlder::setup()");
     IrSender.begin();
     digitalWrite(IR_VCC, HIGH); // Turn on IR receiver
-    IrReceiver.enableIRIn();    // Start the receiver
-    IrReceiver.setUnknownThreshold(kMinUnknownSize);
-    IrReceiver.setTolerance(kTolerancePercentage); // Override the default tolerance.
-                                                   /* clear handler list */
+    IrReceiver.enableIRIn();
+    IrReceiver.disableIRIn();    // Stop the receiver
+
+    /* clear handler list */
     for (int i = 0; i < NUMBER_OF_HANDLER; i++)
     {
         this->irp[i] = nullptr;
     }
+    this->IRReceiverEnabled = preferences.getBool("IRREnabled", false);
+    Serial.printf("enabled: %d\n", this->IRReceiverEnabled);
+    this->IRReceiverEnable(this->IRReceiverEnabled);
+}
+
+bool IRHandler::IRReceiverEnable(bool onoff){
+    Serial.printf("IRHandler::IRReceiverEnable(%d)\n", onoff);
+    if( onoff ){
+        Serial.println("enable IR Receiver");
+        IrReceiver.enableIRIn();    // Start the receiver
+        IrReceiver.setUnknownThreshold(kMinUnknownSize);
+        IrReceiver.setTolerance(kTolerancePercentage); // Override the default tolerance.
+        this->IRReceiverEnabled = true;
+    } else {
+        Serial.println("disable IR Receiver");
+        IrReceiver.disableIRIn();    // Stop the receiver
+        this->IRReceiverEnabled = false;
+    }
+    Serial.printf("save state in preferences %d\n", this->IRReceiverEnabled);
+    preferences.putBool("IRREnabled", this->IRReceiverEnabled);
+    Serial.printf("saved state in preferences %d\n", preferences.getBool("IRREnabled"));
+    return this->IRReceiverEnabled;
+}
+
+bool IRHandler::IRReceiver(){
+    Serial.printf("IRHandler::IRReceiver %d\n", this->IRReceiverEnabled);
+    return this->IRReceiverEnabled;
 }
 
 bool IRHandler::addHandler(void (*func)(uint16_t data), int device)

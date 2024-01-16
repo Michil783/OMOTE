@@ -1,4 +1,4 @@
-#include <Technisat.hpp>
+#include <MagentaTV.hpp>
 #include <Display.hpp>
 #include <Arduino.h>
 
@@ -9,7 +9,8 @@
 extern IRsend IrSender;
 extern Settings settings;
 
-byte virtualKeyMapTechnisat[10] = {0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, 0x9, 0x0};
+char virtualKeyMapMagentaTV[10] = {'1', '2', '3', '4', '5', '6', '7', '8', '9', '0'};
+MR401* globalMR401;
 
 // Virtual Keypad Event handler
 void virtualKeypad_event_cb(lv_event_t *e)
@@ -18,33 +19,32 @@ void virtualKeypad_event_cb(lv_event_t *e)
     lv_obj_t *cont = lv_event_get_current_target(e);
     if (target == cont)
         return; // stop if container was clicked
-    Serial.println(virtualKeyMapTechnisat[(int)target->user_data]);
+    Serial.println(virtualKeyMapMagentaTV[(int)target->user_data]);
     // Send IR command based on the button user data
-    IrSender.sendRC5(IrSender.encodeRC5X(0x00, virtualKeyMapTechnisat[(int)target->user_data]));
+    //IrSender.sendRC5(IrSender.encodeRC5X(0x00, virtualKeyMapMagentaTV[(int)target->user_data]));
+    globalMR401->handleCustomKeypad(-1, virtualKeyMapMagentaTV[(int)target->user_data]);
 }
 
-Technisat::Technisat(Display *display)
+MagentaTV::MagentaTV(Display *display)
 {
     this->display = display;
 
     this->mr401 = new MR401(display);
-    settings.addDevice(this->mr401);
+    globalMR401 = this->mr401;
+
+    this->samsung = new SamsungTV(display);
 }
 
-String Technisat::getName() {
-    return "MagentaTV";
-}
-
-void Technisat::setup()
+void MagentaTV::setup()
 {
-    Serial.println("Technisat::setup()");
+    Serial.println("MagentaTV::setup()");
     this->tab = this->display->addTab(this);
 
     /* Create main page for settings this->settingsMenu*/
-    this->setup_technisat(this->tab);
+    this->setup_MagentaTV(this->tab);
 }
 
-void Technisat::setup_technisat(lv_obj_t *parent)
+void MagentaTV::setup_MagentaTV(lv_obj_t *parent)
 {
     lv_color_t primary_color = this->display->getPrimaryColor();
     unsigned int *backlight_brightness = this->display->getBacklightBrightness();
@@ -102,7 +102,9 @@ void Technisat::setup_technisat(lv_obj_t *parent)
     lv_obj_add_event_cb(cont, virtualKeypad_event_cb, LV_EVENT_CLICKED, NULL);
 }
 
-void Technisat::handleCustomKeypad(int keyCode){
-    this->mr401->handleCustomKeypad(keyCode);
+void MagentaTV::handleCustomKeypad(int keyCode, char keyChar){
+    if( keyChar == 'o' || keyChar == '+' || keyChar == '-' || keyChar == 'm' )
+        this->samsung->handleCustomKeypad(keyCode, keyChar);
+    this->mr401->handleCustomKeypad(keyCode, keyChar);
 }
 

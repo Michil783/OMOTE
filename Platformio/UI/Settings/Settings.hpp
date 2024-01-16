@@ -13,7 +13,7 @@ public:
     Settings(Display *display);
     void setup();
     String getName();
-    void handleCustomKeypad(int keyCode){};
+    void handleCustomKeypad(int keyCode, char keyChar){};
 
     bool addDevice(DeviceInterface* device);
     void saveDeviceSettings();
@@ -78,6 +78,13 @@ private:
      * @param parent LVGL object acting as a parent for the display settings page
      */
     void display_settings(lv_obj_t *parent);
+
+    /**
+     * @brief Function to create the IR settings page.
+     *
+     * @param parent LVGL object acting as a parent for the display settings page
+     */
+    void ir_settings(lv_obj_t *parent);
 
     /**
      * @brief Container within the wifi selection page
