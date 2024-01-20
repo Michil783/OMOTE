@@ -40,7 +40,7 @@ static void ta_event_cb(lv_event_t *e)
         wifihandler.connect(ssid, password);
         lv_obj_clear_state(ta, LV_STATE_FOCUSED);
         display.hide_keyboard();
-        display.reset_settings_menu();
+        settings.reset_settings_menu();
         /* Fall through on purpose. Pressing enter should disable the keyboard as well*/
     default:
         break;
@@ -158,7 +158,7 @@ static void connect_btn_cb(lv_event_t *event)
     wifihandler.connect(ssid, password);
     lv_obj_clear_state(ta, LV_STATE_FOCUSED);
     display.hide_keyboard();
-    display.reset_settings_menu();
+    settings.reset_settings_menu();
 }
 
 /**
@@ -213,7 +213,6 @@ String Settings::getName(){
  */
 void Settings::setup()
 {
-    Serial.println("Settings::setup()");
     this->tab = this->display->addTab(this);
 
     /* Create main page for settings this->settingsMenu*/
@@ -339,6 +338,15 @@ void Settings::display_settings(lv_obj_t *parent)
     lv_dropdown_set_selected(drop, selected);
     lv_obj_add_event_cb(drop, to_dropdown_event_cb, LV_EVENT_ALL, &standbyTimerConfigured);
 }
+
+void Settings::reset_settings_menu()
+{
+  if( this->settingsMenu && this->settingsMainPage )
+    lv_menu_set_page(this->settingsMenu, this->settingsMainPage);
+  else
+    Serial.println("something wrong in reset_settings_menu()");
+}
+
 
 /**
  * @brief IR the settings
@@ -515,6 +523,8 @@ void Settings::update_wifi(bool connected)
 
 lv_obj_t *Settings::create_wifi_password_page(lv_obj_t *menu)
 {
+    Serial.println("Settings::create_wifi_password_page()");
+
     lv_obj_t *ret_val = lv_menu_page_create(menu, NULL);
     lv_obj_t *cont = lv_menu_cont_create(ret_val);
     lv_obj_set_layout(cont, LV_LAYOUT_FLEX);

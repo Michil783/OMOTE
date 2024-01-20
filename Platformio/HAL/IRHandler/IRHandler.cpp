@@ -9,6 +9,10 @@
  *
  */
 
+//#define _IR_ENABLE_DEFAULT_ false
+//#define SEND_RAW true
+//#define SEND_SAMSUNG true
+
 #include <IRHandler.hpp>
 #include <Preferences.h>
 #include <omote.hpp>

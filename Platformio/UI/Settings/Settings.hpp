@@ -18,6 +18,8 @@ public:
     bool addDevice(DeviceInterface* device);
     void saveDeviceSettings();
 
+    void reset_settings_menu();
+
     /**
      * @brief API function to inform display that wifi scan is completed
      *

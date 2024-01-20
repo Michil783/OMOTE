@@ -1,6 +1,6 @@
 /**
  * @file lv_conf.h
- * Configuration file for v8.3.11
+ * Configuration file for v8.3.5
  */
 
 /*
@@ -18,6 +18,8 @@
 #define LV_CONF_H
 
 #include <stdint.h>
+
+#define LV_IMGBTN_TILED 0
 
 /*====================
    COLOR SETTINGS
@@ -46,25 +48,25 @@
  *=========================*/
 
 /*1: use custom malloc/free, 0: use the built-in `lv_mem_alloc()` and `lv_mem_free()`*/
-//#define LV_MEM_CUSTOM 0
-// #if LV_MEM_CUSTOM == 0
-//     /*Size of the memory available for `lv_mem_alloc()` in bytes (>= 2kB)*/
-//     #define LV_MEM_SIZE (48U * 1024U)          /*[bytes]*/
+#define LV_MEM_CUSTOM 0
+#if LV_MEM_CUSTOM == 0
+    /*Size of the memory available for `lv_mem_alloc()` in bytes (>= 2kB)*/
+    #define LV_MEM_SIZE (32U * 1024U)          /*[bytes]*/
 
-//     /*Set an address for the memory pool instead of allocating it as a normal array. Can be in external SRAM too.*/
-//     #define LV_MEM_ADR 0     /*0: unused*/
-//     /*Instead of an address give a memory allocator that will be called to get a memory pool for LVGL. E.g. my_malloc*/
-//     #if LV_MEM_ADR == 0
-//         #undef LV_MEM_POOL_INCLUDE
-//         #undef LV_MEM_POOL_ALLOC
-//     #endif
+    /*Set an address for the memory pool instead of allocating it as a normal array. Can be in external SRAM too.*/
+    #define LV_MEM_ADR 0     /*0: unused*/
+    /*Instead of an address give a memory allocator that will be called to get a memory pool for LVGL. E.g. my_malloc*/
+    #if LV_MEM_ADR == 0
+        #undef LV_MEM_POOL_INCLUDE
+        #undef LV_MEM_POOL_ALLOC
+    #endif
 
-// #else       /*LV_MEM_CUSTOM*/
-//     #define LV_MEM_CUSTOM_INCLUDE <stdlib.h>   /*Header for the dynamic memory function*/
-//     #define LV_MEM_CUSTOM_ALLOC   malloc
-//     #define LV_MEM_CUSTOM_FREE    free
-//     #define LV_MEM_CUSTOM_REALLOC realloc
-// #endif     /*LV_MEM_CUSTOM*/
+#else       /*LV_MEM_CUSTOM*/
+    #define LV_MEM_CUSTOM_INCLUDE <stdlib.h>   /*Header for the dynamic memory function*/
+    #define LV_MEM_CUSTOM_ALLOC   malloc
+    #define LV_MEM_CUSTOM_FREE    free
+    #define LV_MEM_CUSTOM_REALLOC realloc
+#endif     /*LV_MEM_CUSTOM*/
 
 /*Number of the intermediate memory buffer used during rendering and other internal processing mechanisms.
  *You will see an error log message if there wasn't enough buffers. */
@@ -86,13 +88,13 @@
 /*Use a custom tick source that tells the elapsed time in milliseconds.
  *It removes the need to manually update the tick with `lv_tick_inc()`)*/
 #define LV_TICK_CUSTOM 1
-// #if LV_TICK_CUSTOM
-//     #define LV_TICK_CUSTOM_INCLUDE "Arduino.h"         /*Header for the system time function*/
-//     #define LV_TICK_CUSTOM_SYS_TIME_EXPR (millis())    /*Expression evaluating to current system time in ms*/
-//     /*If using lvgl as ESP32 component*/
-//     #define LV_TICK_CUSTOM_INCLUDE "esp_timer.h"
-//     #define LV_TICK_CUSTOM_SYS_TIME_EXPR ((esp_timer_get_time() / 1000LL))
-// #endif   /*LV_TICK_CUSTOM*/
+#if LV_TICK_CUSTOM
+    #define LV_TICK_CUSTOM_INCLUDE "Arduino.h"         /*Header for the system time function*/
+    #define LV_TICK_CUSTOM_SYS_TIME_EXPR (millis())    /*Expression evaluating to current system time in ms*/
+    /*If using lvgl as ESP32 component*/
+    // #define LV_TICK_CUSTOM_INCLUDE "esp_timer.h"
+    // #define LV_TICK_CUSTOM_SYS_TIME_EXPR ((esp_timer_get_time() / 1000LL))
+#endif   /*LV_TICK_CUSTOM*/
 
 /*Default Dot Per Inch. Used to initialize default sizes such as widgets sized, style paddings.
  *(Not so important, you can adjust it to modify default sizes and spaces)*/
@@ -183,16 +185,8 @@
 #define LV_USE_GPU_STM32_DMA2D 0
 #if LV_USE_GPU_STM32_DMA2D
     /*Must be defined to include path of CMSIS header of target processor
-    e.g. "stm32f7xx.h" or "stm32f4xx.h"*/
+    e.g. "stm32f769xx.h" or "stm32f429xx.h"*/
     #define LV_GPU_DMA2D_CMSIS_INCLUDE
-#endif
-
-/*Enable RA6M3 G2D GPU*/
-#define LV_USE_GPU_RA6M3_G2D 0
-#if LV_USE_GPU_RA6M3_G2D
-    /*include path of target processor
-    e.g. "hal_data.h"*/
-    #define LV_GPU_RA6M3_G2D_INCLUDE "hal_data.h"
 #endif
 
 /*Use SWM341's DMA2D GPU*/
@@ -230,7 +224,7 @@
  *-----------*/
 
 /*Enable the log module*/
-#define LV_USE_LOG 0
+#define LV_USE_LOG 1
 #if LV_USE_LOG
 
     /*How important log should be added:
@@ -240,11 +234,12 @@
     *LV_LOG_LEVEL_ERROR       Only critical issue, when the system may fail
     *LV_LOG_LEVEL_USER        Only logs added by the user
     *LV_LOG_LEVEL_NONE        Do not log anything*/
-    #define LV_LOG_LEVEL LV_LOG_LEVEL_WARN
+    //#define LV_LOG_LEVEL LV_LOG_LEVEL_WARN
+    #define LV_LOG_LEVEL LV_LOG_LEVEL_TRACE
 
     /*1: Print the log with 'printf';
     *0: User need to register a callback with `lv_log_register_print_cb()`*/
-    #define LV_LOG_PRINTF 0
+    #define LV_LOG_PRINTF 1
 
     /*Enable/disable LV_LOG_TRACE in modules that produces a huge number of logs*/
     #define LV_LOG_TRACE_MEM        1
@@ -520,25 +515,25 @@
  *----------*/
 #define LV_USE_ANIMIMG    1
 
-//#define LV_USE_CALENDAR   0
-// #if LV_USE_CALENDAR
-//     #define LV_CALENDAR_WEEK_STARTS_MONDAY 0
-//     #if LV_CALENDAR_WEEK_STARTS_MONDAY
-//         #define LV_CALENDAR_DEFAULT_DAY_NAMES {"Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"}
-//     #else
-//         #define LV_CALENDAR_DEFAULT_DAY_NAMES {"Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"}
-//     #endif
+#define LV_USE_CALENDAR   0
+#if LV_USE_CALENDAR
+    #define LV_CALENDAR_WEEK_STARTS_MONDAY 0
+    #if LV_CALENDAR_WEEK_STARTS_MONDAY
+        #define LV_CALENDAR_DEFAULT_DAY_NAMES {"Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"}
+    #else
+        #define LV_CALENDAR_DEFAULT_DAY_NAMES {"Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"}
+    #endif
 
-//     #define LV_CALENDAR_DEFAULT_MONTH_NAMES {"January", "February", "March",  "April", "May",  "June", "July", "August", "September", "October", "November", "December"}
-//     #define LV_USE_CALENDAR_HEADER_ARROW 1
-//     #define LV_USE_CALENDAR_HEADER_DROPDOWN 1
-// #endif  /*LV_USE_CALENDAR*/
+    #define LV_CALENDAR_DEFAULT_MONTH_NAMES {"January", "February", "March",  "April", "May",  "June", "July", "August", "September", "October", "November", "December"}
+    #define LV_USE_CALENDAR_HEADER_ARROW 1
+    #define LV_USE_CALENDAR_HEADER_DROPDOWN 1
+#endif  /*LV_USE_CALENDAR*/
 
 #define LV_USE_CHART      1
 
 #define LV_USE_COLORWHEEL 1
 
-#define LV_USE_IMGBTN     1
+#define LV_USE_IMGBTN     0
 
 #define LV_USE_KEYBOARD   1
 
@@ -566,7 +561,7 @@
 
 #define LV_USE_TILEVIEW   1
 
-#define LV_USE_WIN        1
+#define LV_USE_WIN        0
 
 /*-----------
  * Themes
@@ -607,6 +602,7 @@
  *--------------------*/
 
 /*File system interfaces for common APIs */
+#define LV_USE_FS_LITTLEFS 1
 
 /*API for fopen, fread, etc*/
 #define LV_USE_FS_STDIO 0
@@ -639,15 +635,8 @@
     #define LV_FS_FATFS_CACHE_SIZE 0    /*>0 to cache this number of bytes in lv_fs_read()*/
 #endif
 
-/*API for LittleFS (library needs to be added separately). Uses lfs_file_open, lfs_file_read, etc*/
-#define LV_USE_FS_LITTLEFS 1
-#if LV_USE_FS_LITTLEFS
-    #define LV_FS_LITTLEFS_LETTER 'L'     /*Set an upper cased letter on which the drive will accessible (e.g. 'A')*/
-    #define LV_FS_LITTLEFS_CACHE_SIZE 0    /*>0 to cache this number of bytes in lv_fs_read()*/
-#endif
-
 /*PNG decoder library*/
-#define LV_USE_PNG 1
+#define LV_USE_PNG 0
 
 /*BMP decoder library*/
 #define LV_USE_BMP 0
@@ -677,13 +666,6 @@
         #define LV_FREETYPE_CACHE_FT_FACES 0
         #define LV_FREETYPE_CACHE_FT_SIZES 0
     #endif
-#endif
-
-/*Tiny TTF library*/
-#define LV_USE_TINY_TTF 0
-#if LV_USE_TINY_TTF
-    /*Load TTF data from files*/
-    #define LV_TINY_TTF_FILE_SUPPORT 0
 #endif
 
 /*Rlottie library*/

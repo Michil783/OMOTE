@@ -205,7 +205,7 @@ class Display
          * @brief Main page of the settings menu 
          * 
          */
-        lv_obj_t* settingsMainPage;
+        //lv_obj_t* resetsettingsMainPage;
 
         /**
          * @brief Battery percentage label 

@@ -8,21 +8,118 @@
 
 extern IRsend IrSender;
 extern Settings settings;
+extern long standbyTimer;
+extern long standbyTimerConfigured;
 
-char virtualKeyMapMagentaTV[10] = {'1', '2', '3', '4', '5', '6', '7', '8', '9', '0'};
+#define IMAGEBUTTONS
+#ifdef IMAGEBUTTONS
+LV_IMG_DECLARE(ARD_Logo);
+LV_IMG_DECLARE(zdf_de);
+LV_IMG_DECLARE(br);
+LV_IMG_DECLARE(dmax_de);
+LV_IMG_DECLARE(kabel_eins);
+LV_IMG_DECLARE(prosieben);
+LV_IMG_DECLARE(RTL_Crime);
+LV_IMG_DECLARE(rtl_nitro_de);
+LV_IMG_DECLARE(rtl);
+LV_IMG_DECLARE(rtl2);
+LV_IMG_DECLARE(sat1);
+LV_IMG_DECLARE(sixx);
+LV_IMG_DECLARE(super_rtl);
+LV_IMG_DECLARE(syfy);
+LV_IMG_DECLARE(tele5_de);
+LV_IMG_DECLARE(tlc);
+LV_IMG_DECLARE(universal);
+LV_IMG_DECLARE(vox_de);
+LV_IMG_DECLARE(warner);
+LV_IMG_DECLARE(warnerserie);
+LV_IMG_DECLARE(warnertv);
+LV_IMG_DECLARE(zdf_de);
+#endif
+
+//char virtualKeyMapMagentaTV[10] = {'1', '2', '3', '4', '5', '6', '7', '8', '9', '0'};
+#ifdef IMAGEBUTTONS
+#define SENDERICONS 22
+struct channels{
+    const void* icon;
+    int channel;
+} channelInfo[SENDERICONS] = {
+    {&ARD_Logo, 1},
+    {&zdf_de, 2},
+    {&br, 3},
+    {&super_rtl, 4},
+    {&rtl, 5},
+    {&sat1, 6},
+    {&prosieben, 7},
+    {&vox_de, 8},
+    {&rtl2, 10},
+    {&syfy, 71},
+    {&warner, 81},
+    {&sixx, 45},
+    {&tele5_de, 17},
+    {&universal, 83},
+    {&warnerserie, 82},
+    {&warnertv, 81},
+    {&dmax_de, 38},
+    {&kabel_eins, 9},
+    {&RTL_Crime, 70},
+    {&rtl_nitro_de, 41},
+    {&sixx, 45},
+    {&tlc, 46}
+};
+/*
+const void* senderIcons[SENDERICONS] = {&ard, &zdf_de, &br, &super_rtl, &rtl, &sat1, &prosieben, &vox_de, &rtl2, &syfy,
+ &warner, &sixx, &tele5_de, &universal, &warnerserie, &warnertv, &dmax_de, &kabel_eins, &RTL_Crime, &rtl_nitro_de,
+ &sixx, &tlc};
+const uint16_t senderCode[SENDERICONS] = {1, 2, 3, 4, 5, 6, 7, 8, 10, 71,
+ 81, 45, 17, 83, 82, 81, 38, 9, 70, 41,
+ 45, 46};
+*/
+#endif
 MR401* globalMR401;
 
 // Virtual Keypad Event handler
 void virtualKeypad_event_cb(lv_event_t *e)
 {
+    Serial.printf("virtualKeypad_event_cb\n");
     lv_obj_t *target = lv_event_get_target(e);
     lv_obj_t *cont = lv_event_get_current_target(e);
-    if (target == cont)
+    if (target == cont) {
+        Serial.println("virtualKeypad_event_cb - container was clicked");
         return; // stop if container was clicked
-    Serial.println(virtualKeyMapMagentaTV[(int)target->user_data]);
+    }
+    Serial.printf("button pressed %d\n", (int)target->user_data);
     // Send IR command based on the button user data
     //IrSender.sendRC5(IrSender.encodeRC5X(0x00, virtualKeyMapMagentaTV[(int)target->user_data]));
-    globalMR401->handleCustomKeypad(-1, virtualKeyMapMagentaTV[(int)target->user_data]);
+    //globalMR401->handleCustomKeypad(-1, virtualKeyMapMagentaTV[(int)target->user_data]);
+    if( (int)target->user_data < 10 ){
+        Serial.println("Sender < 10");
+        char value = (char)('0' + (int)target->user_data);
+        Serial.printf("sending %c\n", value);
+        globalMR401->handleCustomKeypad(-1, value);
+    } else if( (int)target->user_data < 100 ) {
+        Serial.println("Sender < 100");
+        char value = (char)('0' + ((int)target->user_data / 10));
+        Serial.printf("sending %c\n", value);
+        globalMR401->handleCustomKeypad(-1, value);
+        value = (char)('0' + ((int)target->user_data % 10));
+        Serial.printf("sending %c\n", value);
+        globalMR401->handleCustomKeypad(-1, value);
+    } else {
+        Serial.println("Sender >= 100");
+        char value = (char)('0' + ((int)target->user_data / 100));
+        Serial.printf("sending %c\n", value);
+        globalMR401->handleCustomKeypad(-1, value);
+        value = (char)('0' + (((int)target->user_data % 100)) / 10);
+        Serial.printf("sending %c\n", value);
+        globalMR401->handleCustomKeypad(-1, value);
+        value = (char)('0' + (((int)target->user_data % 100)) % 10);
+        Serial.printf("sending %c\n", value);
+        globalMR401->handleCustomKeypad(-1, value);
+    }
+    Serial.println("sending OK");
+    globalMR401->handleCustomKeypad(-1, 'k');
+    standbyTimer = standbyTimerConfigured;
 }
 
 MagentaTV::MagentaTV(Display *display)
@@ -50,8 +147,10 @@ void MagentaTV::setup_MagentaTV(lv_obj_t *parent)
     unsigned int *backlight_brightness = this->display->getBacklightBrightness();
 
     // Configure number button grid
-    static lv_coord_t col_dsc[] = {LV_GRID_FR(1), LV_GRID_FR(1), LV_GRID_FR(1), LV_GRID_TEMPLATE_LAST}; // equal x distribution
-    static lv_coord_t row_dsc[] = {52, 52, 52, 52, LV_GRID_TEMPLATE_LAST};                              // manual y distribution to compress the grid a bit
+    //static lv_coord_t col_dsc[] = {LV_GRID_FR(1), LV_GRID_FR(1), LV_GRID_FR(1), LV_GRID_TEMPLATE_LAST}; // equal x distribution
+    //static lv_coord_t row_dsc[] = {52, 52, 52, 52, LV_GRID_TEMPLATE_LAST};                              // manual y distribution to compress the grid a bit
+    static lv_coord_t col_dsc[] = {LV_GRID_FR(1), LV_GRID_FR(1), LV_GRID_TEMPLATE_LAST}; // equal x distribution
+    static lv_coord_t row_dsc[] = {104, 104, 104, 104, 104, 104, 104, 104, 104, 104, 104, 104, 104, 104, LV_GRID_TEMPLATE_LAST};                              // manual y distribution to compress the grid a bit
 
     // Create a container with grid for tab2
     lv_obj_set_style_pad_all(parent, 0, LV_PART_MAIN);
@@ -69,6 +168,18 @@ void MagentaTV::setup_MagentaTV(lv_obj_t *parent)
     lv_obj_t *buttonLabel;
     lv_obj_t *obj;
 
+#ifdef IMAGEBUTTONS
+    for (int i = 0; i < SENDERICONS; i++)
+    {
+        uint8_t col = i % 2;
+        uint8_t row = i / 2;
+        obj = lv_imgbtn_create(cont);
+        lv_imgbtn_set_src(obj, LV_IMGBTN_STATE_RELEASED, nullptr, channelInfo[i].icon, nullptr);
+        lv_obj_set_grid_cell(obj, LV_GRID_ALIGN_STRETCH, col, 1, LV_GRID_ALIGN_STRETCH, row, 1);
+        lv_obj_add_flag(obj, LV_OBJ_FLAG_EVENT_BUBBLE); // Clicking a button causes a event in its container
+        lv_obj_set_user_data(obj, (void *)channelInfo[i].channel);
+    }
+#else
     // Iterate through grid buttons configure them
     for (int i = 0; i < 12; i++)
     {
@@ -98,13 +209,17 @@ void MagentaTV::setup_MagentaTV(lv_obj_t *parent)
         lv_obj_set_style_text_font(buttonLabel, &lv_font_montserrat_24, LV_PART_MAIN);
         lv_obj_center(buttonLabel);
     }
+#endif
     // Create a shared event for all button inside container
     lv_obj_add_event_cb(cont, virtualKeypad_event_cb, LV_EVENT_CLICKED, NULL);
 }
 
 void MagentaTV::handleCustomKeypad(int keyCode, char keyChar){
-    if( keyChar == 'o' || keyChar == '+' || keyChar == '-' || keyChar == 'm' )
+    if( keyChar == 'o' || keyChar == '+' || keyChar == '-' || keyChar == 'm' ) {
         this->samsung->handleCustomKeypad(keyCode, keyChar);
+        if( keyChar == 'o' )
+            this->samsung->handleCustomKeypad(0, 'b');
+    }
     this->mr401->handleCustomKeypad(keyCode, keyChar);
 }
 

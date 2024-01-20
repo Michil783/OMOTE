@@ -9,7 +9,8 @@
 		"files.associations": {
 			"random": "cpp",
 			"array": "cpp",
-			"lvgl.h": "c"
+			"lvgl.h": "c",
+			"lv_fs.h": "c"
 		}
 	}
 }

@@ -43,8 +43,7 @@ void WiFiEvent(WiFiEvent_t event){
       else
       {
         settings.clear_wifi_networks();
-        Serial.print(no_networks);
-        Serial.print(" found\n");
+        Serial.printf("%d found\n", no_networks);
         settings.wifi_scan_complete( no_networks);
       }
       break;
@@ -132,9 +131,11 @@ void WifiHandler::begin()
 
 void WifiHandler::connect(const char* SSID, const char* password)
 {
+    Serial.printf("WifiHandler::connect(%s, %s)\n", SSID, password);
     temporary_password = password;
     temporary_ssid = SSID;
     WiFi.begin(SSID, password);
+    Serial.println("WifiHandler::connect finished");
 }
 
 void WifiHandler::turnOff()

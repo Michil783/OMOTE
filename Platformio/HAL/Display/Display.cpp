@@ -90,11 +90,6 @@ void Display::show_keyboard()
   lv_obj_move_foreground(this->kb);
 }
 
-void Display::reset_settings_menu()
-{
-  lv_menu_set_page(this->settingsMenu, this->settingsMainPage);
-}
-
 void Display::turnOff()
 {
   digitalWrite(this->backlight_pin, HIGH);
