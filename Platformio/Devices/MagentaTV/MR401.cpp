@@ -23,8 +23,8 @@ int MR401::getValues(char keyChar){
   {
     if ( this->lircKeys[i].key == keyChar )
     {
-      Serial.printf("key %c found: size of data is %d\n", this->lircKeys[i].key, this->lircKeys[i].size);
-      Serial.printf("buffer: %p\n", this->lircKeys[i].buf);
+      LV_LOG_USER("key %c found: size of data is %d", this->lircKeys[i].key, this->lircKeys[i].size);
+      LV_LOG_USER("buffer: %p", this->lircKeys[i].buf);
       return i;
     }
   }
@@ -34,18 +34,18 @@ int MR401::getValues(char keyChar){
 void MR401::dumpBuffer(uint16_t* buf, size_t size){
     Serial.print("buffer {");
     for(size_t i = 0; i < size; i++){
-        Serial.printf("%d,", buf[i]);
+        LV_LOG_USER("%d,", buf[i]);
     }
-    Serial.println("");
+    LV_LOG_USER("");
 }
 
 void MR401::handleCustomKeypad(int keyCode, char keyChar){
-    Serial.println("MR401");
-    Serial.printf("handleCustomKeypad(%d, %c)\n", keyCode, keyChar);
+    LV_LOG_USER("MR401");
+    LV_LOG_USER("handleCustomKeypad(%d, %c)", keyCode, keyChar);
     
     int result = getValues(keyChar);
     if( result >= 0  ){
-        Serial.printf("sending IR command %c size: %d buf: %p\n", keyChar, this->lircKeys[result].size, this->lircKeys[result].buf);
+        LV_LOG_USER("sending IR command %c size: %d buf: %p", keyChar, this->lircKeys[result].size, this->lircKeys[result].buf);
         this->dumpBuffer(this->lircKeys[result].buf, this->lircKeys[result].size);
         IrSender.sendRaw(this->lircKeys[result].buf, this->lircKeys[result].size, this->kFrequency);
     }

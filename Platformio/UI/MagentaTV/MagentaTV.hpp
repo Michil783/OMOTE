@@ -13,6 +13,15 @@ class MagentaTV : public AppInterface {
     void setup();
     void handleCustomKeypad(int keyCode, char keyChar);
     String getName(){return "MagentaTV";};
+    void displaySettings(lv_obj_t *parent);
+    void saveSettings();
+    void resetMagentaTVPage();
+
+    lv_obj_t* cPicker = nullptr;
+    
+    lv_color_t bgColor;
+    lv_color_t textColor;
+    lv_obj_t* colorPickerPage = nullptr;
 
     private:
     /**
@@ -36,6 +45,15 @@ class MagentaTV : public AppInterface {
 
     MR401* mr401;
     SamsungTV* samsung;
+
+    /**
+     * @brief LVGL Menu for settings pages as needed.
+     *
+     */
+    lv_obj_t *settingsMenu = nullptr;
+    lv_obj_t *menuLabel = nullptr;
+    lv_obj_t* menuBox = nullptr;
+    bool iconEnabled = false;
 };
 
 #endif

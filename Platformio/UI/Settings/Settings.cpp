@@ -54,7 +54,7 @@ static void ta_event_cb(lv_event_t *e)
  */
 void WakeEnableSetting_event_cb(lv_event_t *e)
 {
-    // Serial.println("Settings - WakeEnableSetting_event_cb");
+    // LV_LOG_TRACE("Settings - WakeEnableSetting_event_cb");
     wakeupByIMUEnabled = lv_obj_has_state(lv_event_get_target(e), LV_STATE_CHECKED);
 }
 
@@ -65,7 +65,7 @@ void WakeEnableSetting_event_cb(lv_event_t *e)
  */
 void IREnableSetting_event_cb(lv_event_t *e)
 {
-    Serial.println("Settings - IREnableSetting_event_cb");
+    LV_LOG_TRACE("Settings - IREnableSetting_event_cb");
     irhandler.IRReceiverEnable(lv_obj_has_state(lv_event_get_target(e), LV_STATE_CHECKED));
 }
 
@@ -79,7 +79,7 @@ void bl_slider_event_cb(lv_event_t *e)
     lv_obj_t *slider = lv_event_get_target(e);
     unsigned int *backlight_brightness = (unsigned int *)lv_event_get_user_data(e);
     *backlight_brightness = map(constrain(lv_slider_get_value(slider), 30, 240), 30, 240, 240, 30);
-    // Serial.printf("Settings - bl_slider_event_cb(%d) - %d\n", constrain(lv_slider_get_value(slider), 30, 240), *backlight_brightness);
+    // LV_LOG_TRACE("Settings - bl_slider_event_cb(%d) - %d", constrain(lv_slider_get_value(slider), 30, 240), *backlight_brightness);
 }
 
 /**
@@ -94,7 +94,7 @@ void to_dropdown_event_cb(lv_event_t *e)
     if (code == LV_EVENT_VALUE_CHANGED)
     {
         int index = lv_dropdown_get_selected(obj);
-        // Serial.printf("new value = %d\n", index);
+        // LV_LOG_TRACE("new value = %d\n", index);
         long *standbyTimerConfigured = (long *)lv_event_get_user_data(e);
         switch (index)
         {
@@ -248,6 +248,8 @@ void Settings::setup_settings(lv_obj_t *parent)
 
     this->create_wifi_settings(this->settingsMenu, cont);
 
+    this->createAppSettings(this->settingsMenu, cont);
+
     this->createDeviceSettings(this->settingsMenu, cont);
 
     lv_menu_set_page(this->settingsMenu, this->settingsMainPage);
@@ -282,7 +284,7 @@ void Settings::display_settings(lv_obj_t *parent)
     lv_obj_set_style_bg_opa(slider, LV_OPA_COVER, LV_PART_MAIN);
     lv_obj_set_style_bg_color(slider, lv_color_lighten(primary_color, 50), LV_PART_MAIN);
     lv_slider_set_value(slider, map(*backlight_brightness, 240, 30, 30, 240), LV_ANIM_OFF);
-    //Serial.printf("set blSlider to %d\n", map(*backlight_brightness, 240, 30, 30, 240));
+    //LV_LOG_TRACE("set blSlider to %d", map(*backlight_brightness, 240, 30, 30, 240));
     lv_obj_set_size(slider, lv_pct(66), 10);
     lv_obj_align(slider, LV_ALIGN_TOP_MID, 0, 3);
     brightnessIcon = lv_img_create(menuBox);
@@ -341,10 +343,14 @@ void Settings::display_settings(lv_obj_t *parent)
 
 void Settings::reset_settings_menu()
 {
-  if( this->settingsMenu && this->settingsMainPage )
-    lv_menu_set_page(this->settingsMenu, this->settingsMainPage);
-  else
-    Serial.println("something wrong in reset_settings_menu()");
+    /*
+    lv_obj_clean(this->tab);
+    this->setup_settings(this->tab);
+    */
+    if( this->settingsMenu && this->settingsMainPage )
+        lv_menu_set_page(this->settingsMenu, this->settingsMainPage);
+    else
+        LV_LOG_TRACE("something wrong in reset_settings_menu()");
 }
 
 
@@ -500,17 +506,17 @@ void Settings::update_wifi(bool connected)
     lv_obj_t *ssid_label = lv_obj_get_child(this->wifiOverview, 0);
     if (connected)
     {
-        Serial.println("update_wifi()");
-        Serial.printf("WifiLabel: %p\n", this->WifiLabel);
+        LV_LOG_TRACE("update_wifi()");
+        LV_LOG_TRACE("WifiLabel: %p", this->WifiLabel);
         // lv_label_set_text(this->WifiLabel, LV_SYMBOL_WIFI);
         this->display->updateWifi(LV_SYMBOL_WIFI);
-        Serial.println("update_wifi() WifiLabel success");
-        Serial.printf("ssid_label: %p\n", ssid_label);
+        LV_LOG_TRACE("update_wifi() WifiLabel success");
+        LV_LOG_TRACE("ssid_label: %p", ssid_label);
         lv_label_set_text(ssid_label, wifihandler.getSSID());
-        Serial.println("update_wifi() SSID success");
-        Serial.printf("ip_label: %p\n", ip_label);
+        LV_LOG_TRACE("update_wifi() SSID success");
+        LV_LOG_TRACE("ip_label: %p", ip_label);
         lv_label_set_text(ip_label, wifihandler.getIP().c_str());
-        Serial.println("update_wifi() IP success");
+        LV_LOG_TRACE("update_wifi() IP success");
     }
     else
     {
@@ -523,7 +529,7 @@ void Settings::update_wifi(bool connected)
 
 lv_obj_t *Settings::create_wifi_password_page(lv_obj_t *menu)
 {
-    Serial.println("Settings::create_wifi_password_page()");
+    LV_LOG_TRACE("Settings::create_wifi_password_page()");
 
     lv_obj_t *ret_val = lv_menu_page_create(menu, NULL);
     lv_obj_t *cont = lv_menu_cont_create(ret_val);
@@ -614,6 +620,8 @@ void Settings::create_wifi_settings(lv_obj_t *menu, lv_obj_t *parent)
 
 bool Settings::addDevice(DeviceInterface *device)
 {
+    LV_LOG_TRACE("Settings::addDevice(%s)", device->getName());
+
     DeviceInterface *currentDevice;
     /* search free slot in device array */
     for (int i = 0; i < DEVICESLOTS; i++)
@@ -628,9 +636,14 @@ bool Settings::addDevice(DeviceInterface *device)
     return false;
 }
 
+void Settings::saveSettings(){
+    this->saveAppSettings();
+    this->saveDeviceSettings();
+}
+
 void Settings::createDeviceSettings(lv_obj_t *menu, lv_obj_t *parent)
 {
-    Serial.println("createDeviceSettings");
+    LV_LOG_TRACE("Settings::createDeviceSettings");
 
     lv_color_t primary_color = display->getPrimaryColor();
 
@@ -639,32 +652,73 @@ void Settings::createDeviceSettings(lv_obj_t *menu, lv_obj_t *parent)
     {
         if (this->devices[i] != nullptr)
         {
-            Serial.printf("Device: %s\n", this->devices[i]->getName().c_str());
+            LV_LOG_TRACE("Seetings::createDeviceSettings Device: %s", this->devices[i]->getName().c_str());
             this->devices[i]->displaySettings(parent);
-            /*
-            lv_obj_t *menuLabel = lv_label_create(parent);
-            lv_label_set_text(menuLabel, this->devices[i]->getName().c_str());
-            this->deviceOverview[i] = lv_obj_create(parent);
-            lv_obj_set_size(this->deviceOverview[i], lv_pct(100), 80);
-            lv_obj_set_style_bg_color(this->deviceOverview[i], primary_color, LV_PART_MAIN);
-            lv_obj_set_style_border_width(this->deviceOverview[i], 0, LV_PART_MAIN);
-            menuLabel = lv_label_create(this->deviceOverview[i]);
-            */
         }
     }
 }
 
 void Settings::saveDeviceSettings()
 {
-    Serial.println("saveDeviceSettings");
+    LV_LOG_TRACE("Settings::saveDeviceSettings");
 
     /* search device array */
     for (int i = 0; i < DEVICESLOTS; i++)
     {
         if (this->devices[i] != nullptr)
         {
-            Serial.printf("Device: %s\n", this->devices[i]->getName().c_str());
+            LV_LOG_TRACE("Settings::saveDeviceSettings Device: %s", this->devices[i]->getName().c_str());
             this->devices[i]->saveSettings();
+        }
+    }
+}
+
+bool Settings::addApp(AppInterface *app)
+{
+    LV_LOG_TRACE("Settings::addApp(%s)", app->getName());
+
+    AppInterface *currentApp;
+    /* search free slot in app array */
+    for (int i = 0; i < APPSLOTS; i++)
+    {
+        if (this->apps[i] == nullptr)
+        {
+            //  Add tab (name is irrelevant since the labels are hidden and hidden buttons are used (below))
+            this->apps[i] = app;
+            return true;
+        }
+    }
+    return false;
+}
+
+void Settings::createAppSettings(lv_obj_t *menu, lv_obj_t *parent)
+{
+    LV_LOG_TRACE("Settings::createAppSettings");
+
+    lv_color_t primary_color = display->getPrimaryColor();
+
+    /* search app array */
+    for (int i = 0; i < APPSLOTS; i++)
+    {
+        if (this->apps[i] != nullptr)
+        {
+            LV_LOG_TRACE("Settings::createAppSettings App: %s", this->apps[i]->getName().c_str());
+            this->apps[i]->displaySettings(parent);
+        }
+    }
+}
+
+void Settings::saveAppSettings()
+{
+    LV_LOG_TRACE("Settings::saveAppSettings");
+
+    /* search app array */
+    for (int i = 0; i < APPSLOTS; i++)
+    {
+        if (this->apps[i] != nullptr)
+        {
+            LV_LOG_TRACE("Settings::saveAppSettings app: %s", this->apps[i]->getName().c_str());
+            this->apps[i]->saveSettings();
         }
     }
 }

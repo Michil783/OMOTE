@@ -13,8 +13,8 @@ Battery::Battery(int adc_pin, int charging_pin)
 void Battery::setup()
 {
   // Power Pin Definition
-  pinMode(this->charging_pin, INPUT_PULLUP);
-  pinMode(this->adc_pin, INPUT);
+  //pinMode(this->charging_pin, INPUT/*INPUT_PULLUP*/);
+  //pinMode(this->adc_pin, INPUT);
 }
 
 int Battery::getPercentage()
@@ -24,8 +24,12 @@ int Battery::getPercentage()
 
 bool Battery::isCharging()
 {
-    //return !digitalRead(this->charging_pin);
-    return (this->getVoltage() > 4500);
+    LV_LOG_TRACE("isCharging: %d (pin: %d Voltage: %d)", 
+        (!digitalRead(this->charging_pin) && this->getVoltage() > 4500), 
+        !digitalRead(this->charging_pin), 
+        this->getVoltage());
+    return (!digitalRead(this->charging_pin) && this->getVoltage() > 4500);
+    //return (this->getVoltage() > 4500);
 }
 
 bool Battery::isConnected()

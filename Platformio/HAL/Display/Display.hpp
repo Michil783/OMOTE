@@ -255,6 +255,10 @@ class Display
          * Variable to store the current backlight brightness level
         */
         unsigned int backlight_brightness;
+
+        #define BATTERYCHARGINGINDEX_MAX 5
+        int batteryChargingIndex = 0;
+        const char* batteryCharging[BATTERYCHARGINGINDEX_MAX] = {LV_SYMBOL_BATTERY_EMPTY, LV_SYMBOL_BATTERY_1, LV_SYMBOL_BATTERY_2, LV_SYMBOL_BATTERY_3, LV_SYMBOL_BATTERY_FULL};
 };
 
 

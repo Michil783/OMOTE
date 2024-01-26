@@ -1,11 +1,13 @@
 #include <Display.hpp>
 #include <WiFi.h>
 #include <DeviceInterface.hpp>
+#include <AppInterface.hpp>
 
 #ifndef _SETTINGS_HPP_
 #define _SETTINGS_HPP_
 
 #define DEVICESLOTS 10
+#define APPSLOTS 10
 
 class Settings : public AppInterface
 {
@@ -16,9 +18,12 @@ public:
     void handleCustomKeypad(int keyCode, char keyChar){};
 
     bool addDevice(DeviceInterface* device);
-    void saveDeviceSettings();
+
+    bool addApp(AppInterface* app);
 
     void reset_settings_menu();
+
+    void displaySettings(lv_obj_t* parent) {};
 
     /**
      * @brief API function to inform display that wifi scan is completed
@@ -41,6 +46,8 @@ public:
      * @param connected Boolean parameter to indicate if a wifi connection is established or not.
      */
     void update_wifi(bool connected);
+
+    void saveSettings();
 
 private:
     /**
@@ -182,6 +189,13 @@ private:
     DeviceInterface* devices[DEVICESLOTS];
     lv_obj_t* deviceOverview[DEVICESLOTS];
     void createDeviceSettings(lv_obj_t *menu, lv_obj_t *parent);
+
+    AppInterface* apps[APPSLOTS];
+    lv_obj_t* appOverview[APPSLOTS];
+    void createAppSettings(lv_obj_t *menu, lv_obj_t *parent);
+
+    void saveAppSettings();
+    void saveDeviceSettings();
 };
 
 #endif

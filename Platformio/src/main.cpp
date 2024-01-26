@@ -115,8 +115,9 @@ PubSubClient client(espClient);
 lv_obj_t *panel;
 
 // Helper Functions -----------------------------------------------------------------------------------------------------------------------
+/*
 #include "FS.h"
-#include <LITTLEFS.h>
+#include <LittleFS.h>
 
 //#define TWOPART
 #define FORMAT_LITTLEFS_IF_FAILED true
@@ -347,6 +348,7 @@ void testFileIO(fs::FS &fs, const char * path){
         Serial.println("- failed to open file for reading");
     }
 }
+*/
 
 // Display flushing
 /*
@@ -567,6 +569,7 @@ void setup()
   pinMode(SW_E, INPUT);
 
   // Power Pin Definition
+  //pinMode(CRG_STAT, INPUT);
   pinMode(CRG_STAT, INPUT_PULLUP);
   pinMode(ADC_BAT, INPUT);
 
@@ -640,12 +643,14 @@ void setup()
   
   Serial.println("starting setup");
 
-  //LittleFS.begin();
+  /*
   if(!LittleFS.begin(FORMAT_LITTLEFS_IF_FAILED)){
       Serial.println("LITTLEFS Mount Failed");
       return;
   }
-
+  listDir(LittleFS, "/", 2);
+  */
+ 
   // Restore settings from internal flash memory
   preferences.begin("settings", false);
   if (preferences.getBool("alreadySetUp"))
@@ -669,6 +674,18 @@ void setup()
   Serial.println("init TFT");
   display.setup();
   
+  //lv_port_littlefs_init();
+
+  // lv_fs_file_t f;
+  // lv_fs_res_t res;
+  // res = lv_fs_open(&f, "L:/file.txt", LV_FS_MODE_RD);
+  // LV_LOG_USER("open file result: %d", res);
+  // uint32_t read_num;
+  // char buf[8];
+  // res = lv_fs_read(&f, buf, 8, &read_num);
+  // LV_LOG_USER("read file result: %d", res);
+  // LV_LOG_USER("buf: %s", String(buf));
+
   // --- LVGL UI Configuration ---
   display.setup_ui();
 

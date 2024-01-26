@@ -3,6 +3,7 @@
 #include <Wire.h>
 #include <Preferences.h>
 #include <Settings.hpp>
+//#include "lv_fs_littlefs.h"
 
 extern bool wakeupByIMUEnabled;
 extern Display display;
@@ -42,7 +43,7 @@ void store_scroll_value_event_cb(lv_event_t* e){
 // Update current device when the tabview page is changes
 void tabview_device_event_cb(lv_event_t* e){
   currentDevice = lv_tabview_get_tab_act(lv_event_get_target(e));
-  Serial.printf("slide to currentDevice %d\n", currentDevice);
+  LV_LOG_TRACE("slide to currentDevice %d", currentDevice);
 }
 
 // Display flushing
@@ -98,10 +99,10 @@ void Display::turnOff()
   pinMode(this->enable_pin, INPUT);
   gpio_hold_en((gpio_num_t)this->backlight_pin);
   gpio_hold_en((gpio_num_t)this->enable_pin);
-  Serial.printf("save blBrightness %d\n", this->backlight_brightness);
+  LV_LOG_TRACE("save blBrightness %d", this->backlight_brightness);
   preferences.putUChar("blBrightness", this->backlight_brightness);
   /* save settings of all devices */
-  settings.saveDeviceSettings();
+  settings.saveSettings();
 }
 
 void Display::setup()
@@ -162,16 +163,17 @@ void Display::setup()
   // this->touch.begin(128); // Initialize touchscreen and set sensitivity threshold
 
   this->backlight_brightness = preferences.getUChar("blBrightness", DEFAULT_BACKLIGHT_BRIGHTNESS);
-  Serial.printf("restore blBrightness to %d\n", this->backlight_brightness);
+  LV_LOG_TRACE("restore blBrightness to %d", this->backlight_brightness);
 
   // Setup LVGL
   lv_init();
+  //lv_port_littlefs_init();
 }
 
 static lv_disp_draw_buf_t draw_buf;
 void Display::setup_ui()
 {
-  Serial.println("Display::setup_ui()");
+  LV_LOG_TRACE("Display::setup_ui()");
   this->bufA = (lv_color_t *)malloc((this->width * this->height / 10) * sizeof(lv_color_t));
   this->bufB = (lv_color_t *)malloc((this->width * this->height / 10) * sizeof(lv_color_t));
 
@@ -333,35 +335,40 @@ void Display::update_battery(int percentage, bool isCharging, bool isConnected)
     lv_label_set_text(this->objUSBIcon, "");
   }
   // if(isCharging || !isConnected){
-  //   Serial.println("charging?");
+  //   LV_LOG_USER("charging?");
   //   lv_label_set_text(this->objBattPercentage, "");
   lv_label_set_text(this->objBattPercentage, String(percentage).c_str());
   //   lv_label_set_text(this->objBattIcon, LV_SYMBOL_USB);
   // }
   // else {
-  //  Serial.println("Running on battery");
+  //  LV_LOG_USER("Running on battery");
   //this->drawBattery(this->objBattIcon);
-  if (percentage > 95)
-  {
-    lv_label_set_text(this->objBattIcon, LV_SYMBOL_BATTERY_FULL);
+  if( isCharging ) {
+    lv_label_set_text(this->objBattIcon, this->batteryCharging[this->batteryChargingIndex++]);
+    if( this->batteryChargingIndex == BATTERYCHARGINGINDEX_MAX ) this->batteryChargingIndex = 0;
   }
-  else if (percentage > 75)
-  {
-    lv_label_set_text(this->objBattIcon, LV_SYMBOL_BATTERY_3);
+  else {
+    if (percentage > 95)
+    {
+      lv_label_set_text(this->objBattIcon, LV_SYMBOL_BATTERY_FULL);
+    }
+    else if (percentage > 75)
+    {
+      lv_label_set_text(this->objBattIcon, LV_SYMBOL_BATTERY_3);
+    }
+    else if (percentage > 50)
+    {
+      lv_label_set_text(this->objBattIcon, LV_SYMBOL_BATTERY_2);
+    }
+    else if (percentage > 25)
+    {
+      lv_label_set_text(this->objBattIcon, LV_SYMBOL_BATTERY_1);
+    }
+    else
+    {
+      lv_label_set_text(this->objBattIcon, LV_SYMBOL_BATTERY_EMPTY);
+    }
   }
-  else if (percentage > 50)
-  {
-    lv_label_set_text(this->objBattIcon, LV_SYMBOL_BATTERY_2);
-  }
-  else if (percentage > 25)
-  {
-    lv_label_set_text(this->objBattIcon, LV_SYMBOL_BATTERY_1);
-  }
-  else
-  {
-    lv_label_set_text(this->objBattIcon, LV_SYMBOL_BATTERY_EMPTY);
-  }
-  //}
 }
 
 void Display::updateWifi(String symbol)

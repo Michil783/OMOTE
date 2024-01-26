@@ -22,7 +22,7 @@ u_int64_t SamsungTV::getValue(char keyChar){
   {
     if ( this->samsungKeys[i].key == keyChar )
     {
-      Serial.printf("key %c found: data is %x\n", this->samsungKeys[i].key, this->samsungKeys[i].code);
+      LV_LOG_USER("key %c found: data is %x", this->samsungKeys[i].key, this->samsungKeys[i].code);
       return this->samsungKeys[i].code;
     }
   }
@@ -30,8 +30,8 @@ u_int64_t SamsungTV::getValue(char keyChar){
 }
 
 void SamsungTV::handleCustomKeypad(int keyCode, char keyChar){
-    Serial.println("SamsungTV");
-    Serial.printf("handleCustomKeypad(%d, %c)\n", keyCode, keyChar);
+    LV_LOG_USER("SamsungTV");
+    LV_LOG_USER("handleCustomKeypad(%d, %c)", keyCode, keyChar);
     uint64_t code = this->getValue(keyChar);
     if( code != -1 ) IrSender.sendSAMSUNG(code);
 }

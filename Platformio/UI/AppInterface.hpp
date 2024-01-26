@@ -19,6 +19,8 @@ class AppInterface {
     public:
     virtual void handleCustomKeypad(int keyCode, char keyChar) = 0;
     virtual String getName() = 0;
+    virtual void displaySettings(lv_obj_t *parent) = 0;
+    virtual void saveSettings() = 0;
 };
 
 #endif
