@@ -22,8 +22,6 @@
 //#include <AppleTV.hpp>
 //#include <SmartHome.hpp>
 
-#define ENABLE_WIFI // Comment out to diable connected features
-
 // Variables and Object declarations ------------------------------------------------------------------------------------------------------
 #include <IRremoteESP8266.h>
 #include <IRrecv.h>
@@ -705,7 +703,9 @@ void setup()
 #ifdef ENABLE_WIFI
   // Setup WiFi
   Serial.println("init WIFI");
-  wifihandler.begin();
+  LV_LOG_USER("wifiEnable: %d wifiConnected: %d", settings.wifiEnabled(), wifihandler.isConnected());
+  if( settings.wifiEnabled() )
+    wifihandler.begin();
 #endif
 
   // Setup IMU

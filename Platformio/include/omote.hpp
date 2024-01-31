@@ -31,3 +31,5 @@
 
 #define CRG_STAT 21 // battery charger feedback
 
+#define ENABLE_WIFI // Comment out to diable connected features
+

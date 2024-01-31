@@ -22,6 +22,7 @@ public:
     bool addApp(AppInterface* app);
 
     void reset_settings_menu();
+    void reset_wifi_menu();
 
     void displaySettings(lv_obj_t* parent) {};
 
@@ -48,6 +49,10 @@ public:
     void update_wifi(bool connected);
 
     void saveSettings();
+
+    bool wifiEnable = false;
+
+    bool wifiEnabled();
 
 private:
     /**
@@ -196,6 +201,11 @@ private:
 
     void saveAppSettings();
     void saveDeviceSettings();
+
+    lv_obj_t *ssidLabel = nullptr;
+    lv_obj_t * ipLabel = nullptr;
+
+    void factoryReset();
 };
 
 #endif

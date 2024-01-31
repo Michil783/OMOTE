@@ -221,9 +221,15 @@ void MagentaTV::setup()
     settings.addApp(this);
 
     iconEnabled = preferences.getBool("MTVIcons", true);
-    this->bgColor.full = preferences.getUShort("bgColor"); //, lv_color_to16(lv_color_lighten(lv_color_hex(0x808080), 0)));
-    this->textColor.full = preferences.getUShort("textColor"); //, lv_color_to16(lv_color_black())));
-    LV_LOG_USER("iconEnabled: %d, bgColor: 0x%0.4X(0x%0.4X), textColor: 0x%0.4X(0x%0.4X)", this->iconEnabled, lv_color_to16(this->bgColor), preferences.getUShort("bgColor"), lv_color_to16(this->textColor), preferences.getUShort("textColor"));
+    this->bgColor.full = preferences.getUShort("bgColor", lv_color_to16(lv_color_lighten(lv_color_hex(0x808080), 0)));
+    this->textColor.full = preferences.getUShort("textColor", lv_color_to16(lv_color_black()));
+    LV_LOG_USER("iconEnabled: %d, bgColor: 0x%0.4X(0x%0.4X), textColor: 0x%0.4X(0x%0.4X)", 
+        this->iconEnabled, 
+        lv_color_to16(this->bgColor), 
+        preferences.getUShort("bgColor", lv_color_to16(lv_color_lighten(lv_color_hex(0x808080), 0))), 
+        lv_color_to16(this->textColor), 
+        preferences.getUShort("textColor", lv_color_to16(lv_color_black()))
+    );
 
     /* Create main page for the app */
     this->setup_MagentaTV(this->tab);

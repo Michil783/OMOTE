@@ -3,6 +3,8 @@
 #include <Arduino.h>
 #include <WifiHandler.hpp>
 #include <IRHandler.hpp>
+#include <Preferences.h>
+#include <omote.hpp>
 
 #define WIFI_SUBPAGE_SIZE 3
 
@@ -20,6 +22,7 @@ extern long standbyTimerConfigured;
 extern WifiHandler wifihandler;
 static char *ssid;
 extern IRHandler irhandler;
+extern Preferences preferences;
 
 /**
  * @brief Textarea callback function for the password field. In case the enter key is pressed in the text area, the
@@ -80,6 +83,25 @@ void bl_slider_event_cb(lv_event_t *e)
     unsigned int *backlight_brightness = (unsigned int *)lv_event_get_user_data(e);
     *backlight_brightness = map(constrain(lv_slider_get_value(slider), 30, 240), 30, 240, 240, 30);
     // LV_LOG_TRACE("Settings - bl_slider_event_cb(%d) - %d", constrain(lv_slider_get_value(slider), 30, 240), *backlight_brightness);
+}
+
+void WifiEnableSetting_event_cb(lv_event_t *e)
+{
+    // LV_LOG_USER("Settings - WakeEnableSetting_event_cb");
+    settings.wifiEnable = lv_obj_has_state(lv_event_get_target(e), LV_STATE_CHECKED);
+    preferences.putBool("wifiEnabled", settings.wifiEnable);
+    LV_LOG_USER("wifiEnable: %d", settings.wifiEnable);
+    settings.reset_wifi_menu();
+    #ifdef ENABLE_WIFI
+    LV_LOG_USER("wifiEnable: %d wifiConnected: %d", settings.wifiEnabled(), wifihandler.isConnected());
+    if( settings.wifiEnabled() ){
+        wifihandler.begin();
+    } else {
+        wifihandler.turnOff();
+        //settings.update_wifi(false);
+        //display.updateWifi("");
+    }
+    #endif
 }
 
 /**
@@ -201,6 +223,14 @@ Settings::Settings(Display *display)
     }
 }
 
+void Settings::factoryReset(){
+    preferences.clear();
+}
+
+bool Settings::wifiEnabled(){
+    return this->wifiEnable;
+}
+
 String Settings::getName(){
     return "Settings";
 }
@@ -213,6 +243,9 @@ String Settings::getName(){
  */
 void Settings::setup()
 {
+    this->wifiEnable = preferences.getBool("wifiEnable", false);
+    LV_LOG_USER("wifiEnable: %d", this->wifiEnable);
+
     this->tab = this->display->addTab(this);
 
     /* Create main page for settings this->settingsMenu*/
@@ -343,16 +376,21 @@ void Settings::display_settings(lv_obj_t *parent)
 
 void Settings::reset_settings_menu()
 {
-    /*
-    lv_obj_clean(this->tab);
-    this->setup_settings(this->tab);
-    */
+    LV_LOG_USER("");
     if( this->settingsMenu && this->settingsMainPage )
         lv_menu_set_page(this->settingsMenu, this->settingsMainPage);
     else
         LV_LOG_TRACE("something wrong in reset_settings_menu()");
 }
 
+void Settings::reset_wifi_menu()
+{
+    LV_LOG_USER("");
+    lv_obj_clean(this->wifiOverview);
+    this->ssidLabel = this->ipLabel = nullptr;
+    lv_obj_t* cont = lv_obj_get_child(this->settingsMainPage, 0);
+    this->create_wifi_main_page(cont);
+}
 
 /**
  * @brief IR the settings
@@ -501,9 +539,8 @@ void Settings::next_wifi_selection_subpage(lv_event_t *e)
 
 void Settings::update_wifi(bool connected)
 {
-
-    lv_obj_t *ip_label = lv_obj_get_child(this->wifiOverview, 3);
-    lv_obj_t *ssid_label = lv_obj_get_child(this->wifiOverview, 0);
+    lv_obj_t *ip_label = this->ipLabel; //(this->wifiOverview, 3);
+    lv_obj_t *ssid_label = this->ssidLabel; //(this->wifiOverview, 0);
     if (connected)
     {
         LV_LOG_TRACE("update_wifi()");
@@ -521,15 +558,18 @@ void Settings::update_wifi(bool connected)
     else
     {
         // lv_label_set_text(this->WifiLabel, "");
-        this->display->updateWifi(LV_SYMBOL_WIFI);
-        lv_label_set_text(ssid_label, "Disconnected");
-        lv_label_set_text(ip_label, "-");
+        //this->display->updateWifi(LV_SYMBOL_WIFI);
+        this->display->updateWifi("");
+        if( ssid_label )
+            lv_label_set_text(ssid_label, "Disconnected");
+        if( ip_label )
+            lv_label_set_text(ip_label, "-");
     }
 }
 
 lv_obj_t *Settings::create_wifi_password_page(lv_obj_t *menu)
 {
-    LV_LOG_TRACE("Settings::create_wifi_password_page()");
+    LV_LOG_TRACE("");
 
     lv_obj_t *ret_val = lv_menu_page_create(menu, NULL);
     lv_obj_t *cont = lv_menu_cont_create(ret_val);
@@ -576,45 +616,66 @@ lv_obj_t *Settings::create_wifi_selection_page(lv_obj_t *menu)
 
 void Settings::create_wifi_main_page(lv_obj_t *parent)
 {
+    LV_LOG_USER("");
     lv_color_t primary_color = display->getPrimaryColor();
 
-    lv_obj_t *menuLabel = lv_label_create(parent);
-    lv_label_set_text(menuLabel, "Wi-Fi");
-    this->wifiOverview = lv_obj_create(parent);
-    lv_obj_set_size(this->wifiOverview, lv_pct(100), 80);
-    lv_obj_set_style_bg_color(this->wifiOverview, primary_color, LV_PART_MAIN);
-    lv_obj_set_style_border_width(this->wifiOverview, 0, LV_PART_MAIN);
-    menuLabel = lv_label_create(this->wifiOverview);
-
-    lv_obj_t *arrow = lv_label_create(this->wifiOverview);
-    lv_label_set_text(arrow, LV_SYMBOL_RIGHT);
-    lv_obj_align(arrow, LV_ALIGN_TOP_RIGHT, 0, 0);
-
-    lv_obj_t *ip_label = lv_label_create(this->wifiOverview);
-    lv_label_set_text(ip_label, "IP:");
-    lv_obj_align(ip_label, LV_ALIGN_BOTTOM_LEFT, 0, 0);
-
-    lv_obj_t *ip = lv_label_create(this->wifiOverview);
-    lv_obj_align(ip, LV_ALIGN_BOTTOM_RIGHT, 0, 0);
-
-    if (wifihandler.isConnected())
-    {
-        lv_label_set_text(menuLabel, wifihandler.getSSID());
-        lv_label_set_text(ip, wifihandler.getIP().c_str());
+    if( !this->wifiOverview ) {
+        this->wifiOverview = lv_obj_create(parent);
+        lv_obj_set_size(this->wifiOverview, lv_pct(100), 90);
+        lv_obj_set_style_bg_color(this->wifiOverview, primary_color, LV_PART_MAIN);
+        lv_obj_set_style_border_width(this->wifiOverview, 0, LV_PART_MAIN);
     }
-    else
-    {
-        lv_label_set_text(menuLabel, "Disconnected");
-        lv_label_set_text(ip, "-");
+
+    lv_obj_t *enable = lv_label_create(this->wifiOverview);
+    lv_label_set_text(enable, "Enable WiFi");
+    lv_obj_align(enable, LV_ALIGN_TOP_LEFT, 0, 0);
+    lv_obj_t *wifiEnable = lv_switch_create(this->wifiOverview);
+    lv_obj_set_size(wifiEnable, 40, 22);
+    lv_obj_align(wifiEnable, LV_ALIGN_TOP_RIGHT, 0, -3);
+    lv_obj_set_style_bg_color(wifiEnable, lv_color_hex(0x505050), LV_PART_MAIN);
+    lv_obj_add_event_cb(wifiEnable, WifiEnableSetting_event_cb, LV_EVENT_VALUE_CHANGED, this);
+    if (this->wifiEnable)
+        lv_obj_add_state(wifiEnable, LV_STATE_CHECKED); // set default state
+    
+    if( this->wifiEnable ) {
+        lv_obj_t* menuLabel = lv_label_create(this->wifiOverview);
+        lv_obj_align(menuLabel, LV_ALIGN_TOP_LEFT, 0, 24);
+        this->ssidLabel = menuLabel;
+
+        lv_obj_t *arrow = lv_label_create(this->wifiOverview);
+        lv_label_set_text(arrow, LV_SYMBOL_RIGHT);
+        lv_obj_align(arrow, LV_ALIGN_TOP_RIGHT, 0, 24);
+
+        lv_obj_t *ip_label = lv_label_create(this->wifiOverview);
+        lv_label_set_text(ip_label, "IP:");
+        lv_obj_align(ip_label, LV_ALIGN_BOTTOM_LEFT, 0, 0);
+
+        lv_obj_t *ip = lv_label_create(this->wifiOverview);
+        lv_obj_align(ip, LV_ALIGN_BOTTOM_RIGHT, 0, 0);
+        this->ipLabel = ip;
+
+        if (wifihandler.isConnected())
+        {
+            lv_label_set_text(this->ssidLabel, wifihandler.getSSID());
+            lv_label_set_text(this->ipLabel, wifihandler.getIP().c_str());
+        }
+        else
+        {
+            lv_label_set_text(menuLabel, "Disconnected");
+            lv_label_set_text(ip, "-");
+        }
+        lv_menu_set_load_page_event(this->settingsMenu, this->wifiOverview, this->wifi_selection_page);
+        lv_obj_add_event_cb(this->wifiOverview, wifi_settings_cb, LV_EVENT_CLICKED, this->wifi_setting_cont);
     }
-    lv_menu_set_load_page_event(this->settingsMenu, this->wifiOverview, this->wifi_selection_page);
-    lv_obj_add_event_cb(this->wifiOverview, wifi_settings_cb, LV_EVENT_CLICKED, this->wifi_setting_cont);
 }
 
 void Settings::create_wifi_settings(lv_obj_t *menu, lv_obj_t *parent)
 {
+    LV_LOG_USER("");
     this->wifi_selection_page = this->create_wifi_selection_page(menu);
     this->wifi_password_page = this->create_wifi_password_page(this->settingsMenu);
+    lv_obj_t *menuLabel = lv_label_create(parent);
+    lv_label_set_text(menuLabel, "Wi-Fi");
     this->create_wifi_main_page(parent);
 }
 
@@ -637,6 +698,8 @@ bool Settings::addDevice(DeviceInterface *device)
 }
 
 void Settings::saveSettings(){
+    LV_LOG_USER("wifiEnable: %d", this->wifiEnable);
+    preferences.putBool("wifiEnable", this->wifiEnable);
     this->saveAppSettings();
     this->saveDeviceSettings();
 }

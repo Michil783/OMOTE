@@ -34,31 +34,41 @@ void WiFiEvent(WiFiEvent_t event){
   switch (event)
   {
     case ARDUINO_EVENT_WIFI_SCAN_DONE:
-      Serial.println("WIFI scan done\n");
+      LV_LOG_USER("WIFI scan done");
       no_networks = WiFi.scanComplete();
       if (no_networks < 0)
       {
-        Serial.println("Scan failed");
+        LV_LOG_ERROR("Scan failed");
       }
       else
       {
         settings.clear_wifi_networks();
-        Serial.printf("%d found\n", no_networks);
+        LV_LOG_USER("%d found", no_networks);
         settings.wifi_scan_complete( no_networks);
       }
       break;
     case ARDUINO_EVENT_WIFI_STA_GOT_IP:
       //client.setServer(MQTT_SERVER, 1883); // MQTT initialization
       //client.connect("OMOTE"); // Connect using a client id
+      LV_LOG_USER("ARDUINO_EVENT_WIFI_STA_GOT_IP");
     case ARDUINO_EVENT_WIFI_STA_GOT_IP6:
       settings.update_wifi(true);
       wifihandler.update_credetials(temporary_ssid, temporary_password);
       break;
     case ARDUINO_EVENT_WIFI_STA_DISCONNECTED:
-    case ARDUINO_EVENT_WIFI_STA_LOST_IP:
-    case ARDUINO_EVENT_WIFI_STA_STOP:
+      LV_LOG_USER("ARDUINO_EVENT_WIFI_STA_DISCONNECTED");
       settings.update_wifi(false);
+      break;
+    case ARDUINO_EVENT_WIFI_STA_LOST_IP:
+      LV_LOG_USER("ARDUINO_EVENT_WIFI_STA_LOST_IP");
+      settings.update_wifi(false);
+      break;
+    case ARDUINO_EVENT_WIFI_STA_STOP:
+      LV_LOG_USER("ARDUINO_EVENT_WIFI_STA_STOP");
+      settings.update_wifi(false);
+      break;
     default:
+      LV_LOG_USER("ARDUINO_EVENT_WIFI default");
       break;
   }
 }
@@ -105,37 +115,38 @@ void WifiHandler::begin()
     WiFi.mode(WIFI_STA);
     WiFi.onEvent(WiFiEvent);
 
-    String ssid = preferences.getString("SSID");
-    String password = preferences.getString("password");
+    String ssid = preferences.getString("SSID", "");
+    String password = preferences.getString("password", "");
+    LV_LOG_USER("ssid: \"%s\" (%d,%d), password: \"%s\"", ssid, ssid.length(), ssid.isEmpty(), password);
 
     /* If the SSID is not empty, there was a value stored in the preferences and we try to use it.*/
     if (!ssid.isEmpty())
     {
-        Serial.print("Connecting to wifi ");
+        LV_LOG_USER("Connecting to wifi ");
         Serial.println(ssid);
         strcpy(this->SSID,  ssid.c_str());
         strcpy(this->password, password.c_str());
+        LV_LOG_USER("this->SSID: \"%s\" (%d, %d), this->password: \"%s\"", String(this->SSID), String(this->SSID).length(), !String(this->SSID).isEmpty(), String(this->password));
         this->connect(this->SSID, this->password);
     }
     else
     {
-        Serial.println("no SSID or password stored");
-        /*Set first character to \0 indicates an empty string*/
+        LV_LOG_USER("no SSID or password stored");
+        //Set first character to \0 indicates an empty string
         this->SSID[0] = '\0';
         this->password[0] = '\0';
         WiFi.disconnect();
     }
-
     WiFi.setSleep(true);
 }
 
 void WifiHandler::connect(const char* SSID, const char* password)
 {
-    Serial.printf("WifiHandler::connect(%s, %s)\n", SSID, password);
+    LV_LOG_USER("ssid: \"%s\", password: \"%s\"", SSID, password);
     temporary_password = password;
     temporary_ssid = SSID;
     WiFi.begin(SSID, password);
-    Serial.println("WifiHandler::connect finished");
+    LV_LOG_USER("finished");
 }
 
 void WifiHandler::turnOff()

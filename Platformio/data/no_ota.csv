@@ -2,5 +2,5 @@
 nvs,      data, nvs,     0x9000,  0x5000,
 otadata,  data, ota,     0xe000,  0x2000,
 factory,  app,  factory, 0x10000, 3M,
-#littlfs,  data, littlefs,  0x210000,0x1E0000,
+littlfs,  data, littlefs,  0x310000,0x1E0000,
 coredump, data, coredump,0x3F0000,0x10000,
