@@ -371,7 +371,7 @@ void Settings::display_settings(lv_obj_t *parent)
         break;
     }
     lv_dropdown_set_selected(drop, selected);
-    lv_obj_add_event_cb(drop, to_dropdown_event_cb, LV_EVENT_ALL, &standbyTimerConfigured);
+    lv_obj_add_event_cb(drop, to_dropdown_event_cb, LV_EVENT_VALUE_CHANGED, &standbyTimerConfigured);
 }
 
 void Settings::reset_settings_menu()

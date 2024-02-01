@@ -122,6 +122,18 @@ void virtualKeypad_event_cb(lv_event_t *e)
     standbyTimer = standbyTimerConfigured;
 }
 
+void fs_dropdown_event_cb(lv_event_t *e)
+{
+    lv_event_code_t code = lv_event_get_code(e);
+    lv_obj_t *obj = lv_event_get_target(e);
+    MagentaTV *mt = (MagentaTV*)lv_event_get_user_data(e);
+    //LV_LOG_USER("code: %d (%d)", code, LV_EVENT_VALUE_CHANGED);
+    mt->setFontSize(lv_dropdown_get_selected(obj));
+    LV_LOG_TRACE("new fontSize = %d\n", mt->getFontSize());
+    globalMagentaTV->saveSettings();
+    globalMagentaTV->resetMagentaTVPage();
+}
+
 /**
  * @brief Checkbox callback function for the lift to wake option
  *
@@ -230,6 +242,7 @@ void MagentaTV::setup()
         lv_color_to16(this->textColor), 
         preferences.getUShort("textColor", lv_color_to16(lv_color_black()))
     );
+    this->fontSize = preferences.getInt("fontSize", 1);
 
     /* Create main page for the app */
     this->setup_MagentaTV(this->tab);
@@ -277,10 +290,13 @@ void MagentaTV::setup_MagentaTV(lv_obj_t *parent)
             buttonLabel = lv_label_create(obj);
             lv_obj_set_style_bg_color(obj, this->bgColor, LV_PART_MAIN);
             lv_label_set_text_fmt(buttonLabel, channelInfo[i].channelName.c_str());
+            lv_label_set_long_mode(buttonLabel, LV_LABEL_LONG_WRAP);
             static lv_style_t style;
             lv_style_init(&style);
-            lv_style_set_text_font(&style, &lv_font_montserrat_16);
+            //lv_style_set_text_font(&style, &lv_font_montserrat_16);
+            lv_style_set_text_font(&style, &usedFont[this->fontSize]);
             lv_style_set_text_color(&style, this->textColor);
+            lv_style_set_text_align(&style, LV_ALIGN_CENTER);
             lv_obj_add_style(buttonLabel, &style, 0);
             lv_obj_align(buttonLabel, LV_ALIGN_CENTER, 0, 0);
         }
@@ -326,7 +342,7 @@ void MagentaTV::displaySettings(lv_obj_t *parent)
         lv_obj_clean(this->menuBox);
     else
         this->menuBox = lv_obj_create(parent);
-    lv_obj_set_size(menuBox, lv_pct(100), 109);
+    lv_obj_set_size(menuBox, lv_pct(100), 139);
     lv_obj_set_style_bg_color(menuBox, primary_color, LV_PART_MAIN);
     lv_obj_set_style_border_width(menuBox, 0, LV_PART_MAIN);
 
@@ -357,6 +373,22 @@ void MagentaTV::displaySettings(lv_obj_t *parent)
         lv_obj_align(textColorPicker, LV_ALIGN_TOP_RIGHT, 0, 56);
         lv_obj_set_style_bg_color(textColorPicker, this->textColor, LV_PART_MAIN);
         lv_obj_add_event_cb(textColorPicker, colorPicker_event_cb, LV_EVENT_CLICKED, &this->textColor);
+        menuLabel = lv_label_create(menuBox);
+        lv_label_set_text(menuLabel, "Text Size");
+        lv_obj_align(menuLabel, LV_ALIGN_TOP_LEFT, 0, 90);
+        lv_obj_t *drop = lv_dropdown_create(menuBox);
+        lv_dropdown_set_options(drop, "small\n"
+                                    "medium\n"
+                                    "large");
+        lv_obj_align(drop, LV_ALIGN_TOP_RIGHT, 0, 87);
+        lv_obj_set_size(drop, 105, 22);
+        lv_obj_set_style_pad_top(drop, 1, LV_PART_MAIN);
+        lv_obj_set_style_bg_color(drop, primary_color, LV_PART_MAIN);
+        lv_obj_set_style_bg_color(lv_dropdown_get_list(drop), primary_color, LV_PART_MAIN);
+        lv_obj_set_style_border_width(lv_dropdown_get_list(drop), 1, LV_PART_MAIN);
+        lv_obj_set_style_border_color(lv_dropdown_get_list(drop), lv_color_hex(0x505050), LV_PART_MAIN);
+        lv_dropdown_set_selected(drop, this->fontSize);
+        lv_obj_add_event_cb(drop, fs_dropdown_event_cb, LV_EVENT_VALUE_CHANGED, this);
     }
     else
     {
@@ -372,4 +404,6 @@ void MagentaTV::saveSettings()
     LV_LOG_USER("saved bgColor: 0x%0.4X", preferences.getUShort("bgColor"));
     preferences.putUShort("textColor", lv_color_to16(this->textColor));
     LV_LOG_USER("saved textColor: 0x%0.4X", preferences.getUShort("textColor"));
+    preferences.putInt("fontSize", this->fontSize);
+    LV_LOG_USER("saved fontSize: %d", preferences.getInt("fontSize"));
 }

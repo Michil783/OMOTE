@@ -16,12 +16,11 @@ class MagentaTV : public AppInterface {
     void displaySettings(lv_obj_t *parent);
     void saveSettings();
     void resetMagentaTVPage();
+    void setFontSize(int newSize){this->fontSize = newSize;};
+    int getFontSize(){return this->fontSize;};
 
-    lv_obj_t* cPicker = nullptr;
-    
     lv_color_t bgColor;
     lv_color_t textColor;
-    lv_obj_t* colorPickerPage = nullptr;
 
     private:
     /**
@@ -54,6 +53,17 @@ class MagentaTV : public AppInterface {
     lv_obj_t *menuLabel = nullptr;
     lv_obj_t* menuBox = nullptr;
     bool iconEnabled = false;
+
+    lv_obj_t* cPicker = nullptr;
+    
+    lv_obj_t* colorPickerPage = nullptr;
+
+    int fontSize = 1;
+    lv_font_t usedFont[3] = {
+        lv_font_montserrat_14,
+        lv_font_montserrat_16,
+        lv_font_montserrat_24
+    };
 };
 
 #endif

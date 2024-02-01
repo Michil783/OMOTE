@@ -19,7 +19,7 @@ class SamsungTV : public DeviceInterface {
     public:
     SamsungTV(Display *display);
     String getName(){return "SamsungTV";};
-    void displaySettings(lv_obj_t *parent) {};
+    void displaySettings(lv_obj_t *parent);
     void saveSettings() {};
     void handleCustomKeypad(int keyCode, char keyChar);
 private:
@@ -36,7 +36,7 @@ private:
             {'o', 0xE0E040BF},
             {'m', 0xE0E0F00F}
         };
-
+    String ip = "192.168.178.43";
 };
 
 #endif
