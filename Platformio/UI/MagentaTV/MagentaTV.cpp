@@ -260,47 +260,84 @@ void MagentaTV::setup_MagentaTV(lv_obj_t *parent)
     // Create a container with grid for tab2
     lv_obj_set_style_pad_all(parent, 0, LV_PART_MAIN);
     lv_obj_t *cont = lv_obj_create(parent);
-    lv_obj_set_style_shadow_width(cont, 0, LV_PART_MAIN);
-    lv_obj_set_style_bg_color(cont, lv_color_black(), LV_PART_MAIN);
-    lv_obj_set_style_border_width(cont, 0, LV_PART_MAIN);
     lv_obj_set_style_grid_column_dsc_array(cont, col_dsc, 0);
     lv_obj_set_style_grid_row_dsc_array(cont, row_dsc, 0);
     lv_obj_set_size(cont, 240, 270);
+    lv_obj_center(cont);
     lv_obj_set_layout(cont, LV_LAYOUT_GRID);
+/*
+    lv_obj_set_style_shadow_width(cont, 5, LV_PART_MAIN);
+    lv_obj_set_style_bg_color(cont, lv_color_black(), LV_PART_MAIN);
+    lv_obj_set_style_border_width(cont, 0, LV_PART_MAIN);
     lv_obj_align(cont, LV_ALIGN_TOP_MID, 0, 0);
     lv_obj_set_style_radius(cont, 0, LV_PART_MAIN);
+*/
 
     lv_obj_t *buttonLabel;
     lv_obj_t *obj;
+    static lv_style_t style;
+    static lv_style_t style_pr;
 
     LV_LOG_USER("iconEnabled %d", iconEnabled);
     for (int i = 0; i < SENDERICONS; i++)
     {
         uint8_t col = i % 2;
         uint8_t row = i / 2;
+
+        lv_style_init(&style);
+        lv_style_set_bg_color(&style, this->bgColor);
+        lv_style_set_text_font(&style, &usedFont[this->fontSize]);
+        lv_style_set_text_color(&style, this->textColor);
+        lv_style_set_text_align(&style, LV_ALIGN_CENTER);
+
+        /*Init the pressed style*/
+        lv_style_init(&style_pr);
+
+        /*Add a large outline when pressed*/
+        lv_style_set_outline_width(&style_pr, 30);
+        lv_style_set_outline_opa(&style_pr, LV_OPA_TRANSP);
+
+        lv_style_set_translate_y(&style_pr, 5);
+        lv_style_set_bg_color(&style_pr, this->bgColor);
+        lv_style_set_bg_grad_color(&style_pr, lv_palette_darken(LV_PALETTE_BLUE, 4));
+
+        /*Add a transition to the outline*/
+        static lv_style_transition_dsc_t trans;
+        static lv_style_prop_t props[] = {LV_STYLE_OUTLINE_WIDTH, LV_STYLE_OUTLINE_OPA, LV_STYLE_PROP_INV};
+        lv_style_transition_dsc_init(&trans, props, lv_anim_path_linear, 300, 0, NULL);
+
+        lv_style_set_transition(&style_pr, &trans);
+
         if (iconEnabled)
         {
             obj = lv_imgbtn_create(cont);
             lv_imgbtn_set_src(obj, LV_IMGBTN_STATE_RELEASED, nullptr, channelInfo[i].icon, nullptr);
+            lv_obj_set_grid_cell(obj, LV_GRID_ALIGN_STRETCH, col, 1, LV_GRID_ALIGN_STRETCH, row, 1);
         }
         else
         {
             obj = lv_btn_create(cont);
             // Create Labels for each button
+            lv_obj_set_grid_cell(obj, LV_GRID_ALIGN_STRETCH, col, 1, LV_GRID_ALIGN_STRETCH, row, 1);
+
             buttonLabel = lv_label_create(obj);
-            lv_obj_set_style_bg_color(obj, this->bgColor, LV_PART_MAIN);
             lv_label_set_text_fmt(buttonLabel, channelInfo[i].channelName.c_str());
+            lv_obj_center(buttonLabel);
             lv_label_set_long_mode(buttonLabel, LV_LABEL_LONG_WRAP);
-            static lv_style_t style;
-            lv_style_init(&style);
-            //lv_style_set_text_font(&style, &lv_font_montserrat_16);
-            lv_style_set_text_font(&style, &usedFont[this->fontSize]);
-            lv_style_set_text_color(&style, this->textColor);
-            lv_style_set_text_align(&style, LV_ALIGN_CENTER);
-            lv_obj_add_style(buttonLabel, &style, 0);
-            lv_obj_align(buttonLabel, LV_ALIGN_CENTER, 0, 0);
+            //lv_obj_set_style_bg_color(obj, this->bgColor, LV_PART_MAIN);
+
+
+            //lv_obj_add_style(buttonLabel, &style, 0);
+
+            //lv_obj_align(buttonLabel, LV_ALIGN_CENTER, 0, 0);
+            /*
+            lv_obj_set_size(buttonLabel, lv_obj_get_width(obj), lv_obj_get_height(obj));
+            LV_LOG_USER("buttonLabel: w=%d, h=%d", lv_obj_get_width(buttonLabel), lv_obj_get_height(buttonLabel));
+            lv_label_set_long_mode(buttonLabel, LV_LABEL_LONG_WRAP);
+            */
         }
-        lv_obj_set_grid_cell(obj, LV_GRID_ALIGN_STRETCH, col, 1, LV_GRID_ALIGN_STRETCH, row, 1);
+            lv_obj_add_style(obj, &style, LV_STATE_DEFAULT);
+            lv_obj_add_style(obj, &style_pr, LV_STATE_PRESSED);
         lv_obj_add_flag(obj, LV_OBJ_FLAG_EVENT_BUBBLE); // Clicking a button causes a event in its container
         lv_obj_set_user_data(obj, (void *)channelInfo[i].channel);
     }

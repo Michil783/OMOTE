@@ -32,11 +32,12 @@ int MR401::getValues(char keyChar){
 }
 
 void MR401::dumpBuffer(uint16_t* buf, size_t size){
-    Serial.print("buffer {");
+    String buffer;
+    char b[5];
     for(size_t i = 0; i < size; i++){
-        LV_LOG_USER("%d,", buf[i]);
+        buffer = buffer + sprintf(b, "%d,", buf[i]);
     }
-    LV_LOG_USER("");
+    LV_LOG_TRACE("buffer={%s}", buf);
 }
 
 void MR401::handleCustomKeypad(int keyCode, char keyChar){
