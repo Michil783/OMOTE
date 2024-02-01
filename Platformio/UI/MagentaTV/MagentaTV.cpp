@@ -198,9 +198,9 @@ void colorPicker_event_cb(lv_event_t *e)
     lv_obj_add_event_cb(okBtn, selectColor_ok_event_cb, LV_EVENT_CLICKED, win);
 
     lv_obj_t* cPicker = lv_colorwheel_create(cont, true);
-    //lv_colorwheel_set_rgb(cPicker, *(lv_color_t*)e->user_data);
-    //lv_colorwheel_set_mode(cPicker, LV_COLORWHEEL_MODE_SATURATION);
-    lv_colorwheel_set_mode_fixed(cPicker, true);
+    lv_colorwheel_set_rgb(cPicker, *(lv_color_t*)e->user_data);
+    lv_colorwheel_set_mode(cPicker, LV_COLORWHEEL_MODE_HUE+LV_COLORWHEEL_MODE_SATURATION+LV_COLORWHEEL_MODE_VALUE);
+    //lv_colorwheel_set_mode_fixed(cPicker, true);
     lv_obj_set_size(cPicker, 145, 145);
     lv_obj_align(cPicker, LV_ALIGN_CENTER, 0, -30);
     lv_obj_add_event_cb(cPicker, selectColor_event_cb, LV_EVENT_VALUE_CHANGED, e->user_data);
@@ -381,7 +381,7 @@ void MagentaTV::displaySettings(lv_obj_t *parent)
                                     "medium\n"
                                     "large");
         lv_obj_align(drop, LV_ALIGN_TOP_RIGHT, 0, 87);
-        lv_obj_set_size(drop, 105, 22);
+        lv_obj_set_size(drop, 100, 22);
         lv_obj_set_style_pad_top(drop, 1, LV_PART_MAIN);
         lv_obj_set_style_bg_color(drop, primary_color, LV_PART_MAIN);
         lv_obj_set_style_bg_color(lv_dropdown_get_list(drop), primary_color, LV_PART_MAIN);
