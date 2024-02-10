@@ -1,4 +1,5 @@
-#include <Arduino.h>
+//#include <Arduino.h>
+#include <string>
 
 #ifndef _WIFIHANDLER_HPP_
 #define _WIFIHANDLER_HPP_
@@ -31,9 +32,9 @@ class WifiHandler {
          * @brief Get the SSID of the found wifi
          * 
          * @param index     index of the found wifi 
-         * @return String   SSID of the wifi
+         * @return std::string   SSID of the wifi
          */
-        String getFoundSSID(unsigned int index);
+        std::string getFoundSSID(unsigned int index);
 
         /**
          * @brief Get the RSSI of the found wifi
@@ -68,7 +69,7 @@ class WifiHandler {
          * 
          * @return char* SSID of the currently connected network
          */
-        char* getSSID();
+        std::string getSSID();
 
         /**
          * @brief Function to update the wifi credentials. This function is called in the wifi event callback function
@@ -83,9 +84,9 @@ class WifiHandler {
         /**
          * @brief Function to get the IP address of this device 
          * 
-         * @return String IP Address of the device
+         * @return std::string IP Address of the device
          */
-        String getIP();
+        std::string getIP();
     private:
 
         /**

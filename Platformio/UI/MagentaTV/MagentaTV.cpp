@@ -1,20 +1,21 @@
 #include <MagentaTV.hpp>
 #include <Display.hpp>
-#include <Arduino.h>
-#include <Preferences.h>
-
-#include <IRsend.h>
-#include <IRrecv.h>
-#include <IRutils.h>
+//#include <Arduino.h>
 
 #define MAX_IMAGE_WIDTH 240 // Adjust for your images
 
+#ifdef OMOTE_ESP32
+#include <Preferences.h>
+#include <IRsend.h>
+#include <IRrecv.h>
+#include <IRutils.h>
 extern IRsend IrSender;
+extern Preferences preferences;
+extern void lv_port_littlefs_init();
+#endif
 extern Settings settings;
 extern long standbyTimer;
 extern long standbyTimerConfigured;
-extern Preferences preferences;
-extern void lv_port_littlefs_init();
 
 #define SENDERICONS 21
 
@@ -44,20 +45,20 @@ struct channels
 {
     const void *icon;
     int channel;
-    const String channelName;
-    String fileName;
+    const std::string channelName;
+    std::string fileName;
 } channelInfo[SENDERICONS] = {
     {&ARD_Logo, 1, "ARD", "L:/ard.jpg"},
     {&zdf_de, 2, "ZDF", "L:/zdf.jpg"},
     {&br, 3, "BR", "L:/br.jpg"},
-    {&super_rtl, 4, "SuperRTL", "L:/srtl.jpg"},
+    {&super_rtl, 4, "S-RTL", "L:/srtl.jpg"},
     {&rtl, 5, "RTL", "L:/rtl.jpg"},
     {&sat1, 6, "SAT1", "L:/sat1.jpg"},
     {&prosieben, 7, "Pro7", "L:/pro7.jpg"},
     {&vox_de, 8, "VOX", "L:/vox.de"},
     {&rtl2, 10, "RTL2", "L:/rtl2.jpg"},
     {&syfy, 71, "SyFy", "L:/syfy.jpg"},
-    {&warner, 81, "WarnerTV", "L:/warner.jpg"},
+    {&warner, 81, "Warner\nTV", "L:/warner.jpg"},
     {&sixx, 45, "SIXX", "L:/sixx.jpg"},
     {&tele5_de, 17, "Tele5", "L:/tele5.jpg"},
     {&universal, 83, "Universal", "L:/universal.jpg"},
@@ -65,7 +66,7 @@ struct channels
     {&warnertv, 81, "Warner\nComedy", "L:/wcomedy.jpg"},
     {&dmax_de, 38, "DMAX", "L:/dmax.jpg"},
     {&kabel_eins, 9, "Kabel 1", "L:/kabel1.jpg"},
-    {&RTL_Crime, 70, "RTL Crime", "L:/crime.jpg"},
+    {&RTL_Crime, 70, "RTL\nCrime", "L:/crime.jpg"},
     {&rtl_nitro_de, 41, "nitro", "L:/nitro.jpg"},
     {&tlc, 46, "TLC", "L:/tlc.jpg"}};
 
@@ -83,10 +84,9 @@ void virtualKeypad_event_cb(lv_event_t *e)
         LV_LOG_USER("virtualKeypad_event_cb - container was clicked");
         return; // stop if container was clicked
     }
+    #ifdef OMOTE_ESP32
     LV_LOG_USER("button pressed %d", (int)target->user_data);
     // Send IR command based on the button user data
-    // IrSender.sendRC5(IrSender.encodeRC5X(0x00, virtualKeyMapMagentaTV[(int)target->user_data]));
-    // globalMR401->handleCustomKeypad(-1, virtualKeyMapMagentaTV[(int)target->user_data]);
     if ((int)target->user_data < 10)
     {
         LV_LOG_USER("Sender < 10");
@@ -117,6 +117,7 @@ void virtualKeypad_event_cb(lv_event_t *e)
         LV_LOG_USER("sending %c", value);
         globalMR401->handleCustomKeypad(-1, value);
     }
+    #endif
     LV_LOG_USER("sending OK");
     globalMR401->handleCustomKeypad(-1, 'k');
     standbyTimer = standbyTimerConfigured;
@@ -183,7 +184,7 @@ void colorPicker_event_cb(lv_event_t *e)
     btn = lv_win_add_btn(win, LV_SYMBOL_CLOSE, 20);
     lv_obj_add_event_cb(btn, selectColor_close_event_cb, LV_EVENT_CLICKED, win);
 
-    String title = "Text Color";
+    std::string title = "Text Color";
     if ((lv_color_t *)e->user_data == &globalMagentaTV->bgColor)
         title = "Button Color";
     lv_win_add_title(win, title.c_str());
@@ -199,7 +200,7 @@ void colorPicker_event_cb(lv_event_t *e)
 
     lv_obj_t* cPicker = lv_colorwheel_create(cont, true);
     lv_colorwheel_set_rgb(cPicker, *(lv_color_t*)e->user_data);
-    lv_colorwheel_set_mode(cPicker, LV_COLORWHEEL_MODE_HUE+LV_COLORWHEEL_MODE_SATURATION+LV_COLORWHEEL_MODE_VALUE);
+    lv_colorwheel_set_mode(cPicker, LV_COLORWHEEL_MODE_VALUE); // LV_COLORWHEEL_MODE_HUE+LV_COLORWHEEL_MODE_SATURATION+LV_COLORWHEEL_MODE_VALUE);
     //lv_colorwheel_set_mode_fixed(cPicker, true);
     lv_obj_set_size(cPicker, 145, 145);
     lv_obj_align(cPicker, LV_ALIGN_CENTER, 0, -30);
@@ -232,6 +233,7 @@ void MagentaTV::setup()
     this->tab = this->display->addTab(this);
     settings.addApp(this);
 
+    #ifdef OMOTE_ESP32
     iconEnabled = preferences.getBool("MTVIcons", true);
     this->bgColor.full = preferences.getUShort("bgColor", lv_color_to16(lv_color_lighten(lv_color_hex(0x808080), 0)));
     this->textColor.full = preferences.getUShort("textColor", lv_color_to16(lv_color_black()));
@@ -243,6 +245,7 @@ void MagentaTV::setup()
         preferences.getUShort("textColor", lv_color_to16(lv_color_black()))
     );
     this->fontSize = preferences.getInt("fontSize", 1);
+    #endif
 
     /* Create main page for the app */
     this->setup_MagentaTV(this->tab);
@@ -260,35 +263,26 @@ void MagentaTV::setup_MagentaTV(lv_obj_t *parent)
     // Create a container with grid for tab2
     lv_obj_set_style_pad_all(parent, 0, LV_PART_MAIN);
     lv_obj_t *cont = lv_obj_create(parent);
-    lv_obj_set_style_grid_column_dsc_array(cont, col_dsc, 0);
-    lv_obj_set_style_grid_row_dsc_array(cont, row_dsc, 0);
+    lv_obj_set_style_grid_column_dsc_array(cont, col_dsc, LV_STATE_DEFAULT);
+    lv_obj_set_style_grid_row_dsc_array(cont, row_dsc, LV_STATE_DEFAULT);
     lv_obj_set_size(cont, 240, 270);
     lv_obj_center(cont);
     lv_obj_set_layout(cont, LV_LAYOUT_GRID);
-/*
-    lv_obj_set_style_shadow_width(cont, 5, LV_PART_MAIN);
-    lv_obj_set_style_bg_color(cont, lv_color_black(), LV_PART_MAIN);
-    lv_obj_set_style_border_width(cont, 0, LV_PART_MAIN);
-    lv_obj_align(cont, LV_ALIGN_TOP_MID, 0, 0);
-    lv_obj_set_style_radius(cont, 0, LV_PART_MAIN);
-*/
 
     lv_obj_t *buttonLabel;
     lv_obj_t *obj;
     static lv_style_t style;
     static lv_style_t style_pr;
 
-    LV_LOG_USER("iconEnabled %d", iconEnabled);
-    for (int i = 0; i < SENDERICONS; i++)
-    {
-        uint8_t col = i % 2;
-        uint8_t row = i / 2;
-
         lv_style_init(&style);
         lv_style_set_bg_color(&style, this->bgColor);
-        lv_style_set_text_font(&style, &usedFont[this->fontSize]);
-        lv_style_set_text_color(&style, this->textColor);
-        lv_style_set_text_align(&style, LV_ALIGN_CENTER);
+        //lv_style_set_text_font(&style, &usedFont[this->fontSize]);
+        //lv_style_set_text_color(&style, this->textColor);
+        //lv_style_set_text_align(&style, LV_ALIGN_CENTER);
+
+        lv_style_set_shadow_width(&style, 8);
+        lv_style_set_shadow_color(&style, lv_palette_main(LV_PALETTE_GREY));
+        lv_style_set_shadow_ofs_y(&style, 8);
 
         /*Init the pressed style*/
         lv_style_init(&style_pr);
@@ -306,38 +300,56 @@ void MagentaTV::setup_MagentaTV(lv_obj_t *parent)
         static lv_style_prop_t props[] = {LV_STYLE_OUTLINE_WIDTH, LV_STYLE_OUTLINE_OPA, LV_STYLE_PROP_INV};
         lv_style_transition_dsc_init(&trans, props, lv_anim_path_linear, 300, 0, NULL);
 
-        lv_style_set_transition(&style_pr, &trans);
+        //lv_style_set_transition(&style_pr, &trans);
 
-        if (iconEnabled)
+        static lv_style_t btn_style;
+        lv_style_init(&btn_style);
+        lv_style_set_text_font(&btn_style, &usedFont[this->fontSize]);
+        lv_style_set_text_color(&btn_style, this->textColor);
+        lv_style_set_text_align(&btn_style, LV_ALIGN_CENTER);
+        lv_style_set_align(&btn_style, LV_ALIGN_CENTER);
+        //lv_style_set_border_color(&btn_style, lv_color_black());
+        //lv_style_set_border_width(&btn_style, 1);
+        //lv_style_set_border_post(&btn_style, true);
+
+    LV_LOG_USER("iconEnabled %d", iconEnabled);
+    for (int i = 0; i < SENDERICONS; i++)
+    {
+        uint8_t col = i % 2;
+        uint8_t row = i / 2;
+
+        if (iconEnabled) 
         {
             obj = lv_imgbtn_create(cont);
             lv_imgbtn_set_src(obj, LV_IMGBTN_STATE_RELEASED, nullptr, channelInfo[i].icon, nullptr);
-            lv_obj_set_grid_cell(obj, LV_GRID_ALIGN_STRETCH, col, 1, LV_GRID_ALIGN_STRETCH, row, 1);
         }
         else
         {
+            // obj = lv_btn_create(cont);
+            // // Create Labels for each button
+            // //lv_obj_set_grid_cell(obj, LV_GRID_ALIGN_STRETCH, col, 1, LV_GRID_ALIGN_STRETCH, row, 1);
+            
+            // buttonLabel = lv_label_create(obj);
+            // lv_obj_set_width(buttonLabel, 98);
+            // lv_label_set_text(buttonLabel, channelInfo[i].channelName.c_str());
+            // lv_label_set_long_mode(buttonLabel, LV_LABEL_LONG_WRAP);
+
+            // lv_obj_add_style(buttonLabel, &btn_style, LV_STATE_DEFAULT);
+
             obj = lv_btn_create(cont);
+
             // Create Labels for each button
-            lv_obj_set_grid_cell(obj, LV_GRID_ALIGN_STRETCH, col, 1, LV_GRID_ALIGN_STRETCH, row, 1);
-
             buttonLabel = lv_label_create(obj);
+            //lv_obj_set_width(buttonLabel, 98);
+            lv_obj_set_style_bg_color(obj, this->bgColor, LV_PART_MAIN);
             lv_label_set_text_fmt(buttonLabel, channelInfo[i].channelName.c_str());
-            lv_obj_center(buttonLabel);
-            lv_label_set_long_mode(buttonLabel, LV_LABEL_LONG_WRAP);
-            //lv_obj_set_style_bg_color(obj, this->bgColor, LV_PART_MAIN);
-
-
-            //lv_obj_add_style(buttonLabel, &style, 0);
-
+            //lv_label_set_long_mode(buttonLabel, LV_LABEL_LONG_WRAP);
+            lv_obj_add_style(buttonLabel, &btn_style, 0);
             //lv_obj_align(buttonLabel, LV_ALIGN_CENTER, 0, 0);
-            /*
-            lv_obj_set_size(buttonLabel, lv_obj_get_width(obj), lv_obj_get_height(obj));
-            LV_LOG_USER("buttonLabel: w=%d, h=%d", lv_obj_get_width(buttonLabel), lv_obj_get_height(buttonLabel));
-            lv_label_set_long_mode(buttonLabel, LV_LABEL_LONG_WRAP);
-            */
         }
-            lv_obj_add_style(obj, &style, LV_STATE_DEFAULT);
-            lv_obj_add_style(obj, &style_pr, LV_STATE_PRESSED);
+        //lv_obj_add_style(obj, &style, LV_STATE_DEFAULT);
+        //lv_obj_add_style(obj, &style_pr, LV_STATE_PRESSED);
+        lv_obj_set_grid_cell(obj, LV_GRID_ALIGN_STRETCH, col, 1, LV_GRID_ALIGN_STRETCH, row, 1);
         lv_obj_add_flag(obj, LV_OBJ_FLAG_EVENT_BUBBLE); // Clicking a button causes a event in its container
         lv_obj_set_user_data(obj, (void *)channelInfo[i].channel);
     }
@@ -436,6 +448,7 @@ void MagentaTV::displaySettings(lv_obj_t *parent)
 void MagentaTV::saveSettings()
 {
     LV_LOG_USER("iconEnabled: %d, bgColor: 0x%0.4X, textColor: 0x%0.4X", this->iconEnabled, lv_color_to16(this->bgColor), lv_color_to16(this->textColor));
+    #ifdef OMOTE_ESP32
     preferences.putBool("MTVIcons", this->iconEnabled);
     preferences.putUShort("bgColor", lv_color_to16(this->bgColor));
     LV_LOG_USER("saved bgColor: 0x%0.4X", preferences.getUShort("bgColor"));
@@ -443,4 +456,5 @@ void MagentaTV::saveSettings()
     LV_LOG_USER("saved textColor: 0x%0.4X", preferences.getUShort("textColor"));
     preferences.putInt("fontSize", this->fontSize);
     LV_LOG_USER("saved fontSize: %d", preferences.getInt("fontSize"));
+    #endif
 }

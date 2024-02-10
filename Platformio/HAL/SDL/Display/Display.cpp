@@ -1,13 +1,10 @@
-#include <Arduino.h>
+//#include <Arduino.h>
 #include <Display.hpp>
-#include <Wire.h>
-#include <Preferences.h>
 #include <Settings.hpp>
-//#include "lv_fs_littlefs.h"
 
 extern bool wakeupByIMUEnabled;
 extern Display display;
-extern byte currentDevice;
+extern unsigned char currentDevice;
 extern Settings settings;
 
 // LVGL declarations
@@ -18,18 +15,9 @@ LV_IMG_DECLARE(lightbulb);
 extern lv_obj_t *panel;
 static lv_disp_drv_t disp_drv;
 
-/*TODO: get rid of global variable and use API functions instead*/
-extern Preferences preferences;
-
 // TODO: fix callback function structure to pass it in and/or move it out of display class somehow else
-void smartHomeSlider_event_cb(lv_event_t *e);
-void smartHomeToggle_event_cb(lv_event_t *e);
-//void WakeEnableSetting_event_cb(lv_event_t *e);
-//void appleKey_event_cb(lv_event_t *e);
-//void virtualKeypad_event_cb(lv_event_t *e);
-//void bl_slider_event_cb(lv_event_t *e);
-//void tabview_device_event_cb(lv_event_t *e);
-//void store_scroll_value_event_cb(lv_event_t *e);
+//void smartHomeSlider_event_cb(lv_event_t *e);
+//void smartHomeToggle_event_cb(lv_event_t *e);
 void my_touchpad_read(lv_indev_drv_t *indev_driver, lv_indev_data_t *data);
 
 // Set the page indicator scroll position relative to the tabview scroll position
@@ -93,78 +81,14 @@ void Display::show_keyboard()
 
 void Display::turnOff()
 {
-  digitalWrite(this->backlight_pin, HIGH);
-  digitalWrite(this->enable_pin, HIGH);
-  pinMode(this->backlight_pin, INPUT);
-  pinMode(this->enable_pin, INPUT);
-  gpio_hold_en((gpio_num_t)this->backlight_pin);
-  gpio_hold_en((gpio_num_t)this->enable_pin);
   LV_LOG_TRACE("save blBrightness %d", this->backlight_brightness);
-  preferences.putUChar("blBrightness", this->backlight_brightness);
+  //preferences.putUChar("blBrightness", this->backlight_brightness);
   /* save settings of all devices */
   settings.saveSettings();
 }
 
 void Display::setup()
 {
-  // LCD Pin Definition
-  pinMode(this->enable_pin, OUTPUT);
-  digitalWrite(this->enable_pin, HIGH);
-  pinMode(this->backlight_pin, OUTPUT);
-  digitalWrite(this->backlight_pin, HIGH);
-
-  this->tft = TFT_eSPI();
-#if 1
-  ledcSetup(LCD_BACKLIGHT_LEDC_CHANNEL, LCD_BACKLIGHT_LEDC_FREQUENCY, LCD_BACKLIGHT_LEDC_BIT_RESOLUTION);
-  ledcAttachPin(this->backlight_pin, LCD_BACKLIGHT_LEDC_CHANNEL);
-  ledcWrite(LCD_BACKLIGHT_LEDC_CHANNEL, 0);
-#else
-  // Configure the backlight PWM
-  // Manual setup because ledcSetup() briefly turns on the backlight
-  ledc_channel_config_t ledc_channel_left;
-  ledc_channel_left.gpio_num = (gpio_num_t)this->backlight_pin;
-  ledc_channel_left.speed_mode = LEDC_HIGH_SPEED_MODE;
-  ledc_channel_left.channel = LEDC_CHANNEL_5;
-  ledc_channel_left.intr_type = LEDC_INTR_DISABLE;
-  ledc_channel_left.timer_sel = LEDC_TIMER_1;
-  ledc_channel_left.flags.output_invert = 1; // Can't do this with ledcSetup()
-  ledc_channel_left.duty = 0;
-
-  ledc_timer_config_t ledc_timer;
-  ledc_timer.speed_mode = LEDC_HIGH_SPEED_MODE;
-  ledc_timer.duty_resolution = LEDC_TIMER_8_BIT;
-  ledc_timer.timer_num = LEDC_TIMER_1;
-  ledc_timer.freq_hz = 640;
-
-  ledc_channel_config(&ledc_channel_left);
-  ledc_timer_config(&ledc_timer);
-#endif
-
-  // Slowly charge the VSW voltage to prevent a brownout
-  // Workaround for hardware rev 1!
-  for (int i = 0; i < 100; i++)
-  {
-    digitalWrite(this->enable_pin, HIGH); // LCD Logic off
-    delayMicroseconds(1);
-    digitalWrite(this->enable_pin, LOW); // LCD Logic on
-  }
-
-  delay(100); // Wait for the LCD driver to power on
-  this->tft.init();
-  this->tft.initDMA();
-  this->tft.setRotation(0);
-  this->tft.fillScreen(TFT_BLACK);
-  this->tft.setSwapBytes(true);
-
-  // TODO: move touchscreen handling out of Display class
-  //  Setup touchscreen
-  // this->touch = Adafruit_FT6206();
-  Wire.begin(19, 22, 400000); // Configure i2c pins and set frequency to 400kHz
-  // this->touch.begin(128); // Initialize touchscreen and set sensitivity threshold
-
-  this->backlight_brightness = preferences.getUChar("blBrightness", DEFAULT_BACKLIGHT_BRIGHTNESS);
-  LV_LOG_TRACE("restore blBrightness to %d", this->backlight_brightness);
-
   // Setup LVGL
   lv_init();
   //lv_port_littlefs_init();
@@ -250,10 +174,6 @@ lv_obj_t *Display::getTabView()
   return this->tabview;
 }
 
-// lv_obj_t *wifi_subpage;
-// static lv_obj_t *kb;
-// static lv_obj_t *ta;
-
 /* Callback function to show and hide keybaord for attached textareas */
 static void ta_kb_event_cb(lv_event_t *e)
 {
@@ -298,17 +218,18 @@ void Display::flush(lv_disp_drv_t *disp, const lv_area_t *area, lv_color_t *colo
 {
   uint32_t w = (area->x2 - area->x1 + 1);
   uint32_t h = (area->y2 - area->y1 + 1);
-
+/*
   this->tft.startWrite();
   this->tft.setAddrWindow(area->x1, area->y1, w, h);
   this->tft.pushPixelsDMA((uint16_t *)&color_p->full, w * h);
   this->tft.endWrite();
-
+*/
   lv_disp_flush_ready(disp);
 }
 
 void Display::update()
 {
+/*
   static int fadeInTimer = millis(); // fadeInTimer = time after setup
   if (millis() < fadeInTimer + backlight_brightness)
   { // Fade in the backlight brightness
@@ -320,6 +241,7 @@ void Display::update()
     // else ledcWrite(5, this->backlight_brightness);  // Backlight on
     ledcWrite(5, this->backlight_brightness); // Backlight on
   }
+  */
   // Update LVGL UI
   lv_timer_handler();
 }
@@ -337,7 +259,7 @@ void Display::update_battery(int percentage, bool isCharging, bool isConnected)
   // if(isCharging || !isConnected){
   //   LV_LOG_USER("charging?");
   //   lv_label_set_text(this->objBattPercentage, "");
-  lv_label_set_text(this->objBattPercentage, String(percentage).c_str());
+  lv_label_set_text(this->objBattPercentage, std::to_string(percentage).c_str());
   //   lv_label_set_text(this->objBattIcon, LV_SYMBOL_USB);
   // }
   // else {
@@ -371,12 +293,14 @@ void Display::update_battery(int percentage, bool isCharging, bool isConnected)
   }
 }
 
-void Display::updateWifi(String symbol)
+//void Display::updateWifi(std::string symbol)
+void Display::updateWifi(const char* symbol)
 {
-  lv_label_set_text(this->WifiLabel, symbol.c_str());
+  //lv_label_set_text(this->WifiLabel, symbol.c_str());
+  lv_label_set_text(this->WifiLabel, symbol);
 }
 
-void Display::setActiveTab(byte tab)
+void Display::setActiveTab(unsigned char tab)
 {
   lv_tabview_set_act(display.getTabView(), tab, LV_ANIM_OFF);
 }
@@ -403,7 +327,7 @@ lv_obj_t *Display::addTab(AppInterface* app)
   return tab;
 }
 
-AppInterface* Display::getApp(byte tab){
+AppInterface* Display::getApp(unsigned char tab){
   return this->apps[tab];
 }
 

@@ -1,6 +1,6 @@
 #include <Battery.hpp>
 #include <Display.hpp>
-#include <Arduino.h>
+//#include <Arduino.h>
 
 extern Display display;
 
@@ -29,12 +29,10 @@ bool Battery::isCharging()
         !digitalRead(this->charging_pin), 
         this->getVoltage());
     return (!digitalRead(this->charging_pin) && this->getVoltage() > 4500);
-    //return (this->getVoltage() > 4500);
 }
 
 bool Battery::isConnected()
 {
-    //return ((!this->isCharging()) && (this->getVoltage() < 4350));
     return (this->getVoltage() > 4500);
 }
 

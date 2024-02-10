@@ -1,17 +1,19 @@
-#include <Arduino.h>
+//#include <Arduino.h>
 #include <MR401.hpp>
 #include <Display.hpp>
-#include <Preferences.h>
 
 #include <omote.hpp>
+
+#ifdef OMOTE_ESP32
 #include <IRremoteESP8266.h>
 #include <IRsend.h>
 #include <IRrecv.h>
 #include <IRutils.h>
-
+#include <Preferences.h>
 extern Preferences preferences;
 extern IRrecv IrReceiver;
 extern IRsend IrSender;
+#endif
 
 MR401::MR401(Display *display)
 {
@@ -32,10 +34,10 @@ int MR401::getValues(char keyChar){
 }
 
 void MR401::dumpBuffer(uint16_t* buf, size_t size){
-    String buffer;
+    std::string buffer;
     char b[5];
     for(size_t i = 0; i < size; i++){
-        buffer = buffer + sprintf(b, "%d,", buf[i]);
+        buffer = buffer + std::to_string(buf[i]);
     }
     LV_LOG_TRACE("buffer={%s}", buf);
 }
@@ -48,8 +50,8 @@ void MR401::handleCustomKeypad(int keyCode, char keyChar){
     if( result >= 0  ){
         LV_LOG_USER("sending IR command %c size: %d buf: %p", keyChar, this->lircKeys[result].size, this->lircKeys[result].buf);
         this->dumpBuffer(this->lircKeys[result].buf, this->lircKeys[result].size);
+        #ifdef OMOTE_ESP32
         IrSender.sendRaw(this->lircKeys[result].buf, this->lircKeys[result].size, this->kFrequency);
+        #endif
     }
-    //IrSender.sendRaw(this->power[this->index], sizeof(this->power[this->index]), this->kFrequency);
-    //this->index++; if( this->index > 11 ) this->index = 0;
 }

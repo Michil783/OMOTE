@@ -9,8 +9,9 @@
  *
  */
 
-#include <Arduino.h>
+//#include <Arduino.h>
 #include <DeviceInterface.hpp>
+#include <string>
 
 #ifndef _SAMSUNGTV_HPP_
 #define _SAMSUNGTV_HPP_
@@ -18,7 +19,7 @@
 class SamsungTV : public DeviceInterface {
     public:
     SamsungTV(Display *display);
-    String getName(){return "SamsungTV";};
+    std::string getName(){return "SamsungTV";};
     void displaySettings(lv_obj_t *parent);
     void saveSettings() {};
     void handleCustomKeypad(int keyCode, char keyChar);
@@ -36,7 +37,7 @@ private:
             {'o', 0xE0E040BF},
             {'m', 0xE0E0F00F}
         };
-    String ip = "192.168.178.43";
+    std::string ip = "192.168.178.43";
 };
 
 #endif

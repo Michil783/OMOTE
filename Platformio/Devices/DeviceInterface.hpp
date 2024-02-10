@@ -9,15 +9,16 @@
  * 
  */
 
-#include <Arduino.h>
+//#include <Arduino.h>
 #include <Display.hpp>
+#include <string>
 
 #ifndef _DEVICEINTERFACE_HPP_
 #define _DEVICEINTERFACE_HPP_
 
 class DeviceInterface {
     public:
-    virtual String getName() = 0;
+    virtual std::string getName() = 0;
     virtual void displaySettings(lv_obj_t *parent) = 0;
     virtual void saveSettings() = 0;
     virtual void handleCustomKeypad(int keyCode, char keyChar) = 0;

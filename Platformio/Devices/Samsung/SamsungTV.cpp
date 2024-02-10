@@ -1,18 +1,21 @@
-#include <Arduino.h>
+//#include <Arduino.h>
 #include <SamsungTV.hpp>
 #include <Display.hpp>
 #include <Settings.hpp>
-#include <Preferences.h>
 
 #include <omote.hpp>
+
+#ifdef OMOTE_ESP32
 #include <IRremoteESP8266.h>
 #include <IRsend.h>
 #include <IRrecv.h>
 #include <IRutils.h>
-
+#include <Preferences.h>
 extern Preferences preferences;
 extern IRrecv IrReceiver;
 extern IRsend IrSender;
+#endif
+
 extern Settings settings;
 
 SamsungTV::SamsungTV(Display* display){
@@ -36,7 +39,9 @@ void SamsungTV::handleCustomKeypad(int keyCode, char keyChar){
     LV_LOG_USER("SamsungTV");
     LV_LOG_USER("handleCustomKeypad(%d, %c)", keyCode, keyChar);
     uint64_t code = this->getValue(keyChar);
+    #ifdef OMOTE_ESP32
     if( code != -1 ) IrSender.sendSAMSUNG(code);
+    #endif
 }
 
 void SamsungTV::displaySettings(lv_obj_t *parent){

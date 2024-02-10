@@ -13,9 +13,7 @@
 #include <WifiHandler.hpp>
 #include <Preferences.h>
 #include <WiFi.h>
-//#include <Display.hpp>
 #include <Settings.hpp>
-#include <PubSubClient.h>
 
 /*TODO: rework to not use global variables*/
 extern WifiHandler wifihandler;
@@ -73,9 +71,9 @@ void WiFiEvent(WiFiEvent_t event){
   }
 }
 
-String WifiHandler::getFoundSSID(unsigned int index)
+std::string WifiHandler::getFoundSSID(unsigned int index)
 {
-  return WiFi.SSID(index);
+  return WiFi.SSID(index).c_str();
 }
 
 int WifiHandler::getFoundRSSI(unsigned int index)
@@ -97,10 +95,8 @@ void WifiHandler::update_credetials(const char* temporary_ssid, const char* temp
         strcpy(this->password, temporary_password);
         strcpy(this->SSID, temporary_ssid);
 
-        String tempString = this->password;
-        preferences.putString("password", tempString);
-        tempString = this->SSID;
-        preferences.putString("SSID", tempString);
+        preferences.putString("password", this->password);
+        preferences.putString("SSID", this->SSID);
     }
 }
 
@@ -115,18 +111,17 @@ void WifiHandler::begin()
     WiFi.mode(WIFI_STA);
     WiFi.onEvent(WiFiEvent);
 
-    String ssid = preferences.getString("SSID", "");
-    String password = preferences.getString("password", "");
-    LV_LOG_USER("ssid: \"%s\" (%d,%d), password: \"%s\"", ssid, ssid.length(), ssid.isEmpty(), password);
+    std::string ssid = preferences.getString("SSID", "").c_str();
+    std::string password = preferences.getString("password", "").c_str();
+    LV_LOG_USER("ssid: \"%s\" (%d,%d), password: \"%s\"", ssid, ssid.length(), ssid.empty(), password);
 
     /* If the SSID is not empty, there was a value stored in the preferences and we try to use it.*/
-    if (!ssid.isEmpty())
+    if (!ssid.empty())
     {
-        LV_LOG_USER("Connecting to wifi ");
-        Serial.println(ssid);
+        LV_LOG_USER("Connecting to wifi: %s", ssid);
         strcpy(this->SSID,  ssid.c_str());
         strcpy(this->password, password.c_str());
-        LV_LOG_USER("this->SSID: \"%s\" (%d, %d), this->password: \"%s\"", String(this->SSID), String(this->SSID).length(), !String(this->SSID).isEmpty(), String(this->password));
+        LV_LOG_USER("this->SSID: \"%s\" (%d, %d), this->password: \"%s\"", this->SSID, std::string(this->SSID).length(), !(std::string(this->SSID).empty()), this->password);
         this->connect(this->SSID, this->password);
     }
     else
@@ -160,12 +155,12 @@ bool WifiHandler::isConnected()
     return WiFi.isConnected();
 }
 
-char* WifiHandler::getSSID()
+std::string WifiHandler::getSSID()
 {
     return this->SSID;
 }
 
-String WifiHandler::getIP()
+std::string WifiHandler::getIP()
 {
-    return WiFi.localIP().toString();
+    return (WiFi.localIP().toString()).c_str();
 }

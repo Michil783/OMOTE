@@ -3,6 +3,7 @@
 #include <Settings.hpp>
 #include <MR401.hpp>
 #include <SamsungTV.hpp>
+#include <string>
 
 #ifndef _MAGENTATV_HPP_
 #define _MAGENTATV_HPP_
@@ -12,7 +13,7 @@ class MagentaTV : public AppInterface {
     MagentaTV(Display* display);
     void setup();
     void handleCustomKeypad(int keyCode, char keyChar);
-    String getName(){return "MagentaTV";};
+    std::string getName(){return "MagentaTV";};
     void displaySettings(lv_obj_t *parent);
     void saveSettings();
     void resetMagentaTVPage();
@@ -60,9 +61,9 @@ class MagentaTV : public AppInterface {
 
     int fontSize = 1;
     lv_font_t usedFont[3] = {
-        lv_font_montserrat_14,
-        lv_font_montserrat_16,
-        lv_font_montserrat_24
+        lv_font_montserrat_18,
+        lv_font_montserrat_20,
+        lv_font_montserrat_22
     };
 };
 

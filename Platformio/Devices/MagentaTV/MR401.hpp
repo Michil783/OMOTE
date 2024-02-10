@@ -9,8 +9,8 @@
  *
  */
 
-#include <Arduino.h>
 #include <DeviceInterface.hpp>
+#include <string>
 
 #ifndef _MR401_HPP_
 #define _MR401_HPP_
@@ -19,7 +19,7 @@ class MR401 : public DeviceInterface
 {
 public:
     MR401(Display *display);
-    String getName() { return "MR401"; };
+    std::string getName() { return "MR401"; };
     void displaySettings(lv_obj_t *parent){};
     void saveSettings(){};
     void handleCustomKeypad(int keyCode, char keyChar);

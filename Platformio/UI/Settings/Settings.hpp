@@ -1,7 +1,8 @@
 #include <Display.hpp>
-#include <WiFi.h>
+//#include <WiFi.h>
 #include <DeviceInterface.hpp>
 #include <AppInterface.hpp>
+#include <string>
 
 #ifndef _SETTINGS_HPP_
 #define _SETTINGS_HPP_
@@ -14,7 +15,7 @@ class Settings : public AppInterface
 public:
     Settings(Display *display);
     void setup();
-    String getName();
+    std::string getName();
     void handleCustomKeypad(int keyCode, char keyChar){};
 
     bool addDevice(DeviceInterface* device);

@@ -11,22 +11,12 @@
 #ifndef _DISPLAY_HPP_
 #define _DISPLAY_HPP_
 
-#include "driver/ledc.h"
-#include <TFT_eSPI.h> // Hardware-specific library
 #include <lvgl.h>
-#include <Adafruit_FT6206.h>
 #include <omote.hpp>
 #include <AppInterface.hpp>
-
-/*LEDC Channel to use for the LCD backlight*/
-#define LCD_BACKLIGHT_LEDC_CHANNEL LEDC_CHANNEL_5
-
-#define LCD_BACKLIGHT_LEDC_FREQUENCY 640
-
-#define LCD_BACKLIGHT_LEDC_BIT_RESOLUTION 8
+//#include <string>
 
 #define DEFAULT_BACKLIGHT_BRIGHTNESS 128
-
 #define TAB_ARRAY_SIZE 10
 
 class Display
@@ -92,7 +82,8 @@ class Display
          */
         void update_battery(int percentage, bool isCharging, bool isConnected);
 
-        void updateWifi(String symbol);
+        //void updateWifi(std::string symbol);
+        void updateWifi(const char* symbol);
 
         void turnOff();
 
@@ -100,9 +91,9 @@ class Display
 
         lv_obj_t* getTabView();
 
-        void setActiveTab(byte tab);
+        void setActiveTab(unsigned char tab);
 
-        AppInterface* getApp(byte tab);
+        AppInterface* getApp(unsigned char tab);
 
         /**
          * @brief Get the primary_color
@@ -159,12 +150,6 @@ class Display
         lv_color_t *bufB;
         
         /**
-         * @brief Object of the touch input driver
-         * 
-         */
-        Adafruit_FT6206 touch;
-
-        /**
          * @brief Keyboard object used whenever a keyboard is needed.
          * 
          */
@@ -175,12 +160,6 @@ class Display
          * 
          */
         lv_color_t primary_color;
-
-        /**
-         * @brief Object of the TFT driver
-         * 
-         */
-        TFT_eSPI tft;
 
         /**
          * @brief Set the up settings object

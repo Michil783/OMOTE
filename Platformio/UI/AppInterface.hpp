@@ -9,8 +9,8 @@
  * 
  */
 
-#include <Arduino.h>
-#include <Display.hpp>
+#include <string>
+//#include <Display.hpp>
 
 #ifndef _APPINTERFACE_HPP_
 #define _APPINTERFACE_HPP_
@@ -18,7 +18,8 @@
 class AppInterface {
     public:
     virtual void handleCustomKeypad(int keyCode, char keyChar) = 0;
-    virtual String getName() = 0;
+    virtual std::string getName() = 0;
+    //virtual char* getName() = 0;
     virtual void displaySettings(lv_obj_t *parent) = 0;
     virtual void saveSettings() = 0;
 };

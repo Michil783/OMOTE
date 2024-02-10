@@ -9,11 +9,8 @@
  *
  */
 
-//#define _IR_ENABLE_DEFAULT_ false
-//#define SEND_RAW true
-//#define SEND_SAMSUNG true
-
 #include <IRHandler.hpp>
+#include <lvgl.h>
 #include <Preferences.h>
 #include <omote.hpp>
 #include <IRremoteESP8266.h>
@@ -40,43 +37,41 @@ IRHandler::IRHandler()
 
 void IRHandler::setup()
 {
-    Serial.println("IRHanlder::setup()");
+    LV_LOG_USER("IRHanlder::setup()");
     IrSender.begin();
     digitalWrite(IR_VCC, HIGH); // Turn on IR receiver
     IrReceiver.enableIRIn();
     IrReceiver.disableIRIn();    // Stop the receiver
-
     /* clear handler list */
     for (int i = 0; i < NUMBER_OF_HANDLER; i++)
     {
         this->irp[i] = nullptr;
     }
     this->IRReceiverEnabled = preferences.getBool("IRREnabled", false);
-    Serial.printf("enabled: %d\n", this->IRReceiverEnabled);
+    LV_LOG_USER("enabled: %d", this->IRReceiverEnabled);
     this->IRReceiverEnable(this->IRReceiverEnabled);
 }
 
 bool IRHandler::IRReceiverEnable(bool onoff){
-    Serial.printf("IRHandler::IRReceiverEnable(%d)\n", onoff);
+    LV_LOG_USER("IRHandler::IRReceiverEnable(%d)", onoff);
     if( onoff ){
-        Serial.println("enable IR Receiver");
+        LV_LOG_USER("enable IR Receiver");
         IrReceiver.enableIRIn();    // Start the receiver
         IrReceiver.setUnknownThreshold(kMinUnknownSize);
         IrReceiver.setTolerance(kTolerancePercentage); // Override the default tolerance.
-        this->IRReceiverEnabled = true;
     } else {
-        Serial.println("disable IR Receiver");
+        LV_LOG_USER("disable IR Receiver");
         IrReceiver.disableIRIn();    // Stop the receiver
-        this->IRReceiverEnabled = false;
     }
-    Serial.printf("save state in preferences %d\n", this->IRReceiverEnabled);
+    this->IRReceiverEnabled = onoff;
+    LV_LOG_USER("save state in preferences %d", this->IRReceiverEnabled);
     preferences.putBool("IRREnabled", this->IRReceiverEnabled);
-    Serial.printf("saved state in preferences %d\n", preferences.getBool("IRREnabled"));
+    LV_LOG_USER("saved state in preferences %d", preferences.getBool("IRREnabled"));
     return this->IRReceiverEnabled;
 }
 
 bool IRHandler::IRReceiver(){
-    Serial.printf("IRHandler::IRReceiver %d\n", this->IRReceiverEnabled);
+    LV_LOG_USER("IRHandler::IRReceiver %d\n", this->IRReceiverEnabled);
     return this->IRReceiverEnabled;
 }
 
@@ -97,5 +92,5 @@ void IRHandler::IRSender(int currentDevice, uint16_t data)
         (irp[currentDevice])(data);
     }
     else
-        Serial.printf("no current device found for %d\n", currentDevice);
+        LV_LOG_USER("no current device found for %d\n", currentDevice);
 }

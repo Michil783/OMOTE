@@ -33,3 +33,5 @@
 
 #define ENABLE_WIFI // Comment out to diable connected features
 
+#define screenWidth 240
+#define screenHeight 320

@@ -1,7 +1,8 @@
 #ifndef _IRHANDLER_HPP_
 #define _IRHANDLER_HPP_
 
-#include<Arduino.h>
+//#include<Arduino.h>
+#include <stdint.h>
 
 #define NUMBER_OF_HANDLER 10
 

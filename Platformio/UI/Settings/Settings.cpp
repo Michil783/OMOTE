@@ -1,9 +1,6 @@
 #include <Settings.hpp>
 #include <Display.hpp>
-#include <Arduino.h>
 #include <WifiHandler.hpp>
-#include <IRHandler.hpp>
-#include <Preferences.h>
 #include <omote.hpp>
 
 #define WIFI_SUBPAGE_SIZE 3
@@ -21,8 +18,13 @@ extern Settings settings;
 extern long standbyTimerConfigured;
 extern WifiHandler wifihandler;
 static char *ssid;
+
+#ifdef OMOTE_ESP32
+#include <IRHandler.hpp>
+#include <Preferences.h>
 extern IRHandler irhandler;
 extern Preferences preferences;
+#endif
 
 /**
  * @brief Textarea callback function for the password field. In case the enter key is pressed in the text area, the
@@ -69,7 +71,9 @@ void WakeEnableSetting_event_cb(lv_event_t *e)
 void IREnableSetting_event_cb(lv_event_t *e)
 {
     LV_LOG_TRACE("Settings - IREnableSetting_event_cb");
+    #ifdef OMOTE_ESP32
     irhandler.IRReceiverEnable(lv_obj_has_state(lv_event_get_target(e), LV_STATE_CHECKED));
+    #endif
 }
 
 /**
@@ -81,7 +85,9 @@ void bl_slider_event_cb(lv_event_t *e)
 {
     lv_obj_t *slider = lv_event_get_target(e);
     unsigned int *backlight_brightness = (unsigned int *)lv_event_get_user_data(e);
+    #ifdef OMOTE_ESP32
     *backlight_brightness = map(constrain(lv_slider_get_value(slider), 30, 240), 30, 240, 240, 30);
+    #endif
     // LV_LOG_TRACE("Settings - bl_slider_event_cb(%d) - %d", constrain(lv_slider_get_value(slider), 30, 240), *backlight_brightness);
 }
 
@@ -89,7 +95,9 @@ void WifiEnableSetting_event_cb(lv_event_t *e)
 {
     // LV_LOG_USER("Settings - WakeEnableSetting_event_cb");
     settings.wifiEnable = lv_obj_has_state(lv_event_get_target(e), LV_STATE_CHECKED);
+    #ifdef OMOTE_ESP32
     preferences.putBool("wifiEnabled", settings.wifiEnable);
+    #endif
     LV_LOG_USER("wifiEnable: %d", settings.wifiEnable);
     settings.reset_wifi_menu();
     #ifdef ENABLE_WIFI
@@ -224,14 +232,16 @@ Settings::Settings(Display *display)
 }
 
 void Settings::factoryReset(){
+    #ifdef OMOTE_ESP32
     preferences.clear();
+    #endif
 }
 
 bool Settings::wifiEnabled(){
     return this->wifiEnable;
 }
 
-String Settings::getName(){
+std::string Settings::getName(){
     return "Settings";
 }
 
@@ -243,7 +253,9 @@ String Settings::getName(){
  */
 void Settings::setup()
 {
+    #ifdef OMOTE_ESP32
     this->wifiEnable = preferences.getBool("wifiEnable", false);
+    #endif
     LV_LOG_USER("wifiEnable: %d", this->wifiEnable);
 
     this->tab = this->display->addTab(this);
@@ -316,7 +328,11 @@ void Settings::display_settings(lv_obj_t *parent)
     lv_obj_set_style_bg_color(slider, lv_color_white(), LV_PART_KNOB);
     lv_obj_set_style_bg_opa(slider, LV_OPA_COVER, LV_PART_MAIN);
     lv_obj_set_style_bg_color(slider, lv_color_lighten(primary_color, 50), LV_PART_MAIN);
+    #ifdef OMOTE_ESP32
     lv_slider_set_value(slider, map(*backlight_brightness, 240, 30, 30, 240), LV_ANIM_OFF);
+    #else
+    lv_slider_set_value(slider, 120, LV_ANIM_OFF);
+    #endif
     //LV_LOG_TRACE("set blSlider to %d", map(*backlight_brightness, 240, 30, 30, 240));
     lv_obj_set_size(slider, lv_pct(66), 10);
     lv_obj_align(slider, LV_ALIGN_TOP_MID, 0, 3);
@@ -418,7 +434,9 @@ void Settings::ir_settings(lv_obj_t *parent)
     lv_obj_align(irToggle, LV_ALIGN_TOP_RIGHT, 0, -3);
     lv_obj_set_style_bg_color(irToggle, lv_color_hex(0x505050), LV_PART_MAIN);
     lv_obj_add_event_cb(irToggle, IREnableSetting_event_cb, LV_EVENT_VALUE_CHANGED, NULL);
+    #ifdef OMOTE_ESP32
     if (irhandler.IRReceiver())
+    #endif
         lv_obj_add_state(irToggle, LV_STATE_CHECKED); // set default state
 }
 
@@ -449,6 +467,7 @@ void Settings::wifi_scan_complete(unsigned int size)
 
 void Settings::update_wifi_selection_subpage(int page)
 {
+    #ifdef OMOTE_ESP32
     if (page < this->no_subpages)
     {
         lv_obj_clean(this->wifi_setting_cont);
@@ -482,6 +501,7 @@ void Settings::update_wifi_selection_subpage(int page)
             lv_obj_add_flag(menuBox, LV_OBJ_FLAG_EVENT_BUBBLE);
 
             lv_obj_t *menuLabel = lv_label_create(menuBox);
+            //lv_label_set_text(menuLabel, wifihandler.getFoundSSID(page * WIFI_SUBPAGE_SIZE + i).c_str());
             lv_label_set_text(menuLabel, wifihandler.getFoundSSID(page * WIFI_SUBPAGE_SIZE + i).c_str());
             lv_obj_t *wifi_image = lv_img_create(menuBox);
             lv_obj_align(wifi_image, LV_ALIGN_TOP_RIGHT, 0, 0);
@@ -529,12 +549,15 @@ void Settings::update_wifi_selection_subpage(int page)
         }
         lv_obj_scroll_to_y(this->wifi_setting_cont, 0, LV_ANIM_OFF);
     }
+    #endif
 }
 
 void Settings::next_wifi_selection_subpage(lv_event_t *e)
 {
+    #ifdef OMOTE_ESP32
     int subpage = (int)lv_event_get_user_data(e);
     this->update_wifi_selection_subpage(subpage);
+    #endif
 }
 
 void Settings::update_wifi(bool connected)
@@ -549,9 +572,10 @@ void Settings::update_wifi(bool connected)
         this->display->updateWifi(LV_SYMBOL_WIFI);
         LV_LOG_TRACE("update_wifi() WifiLabel success");
         LV_LOG_TRACE("ssid_label: %p", ssid_label);
-        lv_label_set_text(ssid_label, wifihandler.getSSID());
+        lv_label_set_text(ssid_label, wifihandler.getSSID().c_str());
         LV_LOG_TRACE("update_wifi() SSID success");
         LV_LOG_TRACE("ip_label: %p", ip_label);
+        //lv_label_set_text(ip_label, wifihandler.getIP().c_str());
         lv_label_set_text(ip_label, wifihandler.getIP().c_str());
         LV_LOG_TRACE("update_wifi() IP success");
     }
@@ -656,7 +680,7 @@ void Settings::create_wifi_main_page(lv_obj_t *parent)
 
         if (wifihandler.isConnected())
         {
-            lv_label_set_text(this->ssidLabel, wifihandler.getSSID());
+            lv_label_set_text(this->ssidLabel, wifihandler.getSSID().c_str());
             lv_label_set_text(this->ipLabel, wifihandler.getIP().c_str());
         }
         else
@@ -699,7 +723,9 @@ bool Settings::addDevice(DeviceInterface *device)
 
 void Settings::saveSettings(){
     LV_LOG_USER("wifiEnable: %d", this->wifiEnable);
+    #ifdef OMOTE_ESP32
     preferences.putBool("wifiEnable", this->wifiEnable);
+    #endif
     this->saveAppSettings();
     this->saveDeviceSettings();
 }
