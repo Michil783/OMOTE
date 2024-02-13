@@ -10,7 +10,8 @@
  */
 
 //#include <Arduino.h>
-#include <Display.hpp>
+//#include <Display.hpp>
+#include "lvgl.h"
 #include <string>
 
 #ifndef _DEVICEINTERFACE_HPP_

@@ -10,6 +10,7 @@
  */
 
 #include <string>
+#include "lvgl.h"
 //#include <Display.hpp>
 
 #ifndef _APPINTERFACE_HPP_

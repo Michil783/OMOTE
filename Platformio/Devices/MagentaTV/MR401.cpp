@@ -1,8 +1,10 @@
 //#include <Arduino.h>
 #include <MR401.hpp>
-#include <Display.hpp>
+#include "DisplayAbstract.h"
 
-#include <omote.hpp>
+//#include <omote.hpp>
+#include "HardwareAbstract.hpp"
+#include "IRHandlerInterface.h"
 
 #ifdef OMOTE_ESP32
 #include <IRremoteESP8266.h>
@@ -15,9 +17,9 @@ extern IRrecv IrReceiver;
 extern IRsend IrSender;
 #endif
 
-MR401::MR401(Display *display)
+MR401::MR401(std::shared_ptr<DisplayAbstract> display)
 {
-    this->display = display;
+    mDisplay = display;
 }
 
 int MR401::getValues(char keyChar){
@@ -49,7 +51,7 @@ void MR401::handleCustomKeypad(int keyCode, char keyChar){
     int result = getValues(keyChar);
     if( result >= 0  ){
         LV_LOG_USER("sending IR command %c size: %d buf: %p", keyChar, this->lircKeys[result].size, this->lircKeys[result].buf);
-        this->dumpBuffer(this->lircKeys[result].buf, this->lircKeys[result].size);
+        //this->dumpBuffer(this->lircKeys[result].buf, this->lircKeys[result].size);
         #ifdef OMOTE_ESP32
         IrSender.sendRaw(this->lircKeys[result].buf, this->lircKeys[result].size, this->kFrequency);
         #endif

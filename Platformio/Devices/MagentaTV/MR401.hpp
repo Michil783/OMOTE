@@ -9,6 +9,7 @@
  *
  */
 
+#include "HardwareAbstract.hpp"
 #include <DeviceInterface.hpp>
 #include <string>
 
@@ -18,14 +19,14 @@
 class MR401 : public DeviceInterface
 {
 public:
-    MR401(Display *display);
+    MR401(std::shared_ptr<DisplayAbstract> display);
     std::string getName() { return "MR401"; };
     void displaySettings(lv_obj_t *parent){};
     void saveSettings(){};
     void handleCustomKeypad(int keyCode, char keyChar);
 
 private:
-    Display *display;
+    std::shared_ptr<DisplayAbstract> mDisplay;
     const uint16_t kFrequency = 38000; // in Hz. e.g. 38kHz.
     void dumpBuffer(uint16_t *buf, size_t size);
 #define LIRCENTRIES 28

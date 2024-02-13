@@ -1,4 +1,5 @@
 #pragma once
+#include "Notification.hpp"
 #include <functional>
 #include <memory>
 #include <string>

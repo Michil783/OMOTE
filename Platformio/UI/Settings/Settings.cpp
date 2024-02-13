@@ -1,7 +1,11 @@
 #include <Settings.hpp>
-#include <Display.hpp>
-#include <WifiHandler.hpp>
-#include <omote.hpp>
+#include <HardwareAbstract.hpp>
+#include <wifiHandlerInterface.h>
+#include "OmoteUI.hpp"
+#include "omoteconfig.h"
+//#include <omote.hpp>
+//#include <IRHandler.hpp>
+//#include <Preferences.h>
 
 #define WIFI_SUBPAGE_SIZE 3
 
@@ -13,18 +17,16 @@ LV_IMG_DECLARE(WiFi_Mid_Signal);
 LV_IMG_DECLARE(WiFi_High_Signal);
 
 extern bool wakeupByIMUEnabled;
-extern Display display;
-extern Settings settings;
+//extern Display display;
+//extern Settings settings;
 extern long standbyTimerConfigured;
-extern WifiHandler wifihandler;
+//extern WifiHandler wifihandler;
 static char *ssid;
 
-#ifdef OMOTE_ESP32
-#include <IRHandler.hpp>
-#include <Preferences.h>
-extern IRHandler irhandler;
-extern Preferences preferences;
-#endif
+//extern IRHandler irhandler;
+//extern Preferences preferences;
+
+//#include "Display.hpp"
 
 /**
  * @brief Textarea callback function for the password field. In case the enter key is pressed in the text area, the
@@ -42,10 +44,10 @@ static void ta_event_cb(lv_event_t *e)
     switch (code)
     {
     case LV_EVENT_READY:
-        wifihandler.connect(ssid, password);
+        (HardwareAbstract::wifi)->connect(ssid, password);
         lv_obj_clear_state(ta, LV_STATE_FOCUSED);
-        display.hide_keyboard();
-        settings.reset_settings_menu();
+        (HardwareAbstract::display)->hide_keyboard();
+        Settings::getInstance()->reset_settings_menu();
         /* Fall through on purpose. Pressing enter should disable the keyboard as well*/
     default:
         break;
@@ -94,20 +96,20 @@ void bl_slider_event_cb(lv_event_t *e)
 void WifiEnableSetting_event_cb(lv_event_t *e)
 {
     // LV_LOG_USER("Settings - WakeEnableSetting_event_cb");
-    settings.wifiEnable = lv_obj_has_state(lv_event_get_target(e), LV_STATE_CHECKED);
+    Settings::getInstance()->wifiEnable = lv_obj_has_state(lv_event_get_target(e), LV_STATE_CHECKED);
     #ifdef OMOTE_ESP32
     preferences.putBool("wifiEnabled", settings.wifiEnable);
     #endif
     LV_LOG_USER("wifiEnable: %d", settings.wifiEnable);
-    settings.reset_wifi_menu();
+    Settings::getInstance()->reset_wifi_menu();
     #ifdef ENABLE_WIFI
     LV_LOG_USER("wifiEnable: %d wifiConnected: %d", settings.wifiEnabled(), wifihandler.isConnected());
-    if( settings.wifiEnabled() ){
-        wifihandler.begin();
+    if( Settings::getInstance()->wifiEnabled() ){
+        (HardwareAbstract::wifi)->begin();
     } else {
-        wifihandler.turnOff();
-        //settings.update_wifi(false);
-        //display.updateWifi("");
+        (HardwareAbstract::wifi)->turnOff();
+        Settings::getInstance()->update_wifi(false);
+        (HardwareAbstract::display)->updateWifi("");
     }
     #endif
 }
@@ -172,7 +174,7 @@ static void wifi_settings_cb(lv_event_t *event)
     lv_obj_t *label = lv_label_create(cont);
     lv_label_set_text(label, "Searching for wifi networks");
     // This will trigger an asynchronouse network scan
-    wifihandler.scan();
+    (HardwareAbstract::wifi)->scan();
 }
 
 /**
@@ -185,10 +187,11 @@ static void connect_btn_cb(lv_event_t *event)
     lv_obj_t *ta = (lv_obj_t *)event->user_data;
     const char *password = lv_textarea_get_text(ta);
 
-    wifihandler.connect(ssid, password);
+    (HardwareAbstract::wifi)->connect(ssid, password);
     lv_obj_clear_state(ta, LV_STATE_FOCUSED);
-    display.hide_keyboard();
-    settings.reset_settings_menu();
+    //display.hide_keyboard();
+    (HardwareAbstract::display)->hide_keyboard();
+    Settings::getInstance()->reset_settings_menu();
 }
 
 /**
@@ -220,9 +223,9 @@ static lv_obj_t *ta;
  * @param Display* display
  */
 
-Settings::Settings(Display *display)
+Settings::Settings(std::shared_ptr<DisplayAbstract> display)
 {
-    this->display = display;
+    mDisplay = display;
 
     /*Initialize device array*/
     for (int i = 0; i < DEVICESLOTS; i++)
@@ -258,11 +261,45 @@ void Settings::setup()
     #endif
     LV_LOG_USER("wifiEnable: %d", this->wifiEnable);
 
-    this->tab = this->display->addTab(this);
+    this->tab = mDisplay->addTab(this);
 
     /* Create main page for settings this->settingsMenu*/
     this->setup_settings(this->tab);
 }
+
+// void OmoteUI::setup_settings(lv_obj_t *parent) {
+//   // Add content to the settings tab
+//   // With a flex layout, setting groups/boxes will position themselves
+//   // automatically
+//   lv_obj_set_layout(parent, LV_LAYOUT_FLEX);
+//   lv_obj_set_flex_flow(parent, LV_FLEX_FLOW_COLUMN);
+//   lv_obj_set_scrollbar_mode(parent, LV_SCROLLBAR_MODE_ACTIVE);
+//   // Add a label, then a box for the display settings
+//   this->settingsMenu = lv_menu_create(parent);
+//   lv_obj_set_width(this->settingsMenu, 210);
+
+//   /* Create main page for settings this->settingsMenu*/
+//   this->settingsMainPage = lv_menu_page_create(this->settingsMenu, NULL);
+//   lv_obj_t *cont = lv_menu_cont_create(this->settingsMainPage);
+//   lv_obj_set_layout(cont, LV_LAYOUT_FLEX);
+//   lv_obj_set_flex_flow(cont, LV_FLEX_FLOW_COLUMN);
+//   lv_obj_set_scrollbar_mode(cont, LV_SCROLLBAR_MODE_ACTIVE);
+//   // lv_obj_set_width(cont, lv_obj_get_width(parent));
+//   this->display_settings(cont);
+
+//   this->create_wifi_settings(this->settingsMenu, cont);
+
+//   // Another setting for the battery
+//   lv_obj_t *menuLabel = lv_label_create(cont);
+//   lv_label_set_text(menuLabel, "Battery");
+//   lv_obj_t *menuBox = lv_obj_create(cont);
+//   lv_obj_set_size(menuBox, lv_pct(100), 125);
+//   lv_obj_set_style_bg_color(menuBox, color_primary, LV_PART_MAIN);
+//   lv_obj_set_style_border_width(menuBox, 0, LV_PART_MAIN);
+
+//   lv_menu_set_page(this->settingsMenu, this->settingsMainPage);
+// }
+
 
 /**
  * @brief build the settings in LVGL

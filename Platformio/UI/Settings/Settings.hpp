@@ -1,4 +1,4 @@
-#include <Display.hpp>
+#include "DisplayAbstract.h"
 //#include <WiFi.h>
 #include <DeviceInterface.hpp>
 #include <AppInterface.hpp>
@@ -13,8 +13,8 @@
 class Settings : public AppInterface
 {
 public:
-    Settings(Display *display);
-    void setup();
+    static std::shared_ptr<Settings> getInstance() {return Settings::mInstance;}
+    Settings(std::shared_ptr<DisplayAbstract> display);
     std::string getName();
     void handleCustomKeypad(int keyCode, char keyChar){};
 
@@ -56,11 +56,13 @@ public:
     bool wifiEnabled();
 
 private:
+    void setup();
+
     /**
      * @brief pointer to Display object
      *
      */
-    Display *display;
+    std::shared_ptr<DisplayAbstract> mDisplay;
 
     /**
      * @brief tab object
@@ -207,6 +209,8 @@ private:
     lv_obj_t * ipLabel = nullptr;
 
     void factoryReset();
+
+    static std::shared_ptr<Settings> mInstance;
 };
 
 #endif

@@ -58,6 +58,7 @@ TS_Point oldPoint;
 
 /* HAL instances */
 Display display(LCD_BL, LCD_EN, screenWidth, screenHeight);
+Display display(LCD_BL, LCD_EN);
 WifiHandler wifihandler;
 Battery battery(ADC_BAT, CRG_STAT);
 IRHandler irhandler;

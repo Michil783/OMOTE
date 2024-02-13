@@ -1,9 +1,9 @@
 //#include <Arduino.h>
 #include <SamsungTV.hpp>
-#include <Display.hpp>
+#include <DisplayAbstract.h>
 #include <Settings.hpp>
 
-#include <omote.hpp>
+//#include <omote.hpp>
 
 #ifdef OMOTE_ESP32
 #include <IRremoteESP8266.h>
@@ -16,11 +16,11 @@ extern IRrecv IrReceiver;
 extern IRsend IrSender;
 #endif
 
-extern Settings settings;
+//extern Settings settings;
 
-SamsungTV::SamsungTV(Display* display){
-    this->display = display;
-    settings.addDevice(this);    
+SamsungTV::SamsungTV(std::shared_ptr<DisplayAbstract> display){
+    mDisplay = display;
+    //settings.addDevice(this);    
 }
 
 u_int64_t SamsungTV::getValue(char keyChar){
@@ -46,7 +46,7 @@ void SamsungTV::handleCustomKeypad(int keyCode, char keyChar){
 
 void SamsungTV::displaySettings(lv_obj_t *parent){
     LV_LOG_USER("");
-    lv_color_t primary_color = display->getPrimaryColor();
+    lv_color_t primary_color = lv_color_hex(0x303030); // mDisplay->getPrimaryColor();
 
     lv_obj_t *menuLabel;
     menuLabel = lv_label_create(parent);

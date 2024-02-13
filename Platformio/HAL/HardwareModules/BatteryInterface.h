@@ -1,5 +1,5 @@
 #pragma once
-//#include "Notification.hpp"
+#include "Notification.hpp"
 
 class BatteryInterface {
 public:

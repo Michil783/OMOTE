@@ -10,6 +10,7 @@
  */
 
 //#include <Arduino.h>
+#include "HardwareAbstract.hpp"
 #include <DeviceInterface.hpp>
 #include <string>
 
@@ -18,13 +19,14 @@
 
 class SamsungTV : public DeviceInterface {
     public:
-    SamsungTV(Display *display);
+    SamsungTV(std::shared_ptr<DisplayAbstract> display);
+    ~SamsungTV() {};
     std::string getName(){return "SamsungTV";};
     void displaySettings(lv_obj_t *parent);
     void saveSettings() {};
     void handleCustomKeypad(int keyCode, char keyChar);
 private:
-    Display *display;
+    std::shared_ptr<DisplayAbstract> mDisplay;
     uint64_t getValue(char keyChar);
     struct SamsungKeys
     {

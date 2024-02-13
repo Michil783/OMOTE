@@ -1,4 +1,7 @@
 #include "DisplayAbstract.h"
+#include "AppInterface.hpp"
+
+extern lv_obj_t *panel;
 
 std::shared_ptr<DisplayAbstract> DisplayAbstract::mInstance = nullptr;
 
@@ -23,7 +26,6 @@ DisplayAbstract::DisplayAbstract(){
     indev_drv.type = LV_INDEV_TYPE_POINTER;
     indev_drv.read_cb = &DisplayAbstract::screenInputImpl;
     lv_indev_drv_register(&indev_drv);
-
 }
 
 void DisplayAbstract::flushDisplayImpl(lv_disp_drv_t *disp, const lv_area_t *area, lv_color_t *color_p) {
@@ -33,3 +35,11 @@ void DisplayAbstract::flushDisplayImpl(lv_disp_drv_t *disp, const lv_area_t *are
 void DisplayAbstract::screenInputImpl(lv_indev_drv_t *indev_driver, lv_indev_data_t *data) {
     mInstance->screenInput(indev_driver, data);
 }
+
+
+
+unsigned int *DisplayAbstract::getBacklightBrightness()
+{
+  return &this->backlight_brightness;
+}
+

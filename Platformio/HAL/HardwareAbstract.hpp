@@ -5,8 +5,9 @@
 #include "DisplayAbstract.h"
 #include "KeyPressAbstract.hpp"
 #include "wifiHandlerInterface.h"
+//#include "IRHandlerInterface.h"
 
-//#include "Notification.hpp"
+#include "Notification.hpp"
 
 #include <memory>
 
@@ -28,7 +29,8 @@ public:
   virtual std::shared_ptr<DisplayAbstract> display() = 0;
   virtual std::shared_ptr<wifiHandlerInterface> wifi() = 0;
   virtual std::shared_ptr<KeyPressAbstract> keys() = 0;
-
+  //virtual std::shared_ptr<IRHandlerInterface> irhandler() = 0;
+  
   virtual char getCurrentDevice() = 0;
   virtual void setCurrentDevice(char currentDevice) = 0;
 
