@@ -89,8 +89,12 @@ protected:
     void setCurrentBrightness(uint8_t brightness);
 
 private:
-    int backlight_pin;
-    int enable_pin;
+    void setupTFT();
+    void setupTouchScreen();
+    void setupBacklight();
+    
+    int mBacklightPin;
+    int mEnablePin;
     lv_color_t *bufA;
     lv_color_t *bufB;
 

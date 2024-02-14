@@ -15,7 +15,7 @@ class Battery : public BatteryInterface
          * 
          * @return int Percentage of the battery 
          */
-        int getPercentage();
+        int getPercentage() override;
 
         /**
          * @brief Function to determine if the battery is charging or not
@@ -23,7 +23,7 @@ class Battery : public BatteryInterface
          * @return true   Battery is currently charging 
          * @return false  Battery is currently not charging
          */
-        bool isCharging();
+        bool isCharging() override;
 
         /**
          * @brief Function to determine if the battery is connected 
@@ -31,7 +31,7 @@ class Battery : public BatteryInterface
          * @return true   Battery is connected 
          * @return false  Battery is not connected
          */
-        bool isConnected();
+        bool isConnected() override;
 
         /**
          * @brief Function to update the battery status. This should be called on a regular basis 

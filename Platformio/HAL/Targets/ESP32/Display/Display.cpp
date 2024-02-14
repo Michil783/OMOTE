@@ -11,15 +11,19 @@ LV_IMG_DECLARE(lightbulb);
 static lv_disp_drv_t disp_drv;
 
 std::shared_ptr<Display> Display::getInstance() {
+  Serial.printf("Display::getInstance()\n");
   if (DisplayAbstract::mInstance == nullptr) {
+    Serial.printf("no instance\n");
     DisplayAbstract::mInstance =
         std::shared_ptr<Display>(new Display(LCD_BL, LCD_EN));
   }
+  Serial.printf("return Display Instance %p\n", std::static_pointer_cast<Display>(mInstance));
   return std::static_pointer_cast<Display>(mInstance);
 }
 
 void Display::screenInput(lv_indev_drv_t *indev_driver, lv_indev_data_t *data) {
   // int16_t touchX, touchY;
+  //Serial.printf("Display::screenInput() touch=%p\n", touch);
   touchPoint = touch.getPoint();
   int16_t touchX = touchPoint.x;
   int16_t touchY = touchPoint.y;
@@ -49,24 +53,27 @@ void Display::screenInput(lv_indev_drv_t *indev_driver, lv_indev_data_t *data) {
 
 Display::Display(int backlight_pin, int enable_pin) : DisplayAbstract() //, backlight_pin(backlight_pin), enable_pin(enable_pin), tft(TFT_eSPI()), touch(Adafruit_FT6206())
 {
-  backlight_pin = backlight_pin;
-  enable_pin = enable_pin;
+  Serial.printf("Display::Display()\n");
+  mBacklightPin = backlight_pin;
+  mEnablePin = enable_pin;
   // LCD Pin Definition
-  pinMode(this->enable_pin, OUTPUT);
-  digitalWrite(this->enable_pin, HIGH);
-  pinMode(this->backlight_pin, OUTPUT);
-  digitalWrite(this->backlight_pin, HIGH);
+  pinMode(mEnablePin, OUTPUT);
+  digitalWrite(mEnablePin, HIGH);
+  pinMode(mBacklightPin, OUTPUT);
+  digitalWrite(mBacklightPin, HIGH);
+
+  setupBacklight(); // This eliminates the flash of the backlight
 
   this->tft = TFT_eSPI();
 #if 1
   ledcSetup(LCD_BACKLIGHT_LEDC_CHANNEL, LCD_BACKLIGHT_LEDC_FREQUENCY, LCD_BACKLIGHT_LEDC_BIT_RESOLUTION);
-  ledcAttachPin(this->backlight_pin, LCD_BACKLIGHT_LEDC_CHANNEL);
+  ledcAttachPin(mBacklightPin, LCD_BACKLIGHT_LEDC_CHANNEL);
   ledcWrite(LCD_BACKLIGHT_LEDC_CHANNEL, 0);
 #else
   // Configure the backlight PWM
   // Manual setup because ledcSetup() briefly turns on the backlight
   ledc_channel_config_t ledc_channel_left;
-  ledc_channel_left.gpio_num = (gpio_num_t)this->backlight_pin;
+  ledc_channel_left.gpio_num = (gpio_num_t)mBacklightPin;
   ledc_channel_left.speed_mode = LEDC_HIGH_SPEED_MODE;
   ledc_channel_left.channel = LEDC_CHANNEL_5;
   ledc_channel_left.intr_type = LEDC_INTR_DISABLE;
@@ -88,23 +95,28 @@ Display::Display(int backlight_pin, int enable_pin) : DisplayAbstract() //, back
   // Workaround for hardware rev 1!
   for (int i = 0; i < 100; i++)
   {
-    digitalWrite(this->enable_pin, HIGH); // LCD Logic off
+    digitalWrite(mEnablePin, HIGH); // LCD Logic off
     delayMicroseconds(1);
-    digitalWrite(this->enable_pin, LOW); // LCD Logic on
+    digitalWrite(mEnablePin, LOW); // LCD Logic on
   }
 
-  delay(100); // Wait for the LCD driver to power on
-  this->tft.init();
-  this->tft.initDMA();
-  this->tft.setRotation(0);
-  this->tft.fillScreen(TFT_BLACK);
-  this->tft.setSwapBytes(true);
+  setupTFT();
+  setupTouchScreen();
+  mFadeTaskMutex = xSemaphoreCreateBinary();
+  xSemaphoreGive(mFadeTaskMutex);
 
-  // TODO: move touchscreen handling out of Display class
-  //  Setup touchscreen
-  // this->touch = Adafruit_FT6206();
-  Wire.begin(19, 22, 400000); // Configure i2c pins and set frequency to 400kHz
-  // this->touch.begin(128); // Initialize touchscreen and set sensitivity threshold
+  // delay(100); // Wait for the LCD driver to power on
+  // this->tft.init();
+  // this->tft.initDMA();
+  // this->tft.setRotation(0);
+  // this->tft.fillScreen(TFT_BLACK);
+  // this->tft.setSwapBytes(true);
+
+  // // TODO: move touchscreen handling out of Display class
+  // //  Setup touchscreen
+  // // this->touch = Adafruit_FT6206();
+  // Wire.begin(19, 22, 400000); // Configure i2c pins and set frequency to 400kHz
+  // // this->touch.begin(128); // Initialize touchscreen and set sensitivity threshold
 
   // this->backlight_brightness = preferences.getUChar("blBrightness", DEFAULT_BACKLIGHT_BRIGHTNESS);
   // LV_LOG_TRACE("restore blBrightness to %d", this->backlight_brightness);
@@ -114,8 +126,47 @@ Display::Display(int backlight_pin, int enable_pin) : DisplayAbstract() //, back
   LV_LOG_TRACE("restore blBrightness to %d", mBrightness);
 
   // Setup LVGL
+  Serial.println("lv_init()");
   lv_init();
   //lv_port_littlefs_init();
+}
+
+void Display::setupTFT() {
+  delay(100);
+  tft = TFT_eSPI();
+  tft.init();
+  tft.initDMA();
+  tft.setRotation(0);
+  tft.fillScreen(TFT_BLACK);
+  tft.setSwapBytes(true);
+}
+
+void Display::setupTouchScreen() {
+  // Configure i2c pins and set frequency to 400kHz
+  Wire.begin(TFT_SDA, TFT_SCL, 400000);
+  touch.begin(128); // Initialize touchscreen and set sensitivity threshold
+}
+
+void Display::setupBacklight() {
+  // Configure the backlight PWM
+  // Manual setup because ledcSetup() briefly turns on the backlight
+  ledc_channel_config_t ledc_channel_left;
+  ledc_channel_left.gpio_num = (gpio_num_t)mBacklightPin;
+  ledc_channel_left.speed_mode = LEDC_HIGH_SPEED_MODE;
+  ledc_channel_left.channel = LEDC_CHANNEL_5;
+  ledc_channel_left.intr_type = LEDC_INTR_DISABLE;
+  ledc_channel_left.timer_sel = LEDC_TIMER_1;
+  ledc_channel_left.flags.output_invert = 1; // Can't do this with ledcSetup()
+  ledc_channel_left.duty = 0;
+  ledc_channel_left.hpoint = 0;
+  ledc_timer_config_t ledc_timer;
+  ledc_timer.speed_mode = LEDC_HIGH_SPEED_MODE;
+  ledc_timer.duty_resolution = LEDC_TIMER_8_BIT;
+  ledc_timer.timer_num = LEDC_TIMER_1;
+  ledc_timer.clk_cfg = LEDC_AUTO_CLK;
+  ledc_timer.freq_hz = 640;
+  ledc_channel_config(&ledc_channel_left);
+  ledc_timer_config(&ledc_timer);
 }
 
 void Display::fadeImpl(void *) {
@@ -179,12 +230,12 @@ void Display::startFade() {
 
 void Display::turnOff()
 {
-  digitalWrite(this->backlight_pin, HIGH);
-  digitalWrite(this->enable_pin, HIGH);
-  pinMode(this->backlight_pin, INPUT);
-  pinMode(this->enable_pin, INPUT);
-  gpio_hold_en((gpio_num_t)this->backlight_pin);
-  gpio_hold_en((gpio_num_t)this->enable_pin);
+  digitalWrite(mBacklightPin, HIGH);
+  digitalWrite(mEnablePin, HIGH);
+  pinMode(mBacklightPin, INPUT);
+  pinMode(mEnablePin, INPUT);
+  gpio_hold_en((gpio_num_t)mBacklightPin);
+  gpio_hold_en((gpio_num_t)mEnablePin);
 
   // LV_LOG_TRACE("save blBrightness %d", this->backlight_brightness);
   // preferences.putUChar("blBrightness", this->backlight_brightness);

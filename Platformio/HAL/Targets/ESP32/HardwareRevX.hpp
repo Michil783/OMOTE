@@ -72,7 +72,7 @@ private:
   std::shared_ptr<Display> mDisplay;
   std::shared_ptr<WifiHandler> mWifiHandler;
   std::shared_ptr<Keys> mKeys;
-  std::shared_ptr<IRHandlerInterface> mIRHandler;
+  std::shared_ptr<IRHandler> mIRHandler;
 
   // IMU Motion Detection
   LIS3DH IMU = LIS3DH(I2C_MODE, 0x19); // Default constructor is I2C, addr 0x19.

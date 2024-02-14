@@ -37,6 +37,7 @@ HardwareSimulator::HardwareSimulator()
             std::this_thread::sleep_for(std::chrono::seconds(2));
           }
         });
+        mSleepTimeout = 10000;
 }
 
 std::shared_ptr<BatteryInterface> HardwareSimulator::battery() {
@@ -60,6 +61,6 @@ bool HardwareSimulator::getWakeupByIMUEnabled() { return true; }
 
 void HardwareSimulator::setWakeupByIMUEnabled(bool wakeupByIMUEnabled) {}
 
-uint32_t HardwareSimulator::getSleepTimeout() { return 20000; }
+uint32_t HardwareSimulator::getSleepTimeout() { return mSleepTimeout; }
 
-void HardwareSimulator::setSleepTimeout(uint32_t sleepTimeout) {}
+void HardwareSimulator::setSleepTimeout(uint32_t sleepTimeout) { mSleepTimeout = sleepTimeout; }

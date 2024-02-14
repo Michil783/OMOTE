@@ -21,8 +21,17 @@ OmoteUI::OmoteUI() : UIBase() {
   {
     mApps[i] = nullptr;
   }
-  mPanel = nullptr;
+  mPanel =
+  mStatusbar =
+  mWifiLabel =
+  mBattPercentage =
+  mBattIcon =
+  mUSBIcon = nullptr;
   currentDevice = 1;
+  mBatteryChargingIndex = 0;
+  mInstance = std::shared_ptr<UI::Basic::OmoteUI>(this);
+
+  setup_ui();
   //mHardware = std::shared_ptr<HardwareAbstract> (&HardwareFactory::getAbstract());
 };
 
@@ -42,64 +51,14 @@ void OmoteUI::tabview_device_event_cb(lv_event_t *e) {
   //mHardware->setCurrentDevice(currentDevice);
 }
 
-// // Slider Event handler
-// void OmoteUI::bl_slider_event_cb(lv_event_t *e) {
-//   lv_obj_t *slider = lv_event_get_target(e);
-//   auto newBrightness = std::clamp(lv_slider_get_value(slider), 60, 255);
-//   mHardware->display()->setBrightness(newBrightness);
-// }
-
-// // Apple Key Event handler
-// void OmoteUI::appleKey_event_cb(lv_event_t *e) {
-//   // Send IR command based on the event user data
-//   // mHardware->debugPrint(std::to_string(50 + (int)e->user_data));
-// }
-
-// // Wakeup by IMU Switch Event handler
-// void OmoteUI::WakeEnableSetting_event_cb(lv_event_t *e) {
-//   this->mHardware->setWakeupByIMUEnabled(
-//       lv_obj_has_state(lv_event_get_target(e), LV_STATE_CHECKED));
-// }
-
-// // Wakeup timeout dropdown Event handler
-// void OmoteUI::wakeTimeoutSetting_event_cb(lv_event_t *e) {
-//   lv_obj_t *drop = lv_event_get_target(e);
-
-//   int sleepTimeout = sleepTimeoutMap[lv_dropdown_get_selected(drop)];
-//   mHardware->setSleepTimeout(sleepTimeout);
-// }
-
-// // Smart Home Toggle Event handler
-// void OmoteUI::smartHomeToggle_event_cb(lv_event_t *e) {
-//   char payload[8];
-//   if (lv_obj_has_state(lv_event_get_target(e), LV_STATE_CHECKED))
-//     strcpy(payload, "true");
-//   else
-//     strcpy(payload, "false");
-//   // Publish an MQTT message based on the event user data
-//   // if ((int)e->user_data == 1)
-//   //   mHardware->MQTTPublish("bulb1_set", payload);
-//   // if ((int)e->user_data == 2)
-//   //   mHardware->MQTTPublish("bulb2_set", payload);
-// }
-
-// // Smart Home Toggle Event handler
-// void OmoteUI::smartHomeSlider_event_cb(lv_event_t *e) {
-//   lv_obj_t *slider = lv_event_get_target(e);
-//   char payload[8];
-//   auto sliderValue = lv_slider_get_value(slider);
-
-//   // TODO convert this dtostrf to somethign more portable.
-//   //  I gave it a stab here but not sure it is the same.
-//   // dtostrf(lv_slider_get_value(slider), 1, 2, payload);
-//   snprintf(payload, sizeof(payload), "%8.2d", sliderValue);
-
-//   // Publish an MQTT message based on the event user data
-//   // if ((int)e->user_data == 1)
-//   //   mHardware->MQTTPublish("bulb1_setbrightness", payload);
-//   // if ((int)e->user_data == 2)
-//   //   mHardware->MQTTPublish("bulb2_setbrightness", payload);
-// }
+void OmoteUI::onPollCb(){
+  // UI::Basic::OmoteUI::getInstance()->update_battery((HardwareFactory::getAbstract()).battery()->getPercentage(),
+  //   (HardwareFactory::getAbstract()).battery()->isCharging(),
+  //   (HardwareFactory::getAbstract()).battery()->isConnected());
+  getInstance()->update_battery((HardwareFactory::getAbstract()).battery()->getPercentage(),
+     (HardwareFactory::getAbstract()).battery()->isCharging(),
+     (HardwareFactory::getAbstract()).battery()->isConnected());//UI::Basic::OmoteUI::getInstance()->update_battery(50, false, false);
+}
 
 void OmoteUI::virtualKeypad_event_cb(lv_event_t *e) {
   lv_obj_t *target = lv_event_get_target(e);
@@ -140,20 +99,13 @@ void OmoteUI::create_status_bar() {
   lv_obj_set_style_text_font(mBattIcon, &lv_font_montserrat_16,
                              LV_PART_MAIN);
 
-  // mBatteryPoller = std::make_unique<poller>(
-  //     [&batteryIcon = mBattIcon, battery = mHardware->battery()]() {
-  //       auto percent = battery->getPercentage();
-  //       if (percent > 95)
-  //         lv_label_set_text(batteryIcon, LV_SYMBOL_BATTERY_FULL);
-  //       else if (percent > 75)
-  //         lv_label_set_text(batteryIcon, LV_SYMBOL_BATTERY_3);
-  //       else if (percent > 50)
-  //         lv_label_set_text(batteryIcon, LV_SYMBOL_BATTERY_2);
-  //       else if (percent > 25)
-  //         lv_label_set_text(batteryIcon, LV_SYMBOL_BATTERY_1);
-  //       else
-  //         lv_label_set_text(batteryIcon, LV_SYMBOL_BATTERY_EMPTY);
-  //     });
+  mUSBIcon = lv_label_create(statusbar);
+  lv_label_set_text(mUSBIcon, LV_SYMBOL_USB);
+  lv_obj_align(mUSBIcon, LV_ALIGN_RIGHT_MID, -40, 0);
+  lv_obj_set_style_text_font(mUSBIcon, &lv_font_montserrat_16, LV_PART_MAIN);
+
+  LV_LOG_USER("create poller");
+  mBatteryPoller = std::make_unique<poller>(onPollCb, ((std::chrono::seconds)(1)));
 }
 
 /* Callback function to show and hide keybaord for attached textareas */
@@ -205,20 +157,12 @@ void OmoteUI::hide_keyboard() {
 
 lv_obj_t *OmoteUI::addTab(AppInterface* app)
 {
-  LV_LOG_USER("");
   lv_obj_t *tab = nullptr;
   /* search free slot in tab array */
-  LV_LOG_USER("find free slot for app \"%s\"", app->getName().c_str());
-  //return tab;
   for (int i = 0; i < TAB_ARRAY_SIZE; i++)
   {
-      LV_LOG_USER("mApps[%d]=%p", i, mApps[i]);
-      //return tab;
     if (mApps[i] == nullptr)
     {
-      LV_LOG_USER("mApps[%d]=%p", i, mApps[i]);
-      //return tab;
-      LV_LOG_USER("found free slot %d", i);
       //  Add tab (name is irrelevant since the labels are hidden and hidden buttons are used (below))
       tab = lv_tabview_add_tab(mTabView, app->getName().c_str());
       mApps[i] = app;
@@ -227,9 +171,6 @@ lv_obj_t *OmoteUI::addTab(AppInterface* app)
       // Initialize scroll position for the indicator
       lv_event_send(lv_tabview_get_content(mTabView), LV_EVENT_SCROLL, NULL);
       return tab;
-    }
-    else {
-      LV_LOG_USER("mApps[%d]=%p used", i, mApps[i]);
     }
   }
 
@@ -316,33 +257,34 @@ void OmoteUI::setup_ui()
   // Initialize scroll position for the indicator
   //lv_event_send(lv_tabview_get_content(mTabView), LV_EVENT_SCROLL, NULL);
 
-  // Create a status bar
-  lv_obj_t *statusbar = lv_btn_create(lv_scr_act());
-  lv_obj_set_size(statusbar, 240, 20);
-  lv_obj_set_style_shadow_width(statusbar, 0, LV_PART_MAIN);
-  lv_obj_set_style_bg_color(statusbar, lv_color_black(), LV_PART_MAIN);
-  lv_obj_set_style_radius(statusbar, 0, LV_PART_MAIN);
-  lv_obj_align(statusbar, LV_ALIGN_TOP_MID, 0, 0);
+  // // Create a status bar
+  // lv_obj_t *statusbar = lv_btn_create(lv_scr_act());
+  // lv_obj_set_size(statusbar, 240, 20);
+  // lv_obj_set_style_shadow_width(statusbar, 0, LV_PART_MAIN);
+  // lv_obj_set_style_bg_color(statusbar, lv_color_black(), LV_PART_MAIN);
+  // lv_obj_set_style_radius(statusbar, 0, LV_PART_MAIN);
+  // lv_obj_align(statusbar, LV_ALIGN_TOP_MID, 0, 0);
 
-  mWifiLabel = lv_label_create(statusbar);
-  lv_label_set_text(mWifiLabel, "");
-  lv_obj_align(mWifiLabel, LV_ALIGN_LEFT_MID, -8, 0);
-  lv_obj_set_style_text_font(mWifiLabel, &lv_font_montserrat_12, LV_PART_MAIN);
+  // mWifiLabel = lv_label_create(statusbar);
+  // lv_label_set_text(mWifiLabel, "");
+  // lv_obj_align(mWifiLabel, LV_ALIGN_LEFT_MID, -8, 0);
+  // lv_obj_set_style_text_font(mWifiLabel, &lv_font_montserrat_12, LV_PART_MAIN);
 
-  mBattPercentage = lv_label_create(statusbar);
-  lv_label_set_text(mBattPercentage, "");
-  lv_obj_align(mBattPercentage, LV_ALIGN_RIGHT_MID, -16, 0);
-  lv_obj_set_style_text_font(mBattPercentage, &lv_font_montserrat_12, LV_PART_MAIN);
+  // mBattPercentage = lv_label_create(statusbar);
+  // lv_label_set_text(mBattPercentage, "");
+  // lv_obj_align(mBattPercentage, LV_ALIGN_RIGHT_MID, -16, 0);
+  // lv_obj_set_style_text_font(mBattPercentage, &lv_font_montserrat_12, LV_PART_MAIN);
 
-  mBattIcon = lv_label_create(statusbar);
-  lv_label_set_text(mBattIcon, LV_SYMBOL_BATTERY_EMPTY);
-  lv_obj_align(mBattIcon, LV_ALIGN_RIGHT_MID, 8, 0);
-  lv_obj_set_style_text_font(mBattIcon, &lv_font_montserrat_16, LV_PART_MAIN);
+  // mBattIcon = lv_label_create(statusbar);
+  // lv_label_set_text(mBattIcon, LV_SYMBOL_BATTERY_EMPTY);
+  // lv_obj_align(mBattIcon, LV_ALIGN_RIGHT_MID, 8, 0);
+  // lv_obj_set_style_text_font(mBattIcon, &lv_font_montserrat_16, LV_PART_MAIN);
 
-  mUSBIcon = lv_label_create(statusbar);
-  lv_label_set_text(mUSBIcon, LV_SYMBOL_USB);
-  lv_obj_align(mUSBIcon, LV_ALIGN_RIGHT_MID, -40, 0);
-  lv_obj_set_style_text_font(mUSBIcon, &lv_font_montserrat_16, LV_PART_MAIN);
+  // mUSBIcon = lv_label_create(statusbar);
+  // lv_label_set_text(mUSBIcon, LV_SYMBOL_USB);
+  // lv_obj_align(mUSBIcon, LV_ALIGN_RIGHT_MID, -40, 0);
+  // lv_obj_set_style_text_font(mUSBIcon, &lv_font_montserrat_16, LV_PART_MAIN);
+  create_status_bar();
 }
 
 void OmoteUI::update_battery(int percentage, bool isCharging, bool isConnected)
@@ -357,6 +299,7 @@ void OmoteUI::update_battery(int percentage, bool isCharging, bool isConnected)
   }
   lv_label_set_text(mBattPercentage, std::to_string(percentage).c_str());
   if( isCharging ) {
+    LV_LOG_USER("isCharging: mBatteryChargingIndex=%d", mBatteryChargingIndex);
     lv_label_set_text(mBattIcon, mBatteryCharging[mBatteryChargingIndex++]);
     if( mBatteryChargingIndex == BATTERYCHARGINGINDEX_MAX ) mBatteryChargingIndex = 0;
   }

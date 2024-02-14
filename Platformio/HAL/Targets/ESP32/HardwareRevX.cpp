@@ -3,6 +3,7 @@
 //#include "wifihandler.hpp"
 
 void HardwareRevX::initIO() {
+  Serial.printf("initIO\n");
   // Button Pin Definition
   pinMode(SW_1, OUTPUT);
   pinMode(SW_2, OUTPUT);
@@ -66,14 +67,20 @@ void HardwareRevX::init() {
   // Make sure ESP32 is running at full speed
   setCpuFrequencyMhz(240);
   wakeup_reason = getWakeReason();
-  initIO();
   Serial.begin(115200);
 
+  initIO();
+
   mDisplay = Display::getInstance();
+  Serial.printf("mDisplay %p\n", mDisplay);
   mBattery = std::make_shared<Battery>(ADC_BAT, CRG_STAT);
+  Serial.printf("mBattery %p\n", mBattery);
   mWifiHandler = WifiHandler::getInstance();
+  Serial.printf("mWifiHandler %p\n", mWifiHandler);
   mKeys = std::make_shared<Keys>();
-  //mIRHandler = std::make_shared<IRHandler>();
+  Serial.printf("mKeys %p\n", mKeys);
+  mIRHandler = std::make_shared<IRHandler>();
+  Serial.printf("mIRHandler %p\n", mIRHandler);
   
   restorePreferences();
 
@@ -85,7 +92,7 @@ void HardwareRevX::init() {
   setupIMU();
   setupIR();
 
-  debugPrint("Finished Hardware Setup in %d", millis());
+  debugPrint("Finished Hardware Setup in %d\n", millis());
 }
 
 void HardwareRevX::debugPrint(const char *fmt, ...) {

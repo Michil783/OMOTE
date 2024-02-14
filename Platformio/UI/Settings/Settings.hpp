@@ -20,9 +20,9 @@ public:
     std::string getName();
     void handleCustomKeypad(int keyCode, char keyChar){};
 
-    bool addDevice(DeviceInterface* device);
+    //bool addDevice(DeviceInterface* device);
 
-    bool addApp(AppInterface* app);
+    //bool addApp(AppInterface* app);
 
     void reset_settings_menu();
     void reset_wifi_menu();
@@ -94,12 +94,12 @@ private:
     void create_wifi_settings(lv_obj_t *menu, lv_obj_t *parent);
     void update_wifi_selection_subpage(int page);
 
-    DeviceInterface* devices[DEVICESLOTS];
-    lv_obj_t* deviceOverview[DEVICESLOTS];
+    //DeviceInterface* devices[DEVICESLOTS];
+    //lv_obj_t* deviceOverview[DEVICESLOTS];
     void createDeviceSettings(lv_obj_t *menu, lv_obj_t *parent);
 
-    AppInterface* apps[APPSLOTS];
-    lv_obj_t* appOverview[APPSLOTS];
+    //AppInterface* apps[APPSLOTS];
+    //lv_obj_t* appOverview[APPSLOTS];
     void createAppSettings(lv_obj_t *menu, lv_obj_t *parent);
 
     void saveAppSettings();

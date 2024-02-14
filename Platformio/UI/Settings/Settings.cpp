@@ -71,9 +71,8 @@ void Settings::WakeEnableSetting_event_cb(lv_event_t *e)
 void Settings::IREnableSetting_event_cb(lv_event_t *e)
 {
     LV_LOG_TRACE("Settings - IREnableSetting_event_cb");
-    #ifdef OMOTE_ESP32
+    LV_LOG_USER("IREnableSetting_event_cb: state=%d", lv_obj_has_state(lv_event_get_target(e), LV_STATE_CHECKED));
     Settings::mHardware->irhandler()->IRReceiverEnable(lv_obj_has_state(lv_event_get_target(e), LV_STATE_CHECKED));
-    #endif
 }
 
 /**
@@ -103,7 +102,7 @@ void Settings::WifiEnableSetting_event_cb(lv_event_t *e)
     LV_LOG_USER("wifiEnable: %d", wifiEnable);
     Settings::getInstance()->reset_wifi_menu();
     #ifdef ENABLE_WIFI
-    LV_LOG_USER("wifiEnable: %d wifiConnected: %d", settings.wifiEnabled(), wifihandler.isConnected());
+    //LV_LOG_USER("wifiEnable: %d wifiConnected: %d", settings.wifiEnabled(), wifihandler.isConnected());
     if( Settings::getInstance()->wifiEnabled() ){
         Settings::mHardware->wifi()->begin();
     } else {
@@ -235,12 +234,18 @@ Settings::Settings(std::shared_ptr<DisplayAbstract> display)
     Settings::mInstance = this;
 
     /*Initialize device array*/
-    for (int i = 0; i < DEVICESLOTS; i++)
-    {
-        this->devices[i] = nullptr;
-    }
+    // for (int i = 0; i < DEVICESLOTS; i++)
+    // {
+    //     this->devices[i] = nullptr;
+    // }
 
     wifiEnable = false;
+    wifi_setting_cont =
+    wifiOverview =
+    wifi_password_label =
+    wifi_password_page =
+    wifi_selection_page =
+    WifiLabel = nullptr;
 
     setup();
 }
@@ -284,40 +289,6 @@ void Settings::setup()
     else
         LV_LOG_ERROR("no TebView pointer returned");
 }
-
-// void OmoteUI::setup_settings(lv_obj_t *parent) {
-//   // Add content to the settings mTab
-//   // With a flex layout, setting groups/boxes will position themselves
-//   // automatically
-//   lv_obj_set_layout(parent, LV_LAYOUT_FLEX);
-//   lv_obj_set_flex_flow(parent, LV_FLEX_FLOW_COLUMN);
-//   lv_obj_set_scrollbar_mode(parent, LV_SCROLLBAR_MODE_ACTIVE);
-//   // Add a label, then a box for the display settings
-//   mSettingsMenu = lv_menu_create(parent);
-//   lv_obj_set_width(mSettingsMenu, 210);
-
-//   /* Create main page for settings mSettingsMenu*/
-//   mSettingsMainPage = lv_menu_page_create(mSettingsMenu, NULL);
-//   lv_obj_t *cont = lv_menu_cont_create(mSettingsMainPage);
-//   lv_obj_set_layout(cont, LV_LAYOUT_FLEX);
-//   lv_obj_set_flex_flow(cont, LV_FLEX_FLOW_COLUMN);
-//   lv_obj_set_scrollbar_mode(cont, LV_SCROLLBAR_MODE_ACTIVE);
-//   // lv_obj_set_width(cont, lv_obj_get_width(parent));
-//   this->display_settings(cont);
-
-//   this->create_wifi_settings(mSettingsMenu, cont);
-
-//   // Another setting for the battery
-//   lv_obj_t *menuLabel = lv_label_create(cont);
-//   lv_label_set_text(menuLabel, "Battery");
-//   lv_obj_t *menuBox = lv_obj_create(cont);
-//   lv_obj_set_size(menuBox, lv_pct(100), 125);
-//   lv_obj_set_style_bg_color(menuBox, color_primary, LV_PART_MAIN);
-//   lv_obj_set_style_border_width(menuBox, 0, LV_PART_MAIN);
-
-//   lv_menu_set_page(mSettingsMenu, mSettingsMainPage);
-// }
-
 
 /**
  * @brief build the settings in LVGL
@@ -489,9 +460,7 @@ void Settings::ir_settings(lv_obj_t *parent)
     lv_obj_align(irToggle, LV_ALIGN_TOP_RIGHT, 0, -3);
     lv_obj_set_style_bg_color(irToggle, lv_color_hex(0x505050), LV_PART_MAIN);
     lv_obj_add_event_cb(irToggle, IREnableSetting_event_cb, LV_EVENT_VALUE_CHANGED, NULL);
-    #ifdef OMOTE_ESP32
     if (Settings::mHardware->irhandler()->IRReceiver())
-    #endif
         lv_obj_add_state(irToggle, LV_STATE_CHECKED); // set default state
 }
 
@@ -698,11 +667,14 @@ void Settings::create_wifi_main_page(lv_obj_t *parent)
     LV_LOG_USER("");
     lv_color_t primary_color = UI::Basic::OmoteUI::getInstance()->getPrimaryColor();
 
+    LV_LOG_USER("Settings::create_wifi_main_page() wifiOverview=%p\n", this->wifiOverview);
+
     if( !this->wifiOverview ) {
         this->wifiOverview = lv_obj_create(parent);
         lv_obj_set_size(this->wifiOverview, lv_pct(100), 90);
         lv_obj_set_style_bg_color(this->wifiOverview, primary_color, LV_PART_MAIN);
         lv_obj_set_style_border_width(this->wifiOverview, 0, LV_PART_MAIN);
+        LV_LOG_USER("create wifiOverview=%p\n", this->wifiOverview);
     }
 
     lv_obj_t *enable = lv_label_create(this->wifiOverview);
@@ -758,23 +730,23 @@ void Settings::create_wifi_settings(lv_obj_t *menu, lv_obj_t *parent)
     this->create_wifi_main_page(parent);
 }
 
-bool Settings::addDevice(DeviceInterface *device)
-{
-    LV_LOG_TRACE("Settings::addDevice(%s)", device->getName());
+// bool Settings::addDevice(DeviceInterface *device)
+// {
+//     LV_LOG_TRACE("Settings::addDevice(%s)", device->getName());
 
-    DeviceInterface *currentDevice;
-    /* search free slot in device array */
-    for (int i = 0; i < DEVICESLOTS; i++)
-    {
-        if (this->devices[i] == nullptr)
-        {
-            //  Add mTab (name is irrelevant since the labels are hidden and hidden buttons are used (below))
-            this->devices[i] = device;
-            return true;
-        }
-    }
-    return false;
-}
+//     DeviceInterface *currentDevice;
+//     /* search free slot in device array */
+//     for (int i = 0; i < DEVICESLOTS; i++)
+//     {
+//         if (this->devices[i] == nullptr)
+//         {
+//             //  Add mTab (name is irrelevant since the labels are hidden and hidden buttons are used (below))
+//             this->devices[i] = device;
+//             return true;
+//         }
+//     }
+//     return false;
+// }
 
 void Settings::saveSettings(){
     LV_LOG_USER("wifiEnable: %d", this->wifiEnable);
@@ -783,8 +755,8 @@ void Settings::saveSettings(){
     preferences.begin("Settings", false);
     preferences.putBool("wifiEnable", this->wifiEnable);
     #endif
-    this->saveAppSettings();
-    this->saveDeviceSettings();
+    //this->saveAppSettings();
+    //this->saveDeviceSettings();
 }
 
 void Settings::createDeviceSettings(lv_obj_t *menu, lv_obj_t *parent)
@@ -794,14 +766,14 @@ void Settings::createDeviceSettings(lv_obj_t *menu, lv_obj_t *parent)
     lv_color_t primary_color = UI::Basic::OmoteUI::getInstance()->getPrimaryColor();
 
     /* search device array */
-    for (int i = 0; i < DEVICESLOTS; i++)
-    {
-        if (this->devices[i] != nullptr)
-        {
-            LV_LOG_TRACE("Seetings::createDeviceSettings Device: %s", this->devices[i]->getName().c_str());
-            this->devices[i]->displaySettings(parent);
-        }
-    }
+    // for (int i = 0; i < DEVICESLOTS; i++)
+    // {
+    //     if (this->devices[i] != nullptr)
+    //     {
+    //         LV_LOG_TRACE("Seetings::createDeviceSettings Device: %s", this->devices[i]->getName().c_str());
+    //         this->devices[i]->displaySettings(parent);
+    //     }
+    // }
 }
 
 void Settings::saveDeviceSettings()
@@ -809,49 +781,49 @@ void Settings::saveDeviceSettings()
     LV_LOG_TRACE("Settings::saveDeviceSettings");
 
     /* search device array */
-    for (int i = 0; i < DEVICESLOTS; i++)
-    {
-        if (this->devices[i] != nullptr)
-        {
-            LV_LOG_TRACE("Settings::saveDeviceSettings Device: %s", this->devices[i]->getName().c_str());
-            this->devices[i]->saveSettings();
-        }
-    }
+    // for (int i = 0; i < DEVICESLOTS; i++)
+    // {
+    //     if (this->devices[i] != nullptr)
+    //     {
+    //         LV_LOG_TRACE("Settings::saveDeviceSettings Device: %s", this->devices[i]->getName().c_str());
+    //         this->devices[i]->saveSettings();
+    //     }
+    // }
 }
 
-bool Settings::addApp(AppInterface *app)
-{
-    LV_LOG_TRACE("Settings::addApp(%s)", app->getName());
+// bool Settings::addApp(AppInterface *app)
+// {
+//     LV_LOG_TRACE("Settings::addApp(%s)", app->getName());
 
-    AppInterface *currentApp;
-    /* search free slot in app array */
-    for (int i = 0; i < APPSLOTS; i++)
-    {
-        if (this->apps[i] == nullptr)
-        {
-            //  Add mTab (name is irrelevant since the labels are hidden and hidden buttons are used (below))
-            this->apps[i] = app;
-            return true;
-        }
-    }
-    return false;
-}
+//     AppInterface *currentApp;
+//     /* search free slot in app array */
+//     for (int i = 0; i < APPSLOTS; i++)
+//     {
+//         if (this->apps[i] == nullptr)
+//         {
+//             //  Add mTab (name is irrelevant since the labels are hidden and hidden buttons are used (below))
+//             this->apps[i] = app;
+//             return true;
+//         }
+//     }
+//     return false;
+// }
 
 void Settings::createAppSettings(lv_obj_t *menu, lv_obj_t *parent)
 {
-    LV_LOG_TRACE("Settings::createAppSettings");
+    LV_LOG_USER("Settings::createAppSettings\n");
 
     lv_color_t primary_color = UI::Basic::OmoteUI::getInstance()->getPrimaryColor();
 
     /* search app array */
-    for (int i = 0; i < APPSLOTS; i++)
-    {
-        if (this->apps[i] != nullptr)
-        {
-            LV_LOG_TRACE("Settings::createAppSettings App: %s", this->apps[i]->getName().c_str());
-            this->apps[i]->displaySettings(parent);
-        }
-    }
+    // for (int i = 0; i < APPSLOTS; i++)
+    // {
+    //     if (this->apps[i] != nullptr)
+    //     {
+    //         LV_LOG_USER("Settings::createAppSettings App: %s\n", this->apps[i]->getName().c_str());
+    //         this->apps[i]->displaySettings(parent);
+    //     }
+    // }
 }
 
 void Settings::saveAppSettings()
@@ -859,12 +831,12 @@ void Settings::saveAppSettings()
     LV_LOG_TRACE("Settings::saveAppSettings");
 
     /* search app array */
-    for (int i = 0; i < APPSLOTS; i++)
-    {
-        if (this->apps[i] != nullptr)
-        {
-            LV_LOG_TRACE("Settings::saveAppSettings app: %s", this->apps[i]->getName().c_str());
-            this->apps[i]->saveSettings();
-        }
-    }
+    // for (int i = 0; i < APPSLOTS; i++)
+    // {
+    //     if (this->apps[i] != nullptr)
+    //     {
+    //         LV_LOG_TRACE("Settings::saveAppSettings app: %s", this->apps[i]->getName().c_str());
+    //         this->apps[i]->saveSettings();
+    //     }
+    // }
 }

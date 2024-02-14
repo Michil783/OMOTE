@@ -47,4 +47,6 @@ private:
   std::shared_ptr<wifiHandlerSim> mWifiHandler;
   std::shared_ptr<KeyPressSim> mKeys;
   std::shared_ptr<IRHandlerInterface> mIRHandler;
+
+  uint32_t mSleepTimeout;
 };

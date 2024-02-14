@@ -2,12 +2,14 @@
 
 #include <functional>
 #include <memory>
+#include "lvgl.h"
 
 using namespace std::chrono;
 using namespace UI;
 
 poller::poller(std::function<void()> aOnPollCb, milliseconds aPollTime)
     : mIntermittentCallback(std::move(aOnPollCb)) {
+      LV_LOG_USER("");
   mTimer = lv_timer_create(poller::onPoll, aPollTime.count(), this);
   lv_timer_set_repeat_count(mTimer, -1); // Call forever
 }

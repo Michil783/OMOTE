@@ -17,7 +17,7 @@
 #include <IRrecv.h>
 #include <IRutils.h>
 
-extern Preferences preferences;
+//extern Preferences preferences;
 
 const uint16_t kCaptureBufferSize = 1024;
 const uint8_t kTimeout = 15;
@@ -47,6 +47,7 @@ void IRHandler::setup()
     {
         this->irp[i] = nullptr;
     }
+    Preferences preferences;
     this->IRReceiverEnabled = preferences.getBool("IRREnabled", false);
     LV_LOG_USER("enabled: %d", this->IRReceiverEnabled);
     this->IRReceiverEnable(this->IRReceiverEnabled);
@@ -65,6 +66,7 @@ bool IRHandler::IRReceiverEnable(bool onoff){
     }
     this->IRReceiverEnabled = onoff;
     LV_LOG_USER("save state in preferences %d", this->IRReceiverEnabled);
+    Preferences preferences;
     preferences.putBool("IRREnabled", this->IRReceiverEnabled);
     LV_LOG_USER("saved state in preferences %d", preferences.getBool("IRREnabled"));
     return this->IRReceiverEnabled;

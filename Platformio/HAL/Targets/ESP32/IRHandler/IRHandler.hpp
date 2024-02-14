@@ -8,7 +8,7 @@
 
 #define NUMBER_OF_HANDLER 10
 
-class IRHandler : IRHandlerInterface {
+class IRHandler : public IRHandlerInterface {
     public:
     IRHandler();
 
