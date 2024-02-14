@@ -13,6 +13,9 @@ public:
   void scan() override;
   void connect(std::string ssid, std::string password) override;
   wifiStatus GetStatus() override { return mCurrentStatus; };
+  virtual void turnOff() override {};
+  virtual std::string getFoundSSID(unsigned int index) override {return "";};
+  virtual int getFoundRSSI(unsigned int index) override {return 0;};
 
 private:
   std::thread mFakeScanThread = std::thread([] {});

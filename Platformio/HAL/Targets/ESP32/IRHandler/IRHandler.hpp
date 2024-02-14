@@ -3,6 +3,7 @@
 
 //#include<Arduino.h>
 #include "IRHandlerInterface.h"
+#include "omoteconfig.h"
 #include <stdint.h>
 
 #define NUMBER_OF_HANDLER 10
@@ -22,8 +23,8 @@ class IRHandler : IRHandlerInterface {
      * @param uint16_t data
     */
     virtual void IRSender(int currentDevice, uint16_t data) override;
-    bool IRReceiverEnable(bool onoff);
-    bool IRReceiver();
+    virtual bool IRReceiverEnable(bool onoff) override;
+    virtual bool IRReceiver() override;
 
     private:
     void (*irp[NUMBER_OF_HANDLER]) (uint16_t data);

@@ -12,7 +12,6 @@
 #include <IRHandler.hpp>
 #include <lvgl.h>
 #include <Preferences.h>
-#include <omote.hpp>
 #include <IRremoteESP8266.h>
 #include <IRsend.h>
 #include <IRrecv.h>

@@ -14,58 +14,64 @@
 
 #include "AppInterface.hpp"
 
-namespace UI::Basic {
-/// @brief Singleton to allow UI code to live separately from the Initialization
-/// of resources.
-class OmoteUI : public UIBase {
-public:
-  //OmoteUI(std::shared_ptr<HardwareAbstract> aHardware);
-  OmoteUI();
+namespace UI::Basic
+{
+  /// @brief Singleton to allow UI code to live separately from the Initialization
+  /// of resources.
+  class OmoteUI : public UIBase
+  {
+  public:
+    // OmoteUI(std::shared_ptr<HardwareAbstract> aHardware);
+    OmoteUI();
 
-  static std::weak_ptr<OmoteUI> getRefrence() { return getInstance(); };
-  static std::shared_ptr<OmoteUI>
-  getInstance(std::shared_ptr<HardwareAbstract> aHardware = nullptr) {
-    if (mInstance) {
+    static std::weak_ptr<OmoteUI> getRefrence() { return getInstance(); };
+    static std::shared_ptr<OmoteUI>
+    getInstance(std::shared_ptr<HardwareAbstract> aHardware = nullptr)
+    {
+      if (mInstance)
+      {
+        return mInstance;
+      }
+      else if (aHardware)
+      {
+        // mInstance = std::make_shared<OmoteUI>(aHardware);
+        mInstance = std::make_shared<OmoteUI>();
+      }
       return mInstance;
-    } else if (aHardware) {
-      //mInstance = std::make_shared<OmoteUI>(aHardware);
-      mInstance = std::make_shared<OmoteUI>();
-    }
-    return mInstance;
-  };
+    };
 
-  // Set the page indicator scroll position relative to the tabview scroll
-  // position
-  static void store_scroll_value_event_cb(lv_event_t *e);
-  // Update current device when the tabview page is changes
-  static void tabview_device_event_cb(lv_event_t *e);
-  // // Update wake timeout handler
-  // void wakeTimeoutSetting_event_cb(lv_event_t *e);
-  // // Slider Event handler
-  // void bl_slider_event_cb(lv_event_t *e);
-  // // Apple Key Event handler
-  // void appleKey_event_cb(lv_event_t *e);
-  // // Wakeup by IMU Switch Event handler
-  // void WakeEnableSetting_event_cb(lv_event_t *e);
-  // // Smart Home Toggle Event handler
-  // void smartHomeToggle_event_cb(lv_event_t *e);
-  // // Smart Home Toggle Event handler
-  // void smartHomeSlider_event_cb(lv_event_t *e);
-  // // Virtual Keypad Event handler
-  void virtualKeypad_event_cb(lv_event_t *e);
-  void wifi_settings_cb(lv_event_t *event);
+    // Set the page indicator scroll position relative to the tabview scroll
+    // position
+    static void store_scroll_value_event_cb(lv_event_t *e);
+    // Update current device when the tabview page is changes
+    static void tabview_device_event_cb(lv_event_t *e);
+    // // Update wake timeout handler
+    // void wakeTimeoutSetting_event_cb(lv_event_t *e);
+    // // Slider Event handler
+    // void bl_slider_event_cb(lv_event_t *e);
+    // // Apple Key Event handler
+    // void appleKey_event_cb(lv_event_t *e);
+    // // Wakeup by IMU Switch Event handler
+    // void WakeEnableSetting_event_cb(lv_event_t *e);
+    // // Smart Home Toggle Event handler
+    // void smartHomeToggle_event_cb(lv_event_t *e);
+    // // Smart Home Toggle Event handler
+    // void smartHomeSlider_event_cb(lv_event_t *e);
+    // // Virtual Keypad Event handler
+    void virtualKeypad_event_cb(lv_event_t *e);
+    void wifi_settings_cb(lv_event_t *event);
 
-  void connect_btn_cb(lv_event_t *event);
+    void connect_btn_cb(lv_event_t *event);
 
-  void password_field_event_cb(lv_event_t *e);
+    void password_field_event_cb(lv_event_t *e);
 
-  static void ta_kb_event_cb(lv_event_t *e);
+    static void ta_kb_event_cb(lv_event_t *e);
 
-  void wifi_scan_done(std::shared_ptr<std::vector<wifiHandlerInterface::WifiInfo>> info);
-  void loopHandler();
+    void wifi_scan_done(std::shared_ptr<std::vector<wifiHandlerInterface::WifiInfo>> info);
+    void loopHandler();
 
-  void hide_keyboard();
-  void show_keyboard();
+    void hide_keyboard();
+    void show_keyboard();
 
     void create_keyboard();
     void attach_keyboard(lv_obj_t *textarea);
@@ -75,70 +81,71 @@ public:
     lv_color_t getPrimaryColor() { return mPrimaryColor; };
     lv_obj_t *addTab(AppInterface *app);
     lv_obj_t *getTabView() { return mTabView; };
-    void updateWifi(std::string symbol) { lv_label_set_text(WifiLabel, symbol.c_str()); };
+    void updateWifi(std::string symbol) { lv_label_set_text(mWifiLabel, symbol.c_str()); };
     void setActiveTab(unsigned char tab) { lv_tabview_set_act(getTabView(), tab, LV_ANIM_OFF); };
     AppInterface *getApp(unsigned char tab) { return mApps[tab]; };
     void update_battery(int percentage, bool isCharging, bool isConnected);
 
-private:
-  static std::shared_ptr<HardwareAbstract> mHardware;
-  static std::shared_ptr<OmoteUI> mInstance;
+  private:
+    static std::shared_ptr<HardwareAbstract> mHardware;
+    static std::shared_ptr<OmoteUI> mInstance;
+    static lv_obj_t *mPanel;
+    static uint_fast8_t mCurrentDevice;
 
-  std::unique_ptr<poller> batteryPoller;
+    std::unique_ptr<poller> mBatteryPoller;
 
-  int sleepTimeoutMap[5] = {10000,30000,60000,180000,600000};
+    int mSleepTimeoutMap[5] = {10000, 30000, 60000, 180000, 600000};
 
-  std::shared_ptr<std::vector<wifiHandlerInterface::WifiInfo>> found_wifi_networks;
+    std::shared_ptr<std::vector<wifiHandlerInterface::WifiInfo>> found_wifi_networks;
 
-  lv_obj_t *kb;
+    lv_obj_t *mKb;
 
-  static lv_obj_t *panel;
-  //Images imgs = Images();
-  static uint_fast8_t currentDevice;
-  
-  lv_color_t mPrimaryColor = lv_color_hex(0x303030); // gray
+    // static lv_obj_t *panel;
+    // //Images imgs = Images();
+    // static uint_fast8_t currentDevice;
 
-  //inline static const uint_fast8_t virtualKeyMapTechnisat[10] = {
-  //    0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, 0x9, 0x0};
+    lv_color_t mPrimaryColor = lv_color_hex(0x303030); // gray
 
-  /************************************** WIFI Settings Menu
-   * *******************************************************/
-  lv_obj_t *wifi_setting_cont;
-  lv_obj_t *wifiOverview;
-  lv_obj_t *wifi_password_label;
-  lv_obj_t *wifi_password_page;
-  lv_obj_t *wifi_selection_page;
-  unsigned int no_subpages;
-  unsigned int no_wifi_networks;
+    // inline static const uint_fast8_t virtualKeyMapTechnisat[10] = {
+    //     0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, 0x9, 0x0};
 
-  void wifi_status(std::shared_ptr<wifiHandlerInterface::wifiStatus> status);
-  void next_wifi_selection_subpage(lv_event_t *e);
-  lv_obj_t *create_wifi_selection_page(lv_obj_t *menu);
-  lv_obj_t *create_wifi_password_page(lv_obj_t *menu);
-  void create_wifi_main_page(lv_obj_t *parent);
-  void create_wifi_settings(lv_obj_t *menu, lv_obj_t *parent);
-  void update_wifi_selection_subpage(int page);
+    /************************************** WIFI Settings Menu
+     * *******************************************************/
+    lv_obj_t *mWifi_setting_cont;
+    lv_obj_t *mWifiOverview;
+    lv_obj_t *mWifi_password_label;
+    lv_obj_t *mWifi_password_page;
+    lv_obj_t *mWifi_selection_page;
+    unsigned int no_subpages;
+    unsigned int no_wifi_networks;
 
-  void display_settings(lv_obj_t *parent);
+    void wifi_status(std::shared_ptr<wifiHandlerInterface::wifiStatus> status);
+    void next_wifi_selection_subpage(lv_event_t *e);
+    lv_obj_t *create_wifi_selection_page(lv_obj_t *menu);
+    lv_obj_t *create_wifi_password_page(lv_obj_t *menu);
+    void create_wifi_main_page(lv_obj_t *parent);
+    void create_wifi_settings(lv_obj_t *menu, lv_obj_t *parent);
+    void update_wifi_selection_subpage(int page);
 
-  AppInterface *mApps[TAB_ARRAY_SIZE];
+    void display_settings(lv_obj_t *parent);
+
+    AppInterface *mApps[TAB_ARRAY_SIZE];
     lv_obj_t *mTabView;
     void createTabviewButtons();
     void setup_settings(lv_obj_t *parent);
-    lv_obj_t *settingsMenu;
+    lv_obj_t *mSettingsMenu;
 
     /******************************************** Statusbar *************************************************************/
-  void create_status_bar();
+    void create_status_bar();
 
-    lv_obj_t *statusbar;
-    lv_obj_t *WifiLabel;
-    lv_obj_t *objBattPercentage;
-    lv_obj_t *objBattIcon;
-    lv_obj_t *objUSBIcon;
+    lv_obj_t *mStatusbar;
+    lv_obj_t *mWifiLabel;
+    lv_obj_t *mBattPercentage;
+    lv_obj_t *mBattIcon;
+    lv_obj_t *mUSBIcon;
 
-    int batteryChargingIndex = 0;
-    const char *batteryCharging[BATTERYCHARGINGINDEX_MAX] = {LV_SYMBOL_BATTERY_EMPTY, LV_SYMBOL_BATTERY_1, LV_SYMBOL_BATTERY_2, LV_SYMBOL_BATTERY_3, LV_SYMBOL_BATTERY_FULL};
-
-};
+    int mBatteryChargingIndex = 0;
+    const char *mBatteryCharging[BATTERYCHARGINGINDEX_MAX] = {LV_SYMBOL_BATTERY_EMPTY, LV_SYMBOL_BATTERY_1, LV_SYMBOL_BATTERY_2, LV_SYMBOL_BATTERY_3, LV_SYMBOL_BATTERY_FULL};
+  };
 
 } // namespace UI::Basic

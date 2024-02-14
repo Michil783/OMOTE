@@ -13,13 +13,13 @@ public:
 
   virtual void setBrightness(uint8_t brightness) override;
   virtual uint8_t getBrightness() override;
-  virtual lv_color_t getPrimaryColor() override;
+  //virtual lv_color_t getPrimaryColor() override;
   virtual void turnOff() override;
 
   void setTitle(std::string aNewTitle);
 
-  lv_obj_t* addTab(AppInterface* app);
-  virtual lv_obj_t* getTabView() override;
+  //lv_obj_t* addTab(AppInterface* app);
+  //virtual lv_obj_t* getTabView() override;
 
 protected:
   virtual void flushDisplay(lv_disp_drv_t *disp, const lv_area_t *area,
@@ -32,15 +32,15 @@ private:
   uint8_t mBrightness;
   SDL_Window *mSimWindow;
 
-  lv_color_t mPrimaryColor;
+  //lv_color_t mPrimaryColor;
   
   /**
    * @brief Function to create the tab view buttons
    * 
    */
-  void createTabviewButtons();
+  //void createTabviewButtons();
 
-  lv_obj_t* tabview;
+  //lv_obj_t* tabview;
   
   /**
    * @brief Array of tab names

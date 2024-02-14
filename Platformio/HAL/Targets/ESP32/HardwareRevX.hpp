@@ -20,8 +20,8 @@
 #include "Display.hpp"
 #include "keys.hpp"
 #include "wifiHandlerInterface.h"
-//#include "IRHandlerInterface.h"
-//#include "IRHandler.hpp"
+#include "IRHandlerInterface.h"
+#include "IRHandler.hpp"
 
 class HardwareRevX : public HardwareAbstract {
 public:
@@ -37,7 +37,7 @@ public:
   virtual std::shared_ptr<DisplayAbstract> display() override;
   virtual std::shared_ptr<wifiHandlerInterface> wifi() override;
   virtual std::shared_ptr<KeyPressAbstract> keys() override;
-  //virtual std::shared_ptr<IRHandlerInterface> irhandler() override;
+  virtual std::shared_ptr<IRHandlerInterface> irhandler() override;
 
   virtual char getCurrentDevice() override;
   virtual void setCurrentDevice(char currentDevice) override;
@@ -45,8 +45,8 @@ public:
   virtual bool getWakeupByIMUEnabled() override;
   virtual void setWakeupByIMUEnabled(bool wakeupByIMUEnabled) override;
 
-  virtual uint16_t getSleepTimeout() override;
-  virtual void setSleepTimeout(uint16_t sleepTimeout) override;
+  virtual uint32_t getSleepTimeout() override;
+  virtual void setSleepTimeout(uint32_t sleepTimeout) override;
 
   /// @brief To be ran in loop out in main
   // TODO move to a freertos task
@@ -72,12 +72,12 @@ private:
   std::shared_ptr<Display> mDisplay;
   std::shared_ptr<WifiHandler> mWifiHandler;
   std::shared_ptr<Keys> mKeys;
-  //std::shared_ptr<IRHandlerInterface> mIRHandler;
+  std::shared_ptr<IRHandlerInterface> mIRHandler;
 
   // IMU Motion Detection
   LIS3DH IMU = LIS3DH(I2C_MODE, 0x19); // Default constructor is I2C, addr 0x19.
-  int standbyTimer = SLEEP_TIMEOUT;
-  int sleepTimeout = SLEEP_TIMEOUT;
+  uint32_t standbyTimer = SLEEP_TIMEOUT;
+  uint32_t sleepTimeout = SLEEP_TIMEOUT;
   int motion = 0;
   WakeReason wakeup_reason;
 

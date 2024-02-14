@@ -53,7 +53,7 @@ class WifiHandler : public wifiHandlerInterface {
          * @param index     index of the found wifi 
          * @return std::string   SSID of the wifi
          */
-        std::string getFoundSSID(unsigned int index);
+        virtual std::string getFoundSSID(unsigned int index) override;
 
         /**
          * @brief Get the RSSI of the found wifi
@@ -61,7 +61,7 @@ class WifiHandler : public wifiHandlerInterface {
          * @param index     index of the found wifi
          * @return int      RSSI value of the found wifi 
          */
-        int getFoundRSSI(unsigned int index);
+        virtual int getFoundRSSI(unsigned int index) override;
 
         /**
          * @brief Function to determine wether or not we are connected to a network 
@@ -75,7 +75,7 @@ class WifiHandler : public wifiHandlerInterface {
          * @brief Function to turn off wifi
          * 
          */
-        void turnOff();
+        void turnOff() override;
 
         /**
          * @brief Function to get SSID of the currently connected wifi network

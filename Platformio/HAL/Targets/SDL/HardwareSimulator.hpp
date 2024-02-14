@@ -5,7 +5,7 @@
 #include "SDLDisplay.hpp"
 #include "batterySimulator.hpp"
 #include "wifiHandlerSim.hpp"
-//#include "irhandlerSimulator.hpp"
+#include "irhandlerSimulator.hpp"
 
 #include <thread>
 
@@ -27,7 +27,7 @@ public:
   std::shared_ptr<DisplayAbstract> display() override;
   std::shared_ptr<wifiHandlerInterface> wifi() override;
   std::shared_ptr<KeyPressAbstract> keys() override;
-  //std::shared_ptr<IRHandlerInterface> irhandler() override;
+  std::shared_ptr<IRHandlerInterface> irhandler() override;
 
   char getCurrentDevice() override;
   void setCurrentDevice(char currentDevice) override;
@@ -35,8 +35,8 @@ public:
   bool getWakeupByIMUEnabled() override;
   void setWakeupByIMUEnabled(bool wakeupByIMUEnabled) override;
 
-  uint16_t getSleepTimeout() override;
-  void setSleepTimeout(uint16_t sleepTimeout) override;
+  uint32_t getSleepTimeout() override;
+  void setSleepTimeout(uint32_t sleepTimeout) override;
 
 private:
   std::thread mTickThread;
@@ -46,5 +46,5 @@ private:
   std::shared_ptr<SDLDisplay> mDisplay;
   std::shared_ptr<wifiHandlerSim> mWifiHandler;
   std::shared_ptr<KeyPressSim> mKeys;
-  //std::shared_ptr<IRHandlerInterface> mIRHandler;
+  std::shared_ptr<IRHandlerInterface> mIRHandler;
 };

@@ -18,6 +18,35 @@ std::shared_ptr<Display> Display::getInstance() {
   return std::static_pointer_cast<Display>(mInstance);
 }
 
+void Display::screenInput(lv_indev_drv_t *indev_driver, lv_indev_data_t *data) {
+  // int16_t touchX, touchY;
+  touchPoint = touch.getPoint();
+  int16_t touchX = touchPoint.x;
+  int16_t touchY = touchPoint.y;
+  bool touched = false;
+  if ((touchX > 0) || (touchY > 0)) {
+    touched = true;
+    mTouchEvent->notify(touchPoint);
+  }
+
+  if (!touched) {
+    data->state = LV_INDEV_STATE_REL;
+  } else {
+    data->state = LV_INDEV_STATE_PR;
+
+    // Set the coordinates
+    data->point.x = SCREEN_WIDTH - touchX;
+    data->point.y = SCREEN_HEIGHT - touchY;
+
+    // Serial.print( "touchpoint: x" );
+    // Serial.print( touchX );
+    // Serial.print( " y" );
+    // Serial.println( touchY );
+    // tft.drawFastHLine(0, screenHeight - touchY, screenWidth, TFT_RED);
+    // tft.drawFastVLine(screenWidth - touchX, 0, screenHeight, TFT_RED);
+  }
+}
+
 Display::Display(int backlight_pin, int enable_pin) : DisplayAbstract() //, backlight_pin(backlight_pin), enable_pin(enable_pin), tft(TFT_eSPI()), touch(Adafruit_FT6206())
 {
   backlight_pin = backlight_pin;
@@ -80,6 +109,7 @@ Display::Display(int backlight_pin, int enable_pin) : DisplayAbstract() //, back
   // this->backlight_brightness = preferences.getUChar("blBrightness", DEFAULT_BACKLIGHT_BRIGHTNESS);
   // LV_LOG_TRACE("restore blBrightness to %d", this->backlight_brightness);
   Preferences preferences;
+  preferences.begin("DisplaySettings", false);
   mBrightness = preferences.getUChar("blBrightness", DEFAULT_BACKLIGHT_BRIGHTNESS);
   LV_LOG_TRACE("restore blBrightness to %d", mBrightness);
 

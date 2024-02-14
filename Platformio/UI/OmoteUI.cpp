@@ -2,10 +2,18 @@
 #include "lvgl.h"
 #include "omoteconfig.h"
 #include <functional>
+#include "HardwareFactory.hpp"
+#include "HardwareAbstract.hpp"
 
 using namespace UI::Basic;
 
 std::shared_ptr<OmoteUI> OmoteUI::mInstance = nullptr;
+//std::shared_ptr<HardwareAbstract> OmoteUI::mHardware = nullptr;
+lv_obj_t *OmoteUI::mPanel = nullptr;
+uint_fast8_t OmoteUI::mCurrentDevice = 1;
+
+  //Images imgs = Images();
+  static uint_fast8_t currentDevice;
 
 OmoteUI::OmoteUI() : UIBase() {
     /*Initialize tab name array*/
@@ -13,8 +21,9 @@ OmoteUI::OmoteUI() : UIBase() {
   {
     mApps[i] = nullptr;
   }
-  panel = nullptr;
+  mPanel = nullptr;
   currentDevice = 1;
+  //mHardware = std::shared_ptr<HardwareAbstract> (&HardwareFactory::getAbstract());
 };
 
 // Set the page indicator scroll position relative to the tabview scroll
@@ -23,14 +32,14 @@ void OmoteUI::store_scroll_value_event_cb(lv_event_t *e) {
   float bias = (150.0 + 8.0) / 240.0;
   int offset = 240 / 2 - 150 / 2 - 8 - 50 - 3;
   lv_obj_t *screen = lv_event_get_target(e);
-  lv_obj_scroll_to_x(panel, lv_obj_get_scroll_x(screen) * bias - offset,
+  lv_obj_scroll_to_x(mPanel, lv_obj_get_scroll_x(screen) * bias - offset,
                      LV_ANIM_OFF);
 }
 
 // Update current device when the tabview page is changes
 void OmoteUI::tabview_device_event_cb(lv_event_t *e) {
   currentDevice = lv_tabview_get_tab_act(lv_event_get_target(e));
-  mHardware->setCurrentDevice(currentDevice);
+  //mHardware->setCurrentDevice(currentDevice);
 }
 
 // // Slider Event handler
@@ -113,54 +122,54 @@ void OmoteUI::create_status_bar() {
   lv_obj_set_style_radius(statusbar, 0, LV_PART_MAIN);
   lv_obj_align(statusbar, LV_ALIGN_TOP_MID, 0, 0);
 
-  this->WifiLabel = lv_label_create(statusbar);
-  lv_label_set_text(this->WifiLabel, "");
-  lv_obj_align(this->WifiLabel, LV_ALIGN_LEFT_MID, -8, 0);
-  lv_obj_set_style_text_font(this->WifiLabel, &lv_font_montserrat_12,
+  mWifiLabel = lv_label_create(statusbar);
+  lv_label_set_text(mWifiLabel, "");
+  lv_obj_align(mWifiLabel, LV_ALIGN_LEFT_MID, -8, 0);
+  lv_obj_set_style_text_font(mWifiLabel, &lv_font_montserrat_12,
                              LV_PART_MAIN);
 
-  this->objBattPercentage = lv_label_create(statusbar);
-  lv_label_set_text(this->objBattPercentage, "");
-  lv_obj_align(this->objBattPercentage, LV_ALIGN_RIGHT_MID, -16, 0);
-  lv_obj_set_style_text_font(this->objBattPercentage, &lv_font_montserrat_12,
+  mBattPercentage = lv_label_create(statusbar);
+  lv_label_set_text(mBattPercentage, "");
+  lv_obj_align(mBattPercentage, LV_ALIGN_RIGHT_MID, -16, 0);
+  lv_obj_set_style_text_font(mBattPercentage, &lv_font_montserrat_12,
                              LV_PART_MAIN);
 
-  this->objBattIcon = lv_label_create(statusbar);
-  lv_label_set_text(this->objBattIcon, LV_SYMBOL_BATTERY_EMPTY);
-  lv_obj_align(this->objBattIcon, LV_ALIGN_RIGHT_MID, 8, 0);
-  lv_obj_set_style_text_font(this->objBattIcon, &lv_font_montserrat_16,
+  mBattIcon = lv_label_create(statusbar);
+  lv_label_set_text(mBattIcon, LV_SYMBOL_BATTERY_EMPTY);
+  lv_obj_align(mBattIcon, LV_ALIGN_RIGHT_MID, 8, 0);
+  lv_obj_set_style_text_font(mBattIcon, &lv_font_montserrat_16,
                              LV_PART_MAIN);
 
-  batteryPoller = std::make_unique<poller>(
-      [&batteryIcon = objBattIcon, battery = mHardware->battery()]() {
-        auto percent = battery->getPercentage();
-        if (percent > 95)
-          lv_label_set_text(batteryIcon, LV_SYMBOL_BATTERY_FULL);
-        else if (percent > 75)
-          lv_label_set_text(batteryIcon, LV_SYMBOL_BATTERY_3);
-        else if (percent > 50)
-          lv_label_set_text(batteryIcon, LV_SYMBOL_BATTERY_2);
-        else if (percent > 25)
-          lv_label_set_text(batteryIcon, LV_SYMBOL_BATTERY_1);
-        else
-          lv_label_set_text(batteryIcon, LV_SYMBOL_BATTERY_EMPTY);
-      });
+  // mBatteryPoller = std::make_unique<poller>(
+  //     [&batteryIcon = mBattIcon, battery = mHardware->battery()]() {
+  //       auto percent = battery->getPercentage();
+  //       if (percent > 95)
+  //         lv_label_set_text(batteryIcon, LV_SYMBOL_BATTERY_FULL);
+  //       else if (percent > 75)
+  //         lv_label_set_text(batteryIcon, LV_SYMBOL_BATTERY_3);
+  //       else if (percent > 50)
+  //         lv_label_set_text(batteryIcon, LV_SYMBOL_BATTERY_2);
+  //       else if (percent > 25)
+  //         lv_label_set_text(batteryIcon, LV_SYMBOL_BATTERY_1);
+  //       else
+  //         lv_label_set_text(batteryIcon, LV_SYMBOL_BATTERY_EMPTY);
+  //     });
 }
 
 /* Callback function to show and hide keybaord for attached textareas */
 void OmoteUI::ta_kb_event_cb(lv_event_t *e) {
   lv_event_code_t code = lv_event_get_code(e);
   lv_obj_t *ta = lv_event_get_target(e);
-  lv_obj_t *kb = (lv_obj_t *)lv_event_get_user_data(e);
+  lv_obj_t *mKb = (lv_obj_t *)lv_event_get_user_data(e);
   switch (code) {
   case LV_EVENT_FOCUSED:
-    lv_keyboard_set_textarea(kb, ta);
-    lv_obj_clear_flag(kb, LV_OBJ_FLAG_HIDDEN);
-    lv_obj_move_foreground(kb);
+    lv_keyboard_set_textarea(mKb, ta);
+    lv_obj_clear_flag(mKb, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_move_foreground(mKb);
     break;
   case LV_EVENT_DEFOCUSED:
-    lv_keyboard_set_textarea(kb, NULL);
-    lv_obj_add_flag(kb, LV_OBJ_FLAG_HIDDEN);
+    lv_keyboard_set_textarea(mKb, NULL);
+    lv_obj_add_flag(mKb, LV_OBJ_FLAG_HIDDEN);
     break;
   default:
     break;
@@ -168,48 +177,59 @@ void OmoteUI::ta_kb_event_cb(lv_event_t *e) {
 }
 
 void OmoteUI::create_keyboard() {
-  kb = lv_keyboard_create(lv_scr_act());
-  lv_obj_add_flag(kb, LV_OBJ_FLAG_HIDDEN);
-  lv_obj_set_y(kb, 0);
+  mKb = lv_keyboard_create(lv_scr_act());
+  lv_obj_add_flag(mKb, LV_OBJ_FLAG_HIDDEN);
+  lv_obj_set_y(mKb, 0);
 }
 
 void OmoteUI::attach_keyboard(lv_obj_t *textarea)
 {
-  if (kb == NULL)
+  if (mKb == NULL)
   {
     create_keyboard();
   }
-  lv_keyboard_set_textarea(kb, textarea);
-  lv_obj_add_event_cb(textarea, (lv_event_cb_t)ta_kb_event_cb, LV_EVENT_FOCUSED, kb);
-  lv_obj_add_event_cb(textarea, (lv_event_cb_t)ta_kb_event_cb, LV_EVENT_DEFOCUSED, kb);
+  lv_keyboard_set_textarea(mKb, textarea);
+  lv_obj_add_event_cb(textarea, (lv_event_cb_t)ta_kb_event_cb, LV_EVENT_FOCUSED, mKb);
+  lv_obj_add_event_cb(textarea, (lv_event_cb_t)ta_kb_event_cb, LV_EVENT_DEFOCUSED, mKb);
 }
 
 void OmoteUI::hide_keyboard() { 
-  lv_obj_add_flag(kb, LV_OBJ_FLAG_HIDDEN);
+  lv_obj_add_flag(mKb, LV_OBJ_FLAG_HIDDEN);
 }
 
     void OmoteUI::show_keyboard()
     {
-        lv_obj_clear_flag(this->kb, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_move_foreground(this->kb);
+        lv_obj_clear_flag(mKb, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_move_foreground(mKb);
     };
 
 lv_obj_t *OmoteUI::addTab(AppInterface* app)
 {
+  LV_LOG_USER("");
   lv_obj_t *tab = nullptr;
   /* search free slot in tab array */
+  LV_LOG_USER("find free slot for app \"%s\"", app->getName().c_str());
+  //return tab;
   for (int i = 0; i < TAB_ARRAY_SIZE; i++)
   {
+      LV_LOG_USER("mApps[%d]=%p", i, mApps[i]);
+      //return tab;
     if (mApps[i] == nullptr)
     {
+      LV_LOG_USER("mApps[%d]=%p", i, mApps[i]);
+      //return tab;
+      LV_LOG_USER("found free slot %d", i);
       //  Add tab (name is irrelevant since the labels are hidden and hidden buttons are used (below))
       tab = lv_tabview_add_tab(mTabView, app->getName().c_str());
       mApps[i] = app;
-      this->createTabviewButtons();
+      createTabviewButtons();
 
       // Initialize scroll position for the indicator
-      //lv_event_send(lv_tabview_get_content(mTabView), LV_EVENT_SCROLL, NULL);
-      break;
+      lv_event_send(lv_tabview_get_content(mTabView), LV_EVENT_SCROLL, NULL);
+      return tab;
+    }
+    else {
+      LV_LOG_USER("mApps[%d]=%p used", i, mApps[i]);
     }
   }
 
@@ -218,21 +238,21 @@ lv_obj_t *OmoteUI::addTab(AppInterface* app)
 
 void OmoteUI::createTabviewButtons()
 {
-  if (panel == nullptr)
+  if (mPanel == nullptr)
   {
     //  Create a page indicator
-    panel = lv_obj_create(lv_scr_act());
-    lv_obj_clear_flag(panel, LV_OBJ_FLAG_CLICKABLE); // This indicator will not be clickable
-    lv_obj_set_size(panel, SCREEN_WIDTH, 30);
-    lv_obj_set_flex_flow(panel, LV_FLEX_FLOW_ROW);
-    lv_obj_align(panel, LV_ALIGN_BOTTOM_MID, 0, 0);
-    lv_obj_set_scrollbar_mode(panel, LV_SCROLLBAR_MODE_OFF);
+    mPanel = lv_obj_create(lv_scr_act());
+    lv_obj_clear_flag(mPanel, LV_OBJ_FLAG_CLICKABLE); // This indicator will not be clickable
+    lv_obj_set_size(mPanel, SCREEN_WIDTH, 30);
+    lv_obj_set_flex_flow(mPanel, LV_FLEX_FLOW_ROW);
+    lv_obj_align(mPanel, LV_ALIGN_BOTTOM_MID, 0, 0);
+    lv_obj_set_scrollbar_mode(mPanel, LV_SCROLLBAR_MODE_OFF);
   }
   // delete old panel objects
-  lv_obj_clean(panel);
+  lv_obj_clean(mPanel);
 
   // This small hidden button enables the page indicator to scroll further
-  lv_obj_t *btn = lv_btn_create(panel);
+  lv_obj_t *btn = lv_btn_create(mPanel);
   lv_obj_set_size(btn, 50, lv_pct(100));
   lv_obj_set_style_shadow_width(btn, 0, LV_PART_MAIN);
   lv_obj_set_style_opa(btn, LV_OPA_TRANSP, LV_PART_MAIN);
@@ -243,11 +263,11 @@ void OmoteUI::createTabviewButtons()
     if (mApps[i] != nullptr)
     {
       AppInterface* app = mApps[i];
-      btn = lv_btn_create(panel);
+      btn = lv_btn_create(mPanel);
       lv_obj_clear_flag(btn, LV_OBJ_FLAG_CLICKABLE);
       lv_obj_set_size(btn, 150, lv_pct(100));
       lv_obj_t *label = lv_label_create(btn);
-      lv_label_set_text_fmt(label, app->getName().c_str());
+      lv_label_set_text(label, app->getName().c_str());
       lv_obj_align(label, LV_ALIGN_CENTER, 0, 0);
       lv_obj_set_style_shadow_width(btn, 0, LV_PART_MAIN);
       lv_obj_set_style_bg_color(btn, mPrimaryColor, LV_PART_MAIN);
@@ -255,7 +275,7 @@ void OmoteUI::createTabviewButtons()
   }
 
   // This small hidden button enables the page indicator to scroll further
-  btn = lv_btn_create(panel);
+  btn = lv_btn_create(mPanel);
   lv_obj_set_size(btn, 50, lv_pct(100));
   lv_obj_set_style_shadow_width(btn, 0, LV_PART_MAIN);
   lv_obj_set_style_opa(btn, LV_OPA_TRANSP, LV_PART_MAIN);
@@ -266,7 +286,7 @@ void OmoteUI::createTabviewButtons()
   lv_style_set_pad_all(&style_btn, 3);
   lv_style_set_border_width(&style_btn, 0);
   lv_style_set_bg_opa(&style_btn, LV_OPA_TRANSP);
-  lv_obj_add_style(panel, &style_btn, 0);
+  lv_obj_add_style(mPanel, &style_btn, 0);
 }
 
 void OmoteUI::setup_ui()
@@ -276,7 +296,7 @@ void OmoteUI::setup_ui()
   // Set the background color
   lv_obj_set_style_bg_color(lv_scr_act(), lv_color_black(), LV_PART_MAIN);
 
-  this->create_keyboard();
+  create_keyboard();
   // Setup a scrollable tabview for devices and settings
   mTabView = lv_tabview_create(lv_scr_act(), LV_DIR_TOP, 0); // Hide tab labels by setting their height to 0
   lv_obj_set_style_bg_color(mTabView, lv_color_black(), LV_PART_MAIN);
@@ -304,62 +324,62 @@ void OmoteUI::setup_ui()
   lv_obj_set_style_radius(statusbar, 0, LV_PART_MAIN);
   lv_obj_align(statusbar, LV_ALIGN_TOP_MID, 0, 0);
 
-  this->WifiLabel = lv_label_create(statusbar);
-  lv_label_set_text(this->WifiLabel, "");
-  lv_obj_align(this->WifiLabel, LV_ALIGN_LEFT_MID, -8, 0);
-  lv_obj_set_style_text_font(this->WifiLabel, &lv_font_montserrat_12, LV_PART_MAIN);
+  mWifiLabel = lv_label_create(statusbar);
+  lv_label_set_text(mWifiLabel, "");
+  lv_obj_align(mWifiLabel, LV_ALIGN_LEFT_MID, -8, 0);
+  lv_obj_set_style_text_font(mWifiLabel, &lv_font_montserrat_12, LV_PART_MAIN);
 
-  this->objBattPercentage = lv_label_create(statusbar);
-  lv_label_set_text(this->objBattPercentage, "");
-  lv_obj_align(this->objBattPercentage, LV_ALIGN_RIGHT_MID, -16, 0);
-  lv_obj_set_style_text_font(this->objBattPercentage, &lv_font_montserrat_12, LV_PART_MAIN);
+  mBattPercentage = lv_label_create(statusbar);
+  lv_label_set_text(mBattPercentage, "");
+  lv_obj_align(mBattPercentage, LV_ALIGN_RIGHT_MID, -16, 0);
+  lv_obj_set_style_text_font(mBattPercentage, &lv_font_montserrat_12, LV_PART_MAIN);
 
-  this->objBattIcon = lv_label_create(statusbar);
-  lv_label_set_text(this->objBattIcon, LV_SYMBOL_BATTERY_EMPTY);
-  lv_obj_align(this->objBattIcon, LV_ALIGN_RIGHT_MID, 8, 0);
-  lv_obj_set_style_text_font(this->objBattIcon, &lv_font_montserrat_16, LV_PART_MAIN);
+  mBattIcon = lv_label_create(statusbar);
+  lv_label_set_text(mBattIcon, LV_SYMBOL_BATTERY_EMPTY);
+  lv_obj_align(mBattIcon, LV_ALIGN_RIGHT_MID, 8, 0);
+  lv_obj_set_style_text_font(mBattIcon, &lv_font_montserrat_16, LV_PART_MAIN);
 
-  this->objUSBIcon = lv_label_create(statusbar);
-  lv_label_set_text(this->objUSBIcon, LV_SYMBOL_USB);
-  lv_obj_align(this->objUSBIcon, LV_ALIGN_RIGHT_MID, -40, 0);
-  lv_obj_set_style_text_font(this->objUSBIcon, &lv_font_montserrat_16, LV_PART_MAIN);
+  mUSBIcon = lv_label_create(statusbar);
+  lv_label_set_text(mUSBIcon, LV_SYMBOL_USB);
+  lv_obj_align(mUSBIcon, LV_ALIGN_RIGHT_MID, -40, 0);
+  lv_obj_set_style_text_font(mUSBIcon, &lv_font_montserrat_16, LV_PART_MAIN);
 }
 
 void OmoteUI::update_battery(int percentage, bool isCharging, bool isConnected)
 {
   if (isConnected)
   {
-    lv_label_set_text(this->objUSBIcon, LV_SYMBOL_USB);
+    lv_label_set_text(mUSBIcon, LV_SYMBOL_USB);
   }
   else
   {
-    lv_label_set_text(this->objUSBIcon, "");
+    lv_label_set_text(mUSBIcon, "");
   }
-  lv_label_set_text(this->objBattPercentage, std::to_string(percentage).c_str());
+  lv_label_set_text(mBattPercentage, std::to_string(percentage).c_str());
   if( isCharging ) {
-    lv_label_set_text(this->objBattIcon, this->batteryCharging[this->batteryChargingIndex++]);
-    if( this->batteryChargingIndex == BATTERYCHARGINGINDEX_MAX ) this->batteryChargingIndex = 0;
+    lv_label_set_text(mBattIcon, mBatteryCharging[mBatteryChargingIndex++]);
+    if( mBatteryChargingIndex == BATTERYCHARGINGINDEX_MAX ) mBatteryChargingIndex = 0;
   }
   else {
     if (percentage > 95)
     {
-      lv_label_set_text(this->objBattIcon, LV_SYMBOL_BATTERY_FULL);
+      lv_label_set_text(mBattIcon, LV_SYMBOL_BATTERY_FULL);
     }
     else if (percentage > 75)
     {
-      lv_label_set_text(this->objBattIcon, LV_SYMBOL_BATTERY_3);
+      lv_label_set_text(mBattIcon, LV_SYMBOL_BATTERY_3);
     }
     else if (percentage > 50)
     {
-      lv_label_set_text(this->objBattIcon, LV_SYMBOL_BATTERY_2);
+      lv_label_set_text(mBattIcon, LV_SYMBOL_BATTERY_2);
     }
     else if (percentage > 25)
     {
-      lv_label_set_text(this->objBattIcon, LV_SYMBOL_BATTERY_1);
+      lv_label_set_text(mBattIcon, LV_SYMBOL_BATTERY_1);
     }
     else
     {
-      lv_label_set_text(this->objBattIcon, LV_SYMBOL_BATTERY_EMPTY);
+      lv_label_set_text(mBattIcon, LV_SYMBOL_BATTERY_EMPTY);
     }
   }
 }

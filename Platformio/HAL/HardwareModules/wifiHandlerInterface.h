@@ -36,7 +36,10 @@ public:
   virtual void connect(std::string ssid, std::string password) = 0;
   /// @brief Get the status of the current wifi connection
   virtual wifiStatus GetStatus() = 0;
-
+  virtual void turnOff() = 0;
+  virtual std::string getFoundSSID(unsigned int index) = 0;
+  virtual int getFoundRSSI(unsigned int index) = 0;
+  
   // Register for Scan Notification to handle when scans are completed
   std::shared_ptr<ScanNotificationTy> ScanCompleteNotification() {
     return mScanNotification;

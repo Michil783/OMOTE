@@ -107,7 +107,7 @@ std::shared_ptr<DisplayAbstract> HardwareRevX::display() { return mDisplay; }
 
 std::shared_ptr<KeyPressAbstract> HardwareRevX::keys() { return mKeys; }
 
-//std::shared_ptr<IRHandlerInterface> HardwareRevX::irhandler() { return mIRHandler; }
+std::shared_ptr<IRHandlerInterface> HardwareRevX::irhandler() { return mIRHandler; }
 
 void HardwareRevX::activityDetection() {
   static int accXold;
@@ -145,9 +145,9 @@ void HardwareRevX::setWakeupByIMUEnabled(bool wakeupByIMUEnabled) {
   this->wakeupByIMUEnabled = wakeupByIMUEnabled;
 }
 
-uint16_t HardwareRevX::getSleepTimeout() { return sleepTimeout; }
+uint32_t HardwareRevX::getSleepTimeout() { return sleepTimeout; }
 
-void HardwareRevX::setSleepTimeout(uint16_t sleepTimeout) {
+void HardwareRevX::setSleepTimeout(uint32_t sleepTimeout) {
   this->sleepTimeout = sleepTimeout;
   standbyTimer = sleepTimeout;
 }
@@ -157,7 +157,7 @@ void HardwareRevX::enterSleep() {
   preferences.putBool("wkpByIMU", wakeupByIMUEnabled);
   preferences.putUChar("blBrightness", mDisplay->getBrightness());
   preferences.putUChar("currentDevice", currentDevice);
-  preferences.putUInt("sleepTimeout", sleepTimeout);
+  preferences.putULong("sleepTimeout", sleepTimeout);
   if (!preferences.getBool("alreadySetUp"))
     preferences.putBool("alreadySetUp", true);
   preferences.end();
@@ -270,7 +270,7 @@ void HardwareRevX::restorePreferences() {
     wakeupByIMUEnabled = preferences.getBool("wkpByIMU");
     backlight_brightness = preferences.getUChar("blBrightness");
     currentDevice = preferences.getUChar("currentDevice");
-    sleepTimeout = preferences.getUInt("sleepTimeout");
+    sleepTimeout = preferences.getULong("sleepTimeout");
     // setting the default to prevent a 0ms sleep timeout
     if (sleepTimeout == 0) {
       sleepTimeout = SLEEP_TIMEOUT;

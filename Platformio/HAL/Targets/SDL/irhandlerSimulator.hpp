@@ -9,6 +9,8 @@ class IRHandlerSimulator: public IRHandlerInterface {
         ~IRHandlerSimulator(){}
 
         virtual void IRSender(int currentDevice, uint16_t data) override {};
+        virtual bool IRReceiverEnable(bool onoff) override {return onoff;};
+        virtual bool IRReceiver() override {return false;};
 
     private:
 };
