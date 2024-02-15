@@ -44,7 +44,7 @@ void Settings::ta_event_cb(lv_event_t *e)
     case LV_EVENT_READY:
         Settings::mHardware->wifi()->connect(ssid, password);
         lv_obj_clear_state(ta, LV_STATE_FOCUSED);
-        UI::Basic::OmoteUI::getInstance()->hide_keyboard();
+        mOmoteUI->hide_keyboard();
         getInstance()->reset_settings_menu();
         /* Fall through on purpose. Pressing enter should disable the keyboard as well*/
     default:
@@ -57,7 +57,7 @@ void Settings::ta_event_cb(lv_event_t *e)
  *
  * @param e Pointer to event object for the event where this callback is called
  */
-void Settings::WakeEnableSetting_event_cb(lv_event_t *e)
+void Settings::wakeEnableSetting_event_cb(lv_event_t *e)
 {
     // LV_LOG_TRACE("Settings - WakeEnableSetting_event_cb");
     Settings::mHardware->setWakeupByIMUEnabled(lv_obj_has_state(lv_event_get_target(e), LV_STATE_CHECKED));
@@ -90,27 +90,32 @@ void bl_slider_event_cb(lv_event_t *e)
     // LV_LOG_TRACE("Settings - bl_slider_event_cb(%d) - %d", constrain(lv_slider_get_value(slider), 30, 240), *backlight_brightness);
 }
 
-void Settings::WifiEnableSetting_event_cb(lv_event_t *e)
+void Settings::wifiEnableSetting_event_cb(lv_event_t *e)
 {
-    // LV_LOG_USER("Settings - WakeEnableSetting_event_cb");
-    Settings::getInstance()->wifiEnable = lv_obj_has_state(lv_event_get_target(e), LV_STATE_CHECKED);
+    LV_LOG_USER(">>> Settings - wifiEnableSetting_event_cb");
+    LV_LOG_USER("mWifiOverview: %p", mInstance->mWifiOverview);
+    mInstance->mWifiEnabled = lv_obj_has_state(lv_event_get_target(e), LV_STATE_CHECKED);
     #ifdef OMOTE_ESP32
     Preferences preferences;
     preferences.begin("Settings", false);
-    preferences.putBool("wifiEnabled", wifiEnable);
+    preferences.putBool("mWifiEnabled", mWifiEnabled);
     #endif
-    LV_LOG_USER("wifiEnable: %d", wifiEnable);
-    Settings::getInstance()->reset_wifi_menu();
+    LV_LOG_USER("mWifiEnabled: %d", mWifiEnabled);
+    mInstance->reset_wifi_menu();
     #ifdef ENABLE_WIFI
-    //LV_LOG_USER("wifiEnable: %d wifiConnected: %d", settings.wifiEnabled(), wifihandler.isConnected());
-    if( Settings::getInstance()->wifiEnabled() ){
-        Settings::mHardware->wifi()->begin();
+    LV_LOG_USER("mWifiEnabled: %d wifiConnected: %d", mInstance->isWifiEnabled(), mHardware->wifi()->GetStatus().isConnected);
+    if( mInstance->isWifiEnabled() ){
+        LV_LOG_USER("mInstance->isWifiEabled() = %d", mInstance->isWifiEnabled());
+        mHardware->wifi()->begin();
     } else {
-        Settings::mHardware->wifi()->turnOff();
+        LV_LOG_USER("mInstance->isWifiEnabled() = %d", mInstance->isWifiEnabled());
+        mHardware->wifi()->turnOff();
         getInstance()->update_wifi(false);
-        UI::Basic::OmoteUI::getInstance()->updateWifi("");
+        mOmoteUI->updateWifi("");
     }
     #endif
+    LV_LOG_USER("mWifiOverview: %p", mInstance->mWifiOverview);
+    LV_LOG_USER("<<< Settings - wifiEnableSetting_event_cb");
 }
 
 /**
@@ -189,7 +194,7 @@ void Settings::connect_btn_cb(lv_event_t *event)
     Settings::mHardware->wifi()->connect(ssid, password);
     lv_obj_clear_state(ta, LV_STATE_FOCUSED);
     //display.hide_keyboard();
-    UI::Basic::OmoteUI::getInstance()->hide_keyboard();
+    mOmoteUI->hide_keyboard();
     getInstance()->reset_settings_menu();
 }
 
@@ -213,25 +218,19 @@ void Settings::show_password_cb(lv_event_t *e)
 }
 
 lv_obj_t *wifi_subpage;
-//static lv_obj_t *kb;
-//static lv_obj_t *ta;
-
-/**
- * @brief Setrtings constructor
- *
- * @param Display* display
- */
 
 HardwareAbstract* Settings::mHardware;
 Settings* Settings::mInstance;
-bool Settings::wifiEnable;
+bool Settings::mWifiEnabled;
+std::shared_ptr<UI::Basic::OmoteUI> Settings::mOmoteUI;
 
 Settings::Settings(std::shared_ptr<DisplayAbstract> display)
 {
-    LV_LOG_USER("");
+    LV_LOG_USER(">>> Settings::Settings()");
     mDisplay = display;
-    Settings::Settings::mHardware = &HardwareFactory::getAbstract();
-    Settings::mInstance = this;
+    mHardware = &HardwareFactory::getAbstract();
+    mInstance = this;
+    mOmoteUI = UI::Basic::OmoteUI::getInstance();
 
     /*Initialize device array*/
     // for (int i = 0; i < DEVICESLOTS; i++)
@@ -239,15 +238,24 @@ Settings::Settings(std::shared_ptr<DisplayAbstract> display)
     //     this->devices[i] = nullptr;
     // }
 
-    wifiEnable = false;
-    wifi_setting_cont =
-    wifiOverview =
-    wifi_password_label =
-    wifi_password_page =
-    wifi_selection_page =
-    WifiLabel = nullptr;
+    mWifiEnabled = true;
+    mWifiSettingsContent =
+    mWifiOverview =
+    mWifiPasswordLabel =
+    mWifiPasswordPage =
+    mWifiSelectionPage =
+    mWifiLabel = nullptr;
 
+    #ifdef OMOTE_ESP32
+    Preferences preferences;
+    preferences.begin("Settings", false);
+    mWifiEnabled = preferences.getBool("mWifiEnabled", false);
+    #endif
+    LV_LOG_USER("mWifiEnabled: %d", mWifiEnabled);
+
+    mTab = mOmoteUI->addTab(this);
     setup();
+    LV_LOG_USER("<<< Settings::Settings()");
 }
 
 void Settings::factoryReset(){
@@ -258,12 +266,8 @@ void Settings::factoryReset(){
     #endif
 }
 
-bool Settings::wifiEnabled(){
-    return wifiEnable;
-}
-
-std::string Settings::getName(){
-    return "Settings";
+bool Settings::isWifiEnabled(){
+    return mWifiEnabled;
 }
 
 /**
@@ -274,20 +278,15 @@ std::string Settings::getName(){
  */
 void Settings::setup()
 {
-    #ifdef OMOTE_ESP32
-    Preferences preferences;
-    preferences.begin("Settings", false);
-    wifiEnable = preferences.getBool("wifiEnable", false);
-    #endif
-    LV_LOG_USER("wifiEnable: %d", this->wifiEnable);
-
-    mTab = UI::Basic::OmoteUI::getInstance()->addTab(this);
-
+    LV_LOG_USER(">>> Settings::setup()");
     /* Create main page for settings mSettingsMenu*/
-    if( mTab != nullptr )
+    if( mTab != nullptr ) {
+        LV_LOG_USER("setup all Settings menu");
         setup_settings(mTab);
+    }
     else
         LV_LOG_ERROR("no TebView pointer returned");
+    LV_LOG_USER("<<< Settings::setup()");
 }
 
 /**
@@ -297,6 +296,7 @@ void Settings::setup()
  */
 void Settings::setup_settings(lv_obj_t *parent)
 {
+    LV_LOG_USER(">>> Settings::setup_settings()");
     // Add content to the settings mTab
     // With a flex layout, setting groups/boxes will position themselves automatically
     lv_obj_set_layout(parent, LV_LAYOUT_FLEX);
@@ -313,17 +313,15 @@ void Settings::setup_settings(lv_obj_t *parent)
     lv_obj_set_flex_flow(cont, LV_FLEX_FLOW_COLUMN);
     lv_obj_set_scrollbar_mode(cont, LV_SCROLLBAR_MODE_ACTIVE);
 
-    this->display_settings(cont);
-
-    this->ir_settings(cont);
-
-    this->create_wifi_settings(mSettingsMenu, cont);
-
-    this->createAppSettings(mSettingsMenu, cont);
-
-    this->createDeviceSettings(mSettingsMenu, cont);
+    display_settings(cont);
+    ir_settings(cont);
+    create_wifi_settings(mSettingsMenu, cont);
+    createAppSettings(mSettingsMenu, cont);
+    createDeviceSettings(mSettingsMenu, cont);
 
     lv_menu_set_page(mSettingsMenu, mSettingsMainPage);
+
+    LV_LOG_USER("<<< Settings::setup_settings()");
 }
 
 /**
@@ -333,7 +331,9 @@ void Settings::setup_settings(lv_obj_t *parent)
  */
 void Settings::display_settings(lv_obj_t *parent)
 {
-    lv_color_t primary_color = UI::Basic::OmoteUI::getInstance()->getPrimaryColor();
+    LV_LOG_USER(">>> Settings::display_settings()");
+
+    lv_color_t primary_color = mOmoteUI->getPrimaryColor();
     unsigned int *backlight_brightness = mDisplay->getBacklightBrightness();
 
     lv_obj_t *menuLabel = lv_label_create(parent);
@@ -376,7 +376,7 @@ void Settings::display_settings(lv_obj_t *parent)
     lv_obj_set_size(wakeToggle, 40, 22);
     lv_obj_align(wakeToggle, LV_ALIGN_TOP_RIGHT, 0, 29);
     lv_obj_set_style_bg_color(wakeToggle, lv_color_hex(0x505050), LV_PART_MAIN);
-    lv_obj_add_event_cb(wakeToggle, WakeEnableSetting_event_cb, LV_EVENT_VALUE_CHANGED, NULL);
+    lv_obj_add_event_cb(wakeToggle, wakeEnableSetting_event_cb, LV_EVENT_VALUE_CHANGED, NULL);
     if (Settings::Settings::mHardware->getWakeupByIMUEnabled())
         lv_obj_add_state(wakeToggle, LV_STATE_CHECKED); // set default state
 
@@ -414,6 +414,7 @@ void Settings::display_settings(lv_obj_t *parent)
     }
     lv_dropdown_set_selected(drop, selected);
     lv_obj_add_event_cb(drop, to_dropdown_event_cb, LV_EVENT_VALUE_CHANGED, (void*)Settings::mHardware);
+    LV_LOG_USER("<<< Settings::display_settings()");
 }
 
 void Settings::reset_settings_menu()
@@ -427,11 +428,30 @@ void Settings::reset_settings_menu()
 
 void Settings::reset_wifi_menu()
 {
-    LV_LOG_USER("");
-    lv_obj_clean(this->wifiOverview);
-    this->ssidLabel = this->ipLabel = nullptr;
+    LV_LOG_USER(">>> Settings::reset_wifi_menu()");
+    LV_LOG_USER("mWifiOverView=%p", mWifiOverview);
+    LV_LOG_USER("mSettingsMainPage = %p", mSettingsMainPage);
+    #ifdef OMOTE_ESP32
+    if( (uint32_t)mWifiOverview > 0x30000000 ) {
+    #else
+    if( (uint64_t)mWifiOverview > 0x100000000 ) {
+    #endif
+        if( lv_obj_get_child_cnt(mWifiOverview) > 0 ) {
+            lv_obj_clean(mWifiOverview);
+            LV_LOG_USER("clean mWifiOverview");
+        } else {
+            LV_LOG_USER("mWifiOverview has no childs, nothing to clean");
+        }
+    }
+    else {
+        LV_LOG_ERROR("mWifiOverview not initialized %p", mWifiOverview);
+        LV_LOG_ERROR("reseting invalid pointer");
+        mWifiOverview = nullptr;
+    }
+    mSSIDLabel = mIPLabel = nullptr;
     lv_obj_t* cont = lv_obj_get_child(mSettingsMainPage, 0);
-    this->create_wifi_main_page(cont);
+    create_wifi_main_page(cont);
+    LV_LOG_USER("<<< Settings::reset_wifi_menu()");
 }
 
 /**
@@ -441,7 +461,8 @@ void Settings::reset_wifi_menu()
  */
 void Settings::ir_settings(lv_obj_t *parent)
 {
-    lv_color_t primary_color = UI::Basic::OmoteUI::getInstance()->getPrimaryColor();
+    LV_LOG_USER(">>> Settings::ir_settings()");
+    lv_color_t primary_color = mOmoteUI->getPrimaryColor();
     unsigned int *backlight_brightness = mDisplay->getBacklightBrightness();
 
     lv_obj_t *menuLabel = lv_label_create(parent);
@@ -462,11 +483,12 @@ void Settings::ir_settings(lv_obj_t *parent)
     lv_obj_add_event_cb(irToggle, IREnableSetting_event_cb, LV_EVENT_VALUE_CHANGED, NULL);
     if (Settings::mHardware->irhandler()->IRReceiver())
         lv_obj_add_state(irToggle, LV_STATE_CHECKED); // set default state
+    LV_LOG_USER("<<< Settings::ir_settings()");
 }
 
 void Settings::clear_wifi_networks()
 {
-    lv_obj_clean(this->wifi_setting_cont);
+    lv_obj_clean(this->mWifiSettingsContent);
     this->no_subpages = 0;
 }
 
@@ -477,7 +499,7 @@ void Settings::wifi_scan_complete(unsigned int size)
 
     if (size == 0)
     {
-        lv_obj_t *menuBox = lv_obj_create(this->wifi_setting_cont);
+        lv_obj_t *menuBox = lv_obj_create(this->mWifiSettingsContent);
         lv_obj_set_size(menuBox, lv_pct(100), 45);
         lv_obj_set_scrollbar_mode(menuBox, LV_SCROLLBAR_MODE_OFF);
         lv_obj_t *menuLabel = lv_label_create(menuBox);
@@ -494,13 +516,13 @@ void Settings::update_wifi_selection_subpage(int page)
     #ifdef OMOTE_ESP32
     if (page < this->no_subpages)
     {
-        lv_obj_clean(this->wifi_setting_cont);
+        lv_obj_clean(this->mWifiSettingsContent);
 
-        lv_obj_t *pageLabel = lv_label_create(this->wifi_setting_cont);
+        lv_obj_t *pageLabel = lv_label_create(this->mWifiSettingsContent);
         lv_label_set_text_fmt(pageLabel, "Page %d/%d", page + 1, this->no_subpages);
         if (page > 0)
         {
-            lv_obj_t *menuBox = lv_obj_create(this->wifi_setting_cont);
+            lv_obj_t *menuBox = lv_obj_create(this->mWifiSettingsContent);
             lv_obj_set_size(menuBox, lv_pct(100), 45);
             lv_obj_set_scrollbar_mode(menuBox, LV_SCROLLBAR_MODE_OFF);
 
@@ -518,7 +540,7 @@ void Settings::update_wifi_selection_subpage(int page)
 
         for (int i = 0; i < WIFI_SUBPAGE_SIZE && (page * WIFI_SUBPAGE_SIZE + i) < this->no_wifi_networks; i++)
         {
-            lv_obj_t *menuBox = lv_obj_create(this->wifi_setting_cont);
+            lv_obj_t *menuBox = lv_obj_create(this->mWifiSettingsContent);
             lv_obj_set_size(menuBox, lv_pct(100), 45);
             lv_obj_set_scrollbar_mode(menuBox, LV_SCROLLBAR_MODE_OFF);
 
@@ -550,13 +572,13 @@ void Settings::update_wifi_selection_subpage(int page)
             lv_obj_set_style_img_recolor(wifi_image, lv_color_white(), LV_PART_MAIN);
             lv_obj_set_style_img_recolor_opa(wifi_image, LV_OPA_COVER, LV_PART_MAIN);
 
-            lv_menu_set_load_page_event(mSettingsMenu, menuBox, this->wifi_password_page);
-            lv_obj_add_event_cb(menuBox, wifi_selected_cb, LV_EVENT_CLICKED, this->wifi_password_label);
+            lv_menu_set_load_page_event(mSettingsMenu, menuBox, mWifiPasswordPage);
+            lv_obj_add_event_cb(menuBox, wifi_selected_cb, LV_EVENT_CLICKED, mWifiPasswordLabel);
         }
 
         if ((page + 1) < this->no_subpages)
         {
-            lv_obj_t *menuBox = lv_obj_create(this->wifi_setting_cont);
+            lv_obj_t *menuBox = lv_obj_create(this->mWifiSettingsContent);
             lv_obj_set_size(menuBox, lv_pct(100), 45);
             lv_obj_set_scrollbar_mode(menuBox, LV_SCROLLBAR_MODE_OFF);
 
@@ -571,7 +593,7 @@ void Settings::update_wifi_selection_subpage(int page)
             lv_label_set_text(arrow, LV_SYMBOL_RIGHT);
             lv_obj_align(arrow, LV_ALIGN_TOP_RIGHT, 0, 0);
         }
-        lv_obj_scroll_to_y(this->wifi_setting_cont, 0, LV_ANIM_OFF);
+        lv_obj_scroll_to_y(this->mWifiSettingsContent, 0, LV_ANIM_OFF);
     }
     #endif
 }
@@ -586,15 +608,15 @@ void Settings::next_wifi_selection_subpage(lv_event_t *e)
 
 void Settings::update_wifi(bool connected)
 {
-    lv_obj_t *ip_label = this->ipLabel; //(this->wifiOverview, 3);
-    lv_obj_t *ssid_label = this->ssidLabel; //(this->wifiOverview, 0);
+    lv_obj_t *ip_label = mIPLabel; //(mWifiOverview, 3);
+    lv_obj_t *ssid_label = this->mSSIDLabel; //(mWifiOverview, 0);
     if (connected)
     {
         LV_LOG_TRACE("update_wifi()");
-        LV_LOG_TRACE("WifiLabel: %p", this->WifiLabel);
-        // lv_label_set_text(this->WifiLabel, LV_SYMBOL_WIFI);
-        UI::Basic::OmoteUI::getInstance()->updateWifi(LV_SYMBOL_WIFI);
-        LV_LOG_TRACE("update_wifi() WifiLabel success");
+        LV_LOG_TRACE("mWifiLabel: %p", this->mWifiLabel);
+        // lv_label_set_text(this->mWifiLabel, LV_SYMBOL_WIFI);
+        mOmoteUI->updateWifi(LV_SYMBOL_WIFI);
+        LV_LOG_TRACE("update_wifi() mWifiLabel success");
         LV_LOG_TRACE("ssid_label: %p", ssid_label);
         lv_label_set_text(ssid_label, Settings::mHardware->wifi()->GetStatus().ssid.c_str());
         LV_LOG_TRACE("update_wifi() SSID success");
@@ -605,9 +627,9 @@ void Settings::update_wifi(bool connected)
     }
     else
     {
-        // lv_label_set_text(this->WifiLabel, "");
+        // lv_label_set_text(this->mWifiLabel, "");
         //this->display->updateWifi(LV_SYMBOL_WIFI);
-        UI::Basic::OmoteUI::getInstance()->updateWifi("");
+        mOmoteUI->updateWifi("");
         if( ssid_label )
             lv_label_set_text(ssid_label, "Disconnected");
         if( ip_label )
@@ -617,7 +639,7 @@ void Settings::update_wifi(bool connected)
 
 lv_obj_t *Settings::create_wifi_password_page(lv_obj_t *menu)
 {
-    LV_LOG_TRACE("");
+    LV_LOG_TRACE(">>> Settings::create_wifi_password_page()");
 
     lv_obj_t *ret_val = lv_menu_page_create(menu, NULL);
     lv_obj_t *cont = lv_menu_cont_create(ret_val);
@@ -625,15 +647,15 @@ lv_obj_t *Settings::create_wifi_password_page(lv_obj_t *menu)
     lv_obj_set_flex_flow(cont, LV_FLEX_FLOW_COLUMN);
     lv_obj_set_scrollbar_mode(cont, LV_SCROLLBAR_MODE_ACTIVE);
 
-    this->wifi_password_label = lv_label_create(cont);
-    lv_label_set_text(this->wifi_password_label, "Password");
+    mWifiPasswordLabel = lv_label_create(cont);
+    lv_label_set_text(mWifiPasswordLabel, "Password");
     lv_obj_t *password_input = lv_textarea_create(cont);
     lv_obj_set_width(password_input, lv_pct(100));
     lv_textarea_set_password_mode(password_input, true);
     lv_textarea_set_one_line(password_input, true);
     lv_textarea_set_placeholder_text(password_input, "Password");
     lv_obj_add_event_cb(password_input, ta_event_cb, LV_EVENT_READY, NULL);
-    UI::Basic::OmoteUI::getInstance()->attach_keyboard(password_input);
+    mOmoteUI->attach_keyboard(password_input);
 
     lv_obj_t *show_password = lv_checkbox_create(cont);
     lv_checkbox_set_text(show_password, "Show password");
@@ -644,90 +666,104 @@ lv_obj_t *Settings::create_wifi_password_page(lv_obj_t *menu)
     lv_label_set_text(label, "Connect");
     lv_obj_add_event_cb(connect_button, connect_btn_cb, LV_EVENT_CLICKED, password_input);
 
+    LV_LOG_TRACE("<<< Settings::create_wifi_password_page()");
+
     return ret_val;
 }
 
 lv_obj_t *Settings::create_wifi_selection_page(lv_obj_t *menu)
 {
+    LV_LOG_USER(">>> Settings::create_wifi_selection_page()");
+
     /* Create sub page for wifi*/
     lv_obj_t *subpage = lv_menu_page_create(menu, NULL);
-    this->wifi_setting_cont = lv_menu_cont_create(subpage);
-    lv_obj_set_layout(this->wifi_setting_cont, LV_LAYOUT_FLEX);
-    lv_obj_set_flex_flow(this->wifi_setting_cont, LV_FLEX_FLOW_COLUMN);
-    lv_obj_set_scrollbar_mode(this->wifi_setting_cont, LV_SCROLLBAR_MODE_ACTIVE);
+    mWifiSettingsContent = lv_menu_cont_create(subpage);
+    lv_obj_set_layout(mWifiSettingsContent, LV_LAYOUT_FLEX);
+    lv_obj_set_flex_flow(mWifiSettingsContent, LV_FLEX_FLOW_COLUMN);
+    lv_obj_set_scrollbar_mode(mWifiSettingsContent, LV_SCROLLBAR_MODE_ACTIVE);
 
-    lv_obj_t *menuLabel = lv_label_create(this->wifi_setting_cont);
+    lv_obj_t *menuLabel = lv_label_create(mWifiSettingsContent);
     lv_label_set_text(menuLabel, "Searching for wifi networks");
+
+    LV_LOG_USER("<<< Settings::create_wifi_selection_page()");
 
     return subpage;
 }
 
 void Settings::create_wifi_main_page(lv_obj_t *parent)
 {
-    LV_LOG_USER("");
-    lv_color_t primary_color = UI::Basic::OmoteUI::getInstance()->getPrimaryColor();
+    LV_LOG_USER(">>> Settings::create_wifi_main_page()");
+    LV_LOG_USER("mWifiOverview: %p", mWifiOverview);
 
-    LV_LOG_USER("Settings::create_wifi_main_page() wifiOverview=%p\n", this->wifiOverview);
+    lv_color_t primary_color = mOmoteUI->getPrimaryColor();
 
-    if( !this->wifiOverview ) {
-        this->wifiOverview = lv_obj_create(parent);
-        lv_obj_set_size(this->wifiOverview, lv_pct(100), 90);
-        lv_obj_set_style_bg_color(this->wifiOverview, primary_color, LV_PART_MAIN);
-        lv_obj_set_style_border_width(this->wifiOverview, 0, LV_PART_MAIN);
-        LV_LOG_USER("create wifiOverview=%p\n", this->wifiOverview);
+    if( !mWifiOverview ) {
+        mWifiOverview = lv_obj_create(parent);
+        lv_obj_set_size(mWifiOverview, lv_pct(100), 90);
+        lv_obj_set_style_bg_color(mWifiOverview, primary_color, LV_PART_MAIN);
+        lv_obj_set_style_border_width(mWifiOverview, 0, LV_PART_MAIN);
+        LV_LOG_USER("create mWifiOverview=%p\n", mWifiOverview);
     }
+    else
+        LV_LOG_USER("mWifiOverview already existst: %p", mWifiOverview);
 
-    lv_obj_t *enable = lv_label_create(this->wifiOverview);
+    lv_obj_t *enable = lv_label_create(mWifiOverview);
     lv_label_set_text(enable, "Enable WiFi");
     lv_obj_align(enable, LV_ALIGN_TOP_LEFT, 0, 0);
-    lv_obj_t *wifiEnable = lv_switch_create(this->wifiOverview);
-    lv_obj_set_size(wifiEnable, 40, 22);
-    lv_obj_align(wifiEnable, LV_ALIGN_TOP_RIGHT, 0, -3);
-    lv_obj_set_style_bg_color(wifiEnable, lv_color_hex(0x505050), LV_PART_MAIN);
-    lv_obj_add_event_cb(wifiEnable, WifiEnableSetting_event_cb, LV_EVENT_VALUE_CHANGED, this);
-    if (this->wifiEnable)
-        lv_obj_add_state(wifiEnable, LV_STATE_CHECKED); // set default state
+    lv_obj_t *mWifiEnableSwitch = lv_switch_create(mWifiOverview);
+    lv_obj_set_size(mWifiEnableSwitch, 40, 22);
+    lv_obj_align(mWifiEnableSwitch, LV_ALIGN_TOP_RIGHT, 0, -3);
+    lv_obj_set_style_bg_color(mWifiEnableSwitch, lv_color_hex(0x505050), LV_PART_MAIN);
+    lv_obj_add_event_cb(mWifiEnableSwitch, wifiEnableSetting_event_cb, LV_EVENT_VALUE_CHANGED, this);
+    if( isWifiEnabled() )
+    {
+        lv_obj_add_state(mWifiEnableSwitch, LV_STATE_CHECKED); // set default state
     
-    if( this->wifiEnable ) {
-        lv_obj_t* menuLabel = lv_label_create(this->wifiOverview);
+        lv_obj_t* menuLabel = lv_label_create(mWifiOverview);
         lv_obj_align(menuLabel, LV_ALIGN_TOP_LEFT, 0, 24);
-        this->ssidLabel = menuLabel;
+        this->mSSIDLabel = menuLabel;
 
-        lv_obj_t *arrow = lv_label_create(this->wifiOverview);
+        lv_obj_t *arrow = lv_label_create(mWifiOverview);
         lv_label_set_text(arrow, LV_SYMBOL_RIGHT);
         lv_obj_align(arrow, LV_ALIGN_TOP_RIGHT, 0, 24);
 
-        lv_obj_t *ip_label = lv_label_create(this->wifiOverview);
+        lv_obj_t *ip_label = lv_label_create(mWifiOverview);
         lv_label_set_text(ip_label, "IP:");
         lv_obj_align(ip_label, LV_ALIGN_BOTTOM_LEFT, 0, 0);
 
-        lv_obj_t *ip = lv_label_create(this->wifiOverview);
+        lv_obj_t *ip = lv_label_create(mWifiOverview);
         lv_obj_align(ip, LV_ALIGN_BOTTOM_RIGHT, 0, 0);
-        this->ipLabel = ip;
+        mIPLabel = ip;
 
         if (Settings::mHardware->wifi()->GetStatus().isConnected)
         {
-            lv_label_set_text(this->ssidLabel, Settings::mHardware->wifi()->GetStatus().ssid.c_str());
-            lv_label_set_text(this->ipLabel, Settings::mHardware->wifi()->GetStatus().IP.c_str());
+            lv_label_set_text(mSSIDLabel, Settings::mHardware->wifi()->GetStatus().ssid.c_str());
+            lv_label_set_text(mIPLabel, Settings::mHardware->wifi()->GetStatus().IP.c_str());
         }
         else
         {
             lv_label_set_text(menuLabel, "Disconnected");
             lv_label_set_text(ip, "-");
         }
-        lv_menu_set_load_page_event(mSettingsMenu, this->wifiOverview, this->wifi_selection_page);
-        lv_obj_add_event_cb(this->wifiOverview, wifi_settings_cb, LV_EVENT_CLICKED, this->wifi_setting_cont);
+        lv_menu_set_load_page_event(mSettingsMenu, mWifiOverview, mWifiSelectionPage);
+        lv_obj_add_event_cb(mWifiOverview, wifi_settings_cb, LV_EVENT_CLICKED, mWifiSettingsContent);
     }
+
+    LV_LOG_USER("mWifiOverview: %p", mWifiOverview);
+    LV_LOG_USER("<<< Settings::create_wifi_main_page()");
 }
 
 void Settings::create_wifi_settings(lv_obj_t *menu, lv_obj_t *parent)
 {
-    LV_LOG_USER("");
-    this->wifi_selection_page = this->create_wifi_selection_page(menu);
-    this->wifi_password_page = this->create_wifi_password_page(mSettingsMenu);
+    LV_LOG_USER(">>> Settings::create_wifi_settings()");
+
+    mWifiSelectionPage = create_wifi_selection_page(menu);
+    mWifiPasswordPage = create_wifi_password_page(mSettingsMenu);
     lv_obj_t *menuLabel = lv_label_create(parent);
     lv_label_set_text(menuLabel, "Wi-Fi");
-    this->create_wifi_main_page(parent);
+    create_wifi_main_page(parent);
+
+    LV_LOG_USER("<<< Settings::create_wifi_settings()");
 }
 
 // bool Settings::addDevice(DeviceInterface *device)
@@ -749,11 +785,11 @@ void Settings::create_wifi_settings(lv_obj_t *menu, lv_obj_t *parent)
 // }
 
 void Settings::saveSettings(){
-    LV_LOG_USER("wifiEnable: %d", this->wifiEnable);
+    LV_LOG_USER("mWifiEnabled: %d", mWifiEnabled);
     #ifdef OMOTE_ESP32
     Preferences preferences;
     preferences.begin("Settings", false);
-    preferences.putBool("wifiEnable", this->wifiEnable);
+    preferences.putBool("mWifiEnabled", mWifiEnabled);
     #endif
     //this->saveAppSettings();
     //this->saveDeviceSettings();
@@ -763,7 +799,7 @@ void Settings::createDeviceSettings(lv_obj_t *menu, lv_obj_t *parent)
 {
     LV_LOG_TRACE("Settings::createDeviceSettings");
 
-    lv_color_t primary_color = UI::Basic::OmoteUI::getInstance()->getPrimaryColor();
+    lv_color_t primary_color = mOmoteUI->getPrimaryColor();
 
     /* search device array */
     // for (int i = 0; i < DEVICESLOTS; i++)
@@ -791,44 +827,28 @@ void Settings::saveDeviceSettings()
     // }
 }
 
-// bool Settings::addApp(AppInterface *app)
-// {
-//     LV_LOG_TRACE("Settings::addApp(%s)", app->getName());
-
-//     AppInterface *currentApp;
-//     /* search free slot in app array */
-//     for (int i = 0; i < APPSLOTS; i++)
-//     {
-//         if (this->apps[i] == nullptr)
-//         {
-//             //  Add mTab (name is irrelevant since the labels are hidden and hidden buttons are used (below))
-//             this->apps[i] = app;
-//             return true;
-//         }
-//     }
-//     return false;
-// }
-
 void Settings::createAppSettings(lv_obj_t *menu, lv_obj_t *parent)
 {
-    LV_LOG_USER("Settings::createAppSettings\n");
+    LV_LOG_USER(">>> Settings::createAppSettings\n");
 
-    lv_color_t primary_color = UI::Basic::OmoteUI::getInstance()->getPrimaryColor();
+    lv_color_t primary_color = mOmoteUI->getPrimaryColor();
 
     /* search app array */
-    // for (int i = 0; i < APPSLOTS; i++)
-    // {
-    //     if (this->apps[i] != nullptr)
-    //     {
-    //         LV_LOG_USER("Settings::createAppSettings App: %s\n", this->apps[i]->getName().c_str());
-    //         this->apps[i]->displaySettings(parent);
-    //     }
-    // }
+    for (int i = 0; i < APPSLOTS; i++)
+    {
+        AppInterface* app = mOmoteUI->getApp(i);
+        if (app != nullptr && app->getName() != "Settings" )
+        {
+            LV_LOG_USER("Settings::createAppSettings App: %s\n", app->getName().c_str());
+            app->displaySettings(parent);
+        }
+    }
+    LV_LOG_USER("<<< Settings::createAppSettings\n");
 }
 
 void Settings::saveAppSettings()
 {
-    LV_LOG_TRACE("Settings::saveAppSettings");
+    LV_LOG_TRACE(">>> Settings::saveAppSettings");
 
     /* search app array */
     // for (int i = 0; i < APPSLOTS; i++)
@@ -839,4 +859,5 @@ void Settings::saveAppSettings()
     //         this->apps[i]->saveSettings();
     //     }
     // }
+    LV_LOG_TRACE("<<< Settings::saveAppSettings");
 }

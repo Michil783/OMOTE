@@ -26,9 +26,9 @@ SamsungTV::SamsungTV(std::shared_ptr<DisplayAbstract> display){
 u_int64_t SamsungTV::getValue(char keyChar){
   for (size_t i = 0; i < sizeof(this->samsungKeys)/sizeof(SamsungKeys); i++)
   {
-    if ( this->samsungKeys[i].key == keyChar )
+    if ( samsungKeys[i].key == keyChar )
     {
-      LV_LOG_USER("key %c found: data is %x", this->samsungKeys[i].key, this->samsungKeys[i].code);
+      LV_LOG_USER("key %c found: data is %X", samsungKeys[i].key, samsungKeys[i].code);
       return this->samsungKeys[i].code;
     }
   }
@@ -38,7 +38,7 @@ u_int64_t SamsungTV::getValue(char keyChar){
 void SamsungTV::handleCustomKeypad(int keyCode, char keyChar){
     LV_LOG_USER("SamsungTV");
     LV_LOG_USER("handleCustomKeypad(%d, %c)", keyCode, keyChar);
-    uint64_t code = this->getValue(keyChar);
+    uint64_t code = getValue(keyChar);
     #ifdef OMOTE_ESP32
     if( code != -1 ) IrSender.sendSAMSUNG(code);
     #endif

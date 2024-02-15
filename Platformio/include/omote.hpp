@@ -1,4 +1,5 @@
-#define TAB_ARRAY_SIZE 10
+#define DEVICESLOTS 10
+#define APPSLOTS 10
 
 // Comment out to disable connected features
 #define ENABLE_WIFI

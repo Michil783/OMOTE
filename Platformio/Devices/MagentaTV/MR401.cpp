@@ -1,8 +1,6 @@
 //#include <Arduino.h>
 #include <MR401.hpp>
 #include "DisplayAbstract.h"
-
-//#include <omote.hpp>
 #include "HardwareAbstract.hpp"
 #include "IRHandlerInterface.h"
 

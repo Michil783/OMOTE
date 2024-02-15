@@ -20,21 +20,24 @@ class MR401 : public DeviceInterface
 {
 public:
     MR401(std::shared_ptr<DisplayAbstract> display);
-    std::string getName() { return "MR401"; };
-    void displaySettings(lv_obj_t *parent){};
-    void saveSettings(){};
-    void handleCustomKeypad(int keyCode, char keyChar);
+
+    /* DeviceInterface */
+    std::string getName() override { return "MR401"; };
+    void displaySettings(lv_obj_t *parent) override {};
+    void saveSettings() override {};
+    void handleCustomKeypad(int keyCode, char keyChar) override;
 
 private:
     std::shared_ptr<DisplayAbstract> mDisplay;
     const uint16_t kFrequency = 38000; // in Hz. e.g. 38kHz.
     void dumpBuffer(uint16_t *buf, size_t size);
-#define LIRCENTRIES 28
+
+    #define LIRCENTRIES 28
     int getValues(char keyChar);
     struct LircKey
     {
         char key;
-        size_t size;
+        uint16_t size;
         uint16_t buf[30];
     } lircKeys[LIRCENTRIES] =
         {

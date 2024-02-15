@@ -181,10 +181,13 @@ void WifiHandler::begin()
     preferences.begin("wifiSettings", false);
     String ssid = preferences.getString("SSID");
     String password = preferences.getString("password");
+    bool wifiEnabled = preferences.getBool("enabled", false);
     preferences.end();
 
     // Attempt Connection with stored Credentials
-    if (!ssid.isEmpty()) {
+    if( !wifiEnabled ) {
+      Serial.println("WiFi not enabled");
+    } else if (!ssid.isEmpty() ) {
       connect(ssid.c_str(), password.c_str());
     } else {
       Serial.println("no SSID or password stored");
@@ -215,6 +218,11 @@ void WifiHandler::turnOff()
 {
   WiFi.disconnect();
   WiFi.mode(WIFI_OFF);
+
+  Preferences preferences;
+  preferences.begin("wifiSettings", false);
+  preferences.putBool("enabled", false);
+  preferences.end();
 }
 
 bool WifiHandler::isConnected()

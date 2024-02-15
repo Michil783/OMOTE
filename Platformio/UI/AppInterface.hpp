@@ -11,16 +11,15 @@
 
 #include <string>
 #include "lvgl.h"
-//#include <Display.hpp>
 
 #ifndef _APPINTERFACE_HPP_
 #define _APPINTERFACE_HPP_
 
 class AppInterface {
     public:
+    //virtual void addAppSettings(std::shared_ptr<void> settings) = 0;
     virtual void handleCustomKeypad(int keyCode, char keyChar) = 0;
     virtual std::string getName() = 0;
-    //virtual char* getName() = 0;
     virtual void displaySettings(lv_obj_t *parent) = 0;
     virtual void saveSettings() = 0;
 };

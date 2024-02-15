@@ -88,7 +88,7 @@ namespace UI::Basic
 
   private:
     static void onPollCb();
-    
+
     //static std::shared_ptr<HardwareAbstract> mHardware;
     static std::shared_ptr<OmoteUI> mInstance;
     static lv_obj_t *mPanel;
@@ -131,7 +131,7 @@ namespace UI::Basic
 
     void display_settings(lv_obj_t *parent);
 
-    AppInterface *mApps[TAB_ARRAY_SIZE];
+    AppInterface *mApps[APPSLOTS];
     lv_obj_t *mTabView;
     void createTabviewButtons();
     void setup_settings(lv_obj_t *parent);

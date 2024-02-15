@@ -7,65 +7,40 @@
 #include <AppInterface.hpp>
 #include <string>
 
-#define DEVICESLOTS 10
-#define APPSLOTS 10
-
 class Settings : public AppInterface
 {
 public:
-    static HardwareAbstract* mHardware;
-    static Settings* mInstance;
     static std::shared_ptr<Settings> getInstance() {return std::shared_ptr<Settings>(Settings::mInstance);}
     Settings(std::shared_ptr<DisplayAbstract> display);
-    std::string getName();
-    void handleCustomKeypad(int keyCode, char keyChar){};
 
-    //bool addDevice(DeviceInterface* device);
-
-    //bool addApp(AppInterface* app);
+    /* App Interface */
+    //void addAppSettings(std::shared_ptr<void> settings) override {};
+    void handleCustomKeypad(int keyCode, char keyChar) override {};
+    std::string getName() override { return "Settings"; };
+    void displaySettings(lv_obj_t *parent) override {};
+    void saveSettings() override;
 
     void reset_settings_menu();
     void reset_wifi_menu();
-
-    void displaySettings(lv_obj_t* parent) {};
-
-    /**
-     * @brief API function to inform display that wifi scan is completed
-     *
-     * @param size number of wifi networks found
-     */
     void wifi_scan_complete(unsigned int size);
-
-    /**
-     * @brief Clear the wifi networks listed in the wifi selection page. This function is called before new wifi
-     * networks are added to the list to avoid double listing
-     *
-     */
     void clear_wifi_networks();
-
-    /**
-     * @brief Update the wifi status. This function will update the wifi label in the status bar according to the
-     * parameter.
-     *
-     * @param connected Boolean parameter to indicate if a wifi connection is established or not.
-     */
     void update_wifi(bool connected);
-
-    void saveSettings();
-
-    bool wifiEnabled();
+    bool isWifiEnabled();
 
 private:
-    static void WifiEnableSetting_event_cb(lv_event_t *e);
+    static HardwareAbstract* mHardware;
+    static Settings* mInstance;
+    static std::shared_ptr<UI::Basic::OmoteUI> mOmoteUI;
+
+    static void wifiEnableSetting_event_cb(lv_event_t *e);
     static void ta_event_cb(lv_event_t *e);
-    static void WakeEnableSetting_event_cb(lv_event_t *e);
     static void IREnableSetting_event_cb(lv_event_t *e);
     static void to_dropdown_event_cb(lv_event_t *e);
+    static void wakeEnableSetting_event_cb(lv_event_t *e);
     static void wifi_selected_cb(lv_event_t *e);
     static void wifi_settings_cb(lv_event_t *event);
     static void connect_btn_cb(lv_event_t *event);
     static void show_password_cb(lv_event_t *e);
-    static bool wifiEnable;
 
     void setup();
 
@@ -78,12 +53,14 @@ private:
     void display_settings(lv_obj_t *parent);
     void ir_settings(lv_obj_t *parent);
 
-    lv_obj_t *wifi_setting_cont;
-    lv_obj_t *wifiOverview;
-    lv_obj_t *wifi_password_label;
-    lv_obj_t *wifi_password_page;
-    lv_obj_t *wifi_selection_page;
-    lv_obj_t *WifiLabel;
+    static bool mWifiEnabled;
+    lv_obj_t *mWifiEnableSwitch;
+    lv_obj_t *mWifiSettingsContent;
+    lv_obj_t *mWifiOverview;
+    lv_obj_t *mWifiPasswordLabel;
+    lv_obj_t *mWifiPasswordPage;
+    lv_obj_t *mWifiSelectionPage;
+    lv_obj_t *mWifiLabel;
     unsigned int no_subpages;
     unsigned int no_wifi_networks;
 
@@ -105,8 +82,8 @@ private:
     void saveAppSettings();
     void saveDeviceSettings();
 
-    lv_obj_t *ssidLabel = nullptr;
-    lv_obj_t *ipLabel = nullptr;
+    lv_obj_t *mSSIDLabel = nullptr;
+    lv_obj_t *mIPLabel = nullptr;
 
     void factoryReset();
 

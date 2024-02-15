@@ -2,14 +2,17 @@
 #include "OmoteUI.hpp"
 #include "HardwareFactory.hpp"
 #include "Settings.hpp"
+#include "MagentaTV.hpp"
 
 namespace OMOTE {
 std::shared_ptr<UI::UIBase> ui = nullptr;
 std::shared_ptr<Settings> settings = nullptr;
+std::shared_ptr<MagentaTV> magentaTV = nullptr;
 
 void setup() {
   HardwareFactory::getAbstract().init();
   ui = std::make_unique<UI::Basic::OmoteUI>();
+  magentaTV = std::make_unique<MagentaTV>(HardwareFactory::getAbstract().display());
   settings = std::make_unique<Settings>(HardwareFactory::getAbstract().display());
   lv_timer_handler(); // Run the LVGL UI once before the loop takes over
 }

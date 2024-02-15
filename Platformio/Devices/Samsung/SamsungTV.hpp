@@ -31,7 +31,7 @@ private:
     struct SamsungKeys
     {
         char key;
-        uint64_t code;
+        uint32_t code;
     } samsungKeys[4] =
         {
             {'+', 0xE0E0E01F},
