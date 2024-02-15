@@ -13,6 +13,7 @@
 #include <string>
 
 #include "AppInterface.hpp"
+#include "DeviceInterface.hpp"
 
 namespace UI::Basic
 {
@@ -79,11 +80,13 @@ namespace UI::Basic
     void setup_ui();
 
     lv_color_t getPrimaryColor() { return mPrimaryColor; };
-    lv_obj_t *addTab(AppInterface *app);
-    lv_obj_t *getTabView() { return mTabView; };
+    lv_obj_t *addApp(AppInterface *app);
+    lv_obj_t *getAppView() { return mTabView; };
+    lv_obj_t *addDevice(DeviceInterface *device);
     void updateWifi(std::string symbol) { lv_label_set_text(mWifiLabel, symbol.c_str()); };
-    void setActiveTab(unsigned char tab) { lv_tabview_set_act(getTabView(), tab, LV_ANIM_OFF); };
+    void setActiveTab(unsigned char tab) { lv_tabview_set_act(getAppView(), tab, LV_ANIM_OFF); };
     AppInterface *getApp(unsigned char tab) { return mApps[tab]; };
+    DeviceInterface *getDevice(unsigned char tab) { return mDevices[tab]; };
     void update_battery(int percentage, bool isCharging, bool isConnected);
 
   private:
@@ -113,29 +116,30 @@ namespace UI::Basic
 
     /************************************** WIFI Settings Menu
      * *******************************************************/
-    lv_obj_t *mWifi_setting_cont;
-    lv_obj_t *mWifiOverview;
-    lv_obj_t *mWifi_password_label;
-    lv_obj_t *mWifi_password_page;
-    lv_obj_t *mWifi_selection_page;
-    unsigned int no_subpages;
-    unsigned int no_wifi_networks;
+    // lv_obj_t *mWifi_setting_cont;
+    // lv_obj_t *mWifiOverview;
+    // lv_obj_t *mWifi_password_label;
+    // lv_obj_t *mWifi_password_page;
+    // lv_obj_t *mWifi_selection_page;
+    // unsigned int no_subpages;
+    // unsigned int no_wifi_networks;
 
-    void wifi_status(std::shared_ptr<wifiHandlerInterface::wifiStatus> status);
-    void next_wifi_selection_subpage(lv_event_t *e);
-    lv_obj_t *create_wifi_selection_page(lv_obj_t *menu);
-    lv_obj_t *create_wifi_password_page(lv_obj_t *menu);
-    void create_wifi_main_page(lv_obj_t *parent);
-    void create_wifi_settings(lv_obj_t *menu, lv_obj_t *parent);
-    void update_wifi_selection_subpage(int page);
+    // void wifi_status(std::shared_ptr<wifiHandlerInterface::wifiStatus> status);
+    // void next_wifi_selection_subpage(lv_event_t *e);
+    // lv_obj_t *create_wifi_selection_page(lv_obj_t *menu);
+    // lv_obj_t *create_wifi_password_page(lv_obj_t *menu);
+    // void create_wifi_main_page(lv_obj_t *parent);
+    // void create_wifi_settings(lv_obj_t *menu, lv_obj_t *parent);
+    // void update_wifi_selection_subpage(int page);
 
-    void display_settings(lv_obj_t *parent);
+    // void display_settings(lv_obj_t *parent);
 
     AppInterface *mApps[APPSLOTS];
     lv_obj_t *mTabView;
     void createTabviewButtons();
-    void setup_settings(lv_obj_t *parent);
-    lv_obj_t *mSettingsMenu;
+    // void setup_settings(lv_obj_t *parent);
+    // lv_obj_t *mSettingsMenu;
+    DeviceInterface *mDevices[DEVICESLOTS];
 
     /******************************************** Statusbar *************************************************************/
     void create_status_bar();

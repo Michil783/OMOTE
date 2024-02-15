@@ -21,6 +21,10 @@ OmoteUI::OmoteUI() : UIBase() {
   {
     mApps[i] = nullptr;
   }
+  for (int i = 0; i < DEVICESLOTS; i++)
+  {
+    mDevices[i] = nullptr;
+  }
   mPanel =
   mStatusbar =
   mWifiLabel =
@@ -152,11 +156,11 @@ void OmoteUI::hide_keyboard() {
         lv_obj_move_foreground(mKb);
     };
 
-lv_obj_t *OmoteUI::addTab(AppInterface* app)
+lv_obj_t *OmoteUI::addApp(AppInterface* app)
 {
-  LV_LOG_USER(">>> OmoteUI::addTab(%s)", app->getName().c_str());
+  LV_LOG_USER(">>> OmoteUI::addApp(%s)", app->getName().c_str());
   lv_obj_t *tab = nullptr;
-  /* search free slot in tab array */
+  /* search free slot in app array */
   for (int i = 0; i < APPSLOTS; i++)
   {
     if (mApps[i] == nullptr)
@@ -169,12 +173,32 @@ lv_obj_t *OmoteUI::addTab(AppInterface* app)
 
       // Initialize scroll position for the indicator
       lv_event_send(lv_tabview_get_content(mTabView), LV_EVENT_SCROLL, NULL);
-      LV_LOG_USER("<<< OmoteUI::addTab(%s)", app->getName().c_str());
+      LV_LOG_USER("<<< OmoteUI::addApp(%s)", app->getName().c_str());
       return tab;
     }
   }
-  LV_LOG_USER("<<< OmoteUI::addTab(%s)", app->getName().c_str());
+  LV_LOG_USER("<<< OmoteUI::addApp(%s)", app->getName().c_str());
   LV_LOG_ERROR("no free App slot");
+  return nullptr;
+}
+
+lv_obj_t *OmoteUI::addDevice(DeviceInterface* device)
+{
+  LV_LOG_USER(">>> OmoteUI::addDevice(%s)", device->getName().c_str());
+  lv_obj_t *dev = nullptr;
+  /* search free slot in device array */
+  for (int i = 0; i < DEVICESLOTS; i++)
+  {
+    if (mApps[i] == nullptr)
+    {
+      LV_LOG_USER("adding device");
+      mDevices[i] = device;
+      LV_LOG_USER("<<< OmoteUI::addDevice(%s)", device->getName().c_str());
+      return dev;
+    }
+  }
+  LV_LOG_USER("<<< OmoteUI::addDeviceTab(%s)", device->getName().c_str());
+  LV_LOG_ERROR("no free Device slot");
   return nullptr;
 }
 

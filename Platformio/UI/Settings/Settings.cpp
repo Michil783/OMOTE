@@ -253,7 +253,7 @@ Settings::Settings(std::shared_ptr<DisplayAbstract> display)
     #endif
     LV_LOG_USER("mWifiEnabled: %d", mWifiEnabled);
 
-    mTab = mOmoteUI->addTab(this);
+    mTab = mOmoteUI->addApp(this);
     setup();
     LV_LOG_USER("<<< Settings::Settings()");
 }
@@ -797,34 +797,38 @@ void Settings::saveSettings(){
 
 void Settings::createDeviceSettings(lv_obj_t *menu, lv_obj_t *parent)
 {
-    LV_LOG_TRACE("Settings::createDeviceSettings");
+    LV_LOG_TRACE(">>> Settings::createDeviceSettings");
 
     lv_color_t primary_color = mOmoteUI->getPrimaryColor();
 
     /* search device array */
-    // for (int i = 0; i < DEVICESLOTS; i++)
-    // {
-    //     if (this->devices[i] != nullptr)
-    //     {
-    //         LV_LOG_TRACE("Seetings::createDeviceSettings Device: %s", this->devices[i]->getName().c_str());
-    //         this->devices[i]->displaySettings(parent);
-    //     }
-    // }
+    for (int i = 0; i < DEVICESLOTS; i++)
+    {
+        DeviceInterface *device = mOmoteUI->getDevice(i);
+        if (device != nullptr)
+        {
+            LV_LOG_TRACE("Seetings::createDeviceSettings Device: %s", device->getName().c_str());
+            device->displaySettings(parent);
+        }
+    }
+    LV_LOG_TRACE(">>> Settings::createDeviceSettings");
 }
 
 void Settings::saveDeviceSettings()
 {
-    LV_LOG_TRACE("Settings::saveDeviceSettings");
+    LV_LOG_USER(">>> Settings::saveDeviceSettings\n");
 
     /* search device array */
-    // for (int i = 0; i < DEVICESLOTS; i++)
-    // {
-    //     if (this->devices[i] != nullptr)
-    //     {
-    //         LV_LOG_TRACE("Settings::saveDeviceSettings Device: %s", this->devices[i]->getName().c_str());
-    //         this->devices[i]->saveSettings();
-    //     }
-    // }
+    for (int i = 0; i < DEVICESLOTS; i++)
+    {
+        DeviceInterface *device = mOmoteUI->getDevice(i);
+        if (device != nullptr)
+        {
+            LV_LOG_TRACE("Settings::saveDeviceSettings Device: %s", device->getName().c_str());
+            device->saveSettings();
+        }
+    }
+    LV_LOG_USER("<<< Settings::saveDeviceSettings\n");
 }
 
 void Settings::createAppSettings(lv_obj_t *menu, lv_obj_t *parent)

@@ -236,7 +236,7 @@ MagentaTV::MagentaTV(std::shared_ptr<DisplayAbstract> display)
 void MagentaTV::setup()
 {
     LV_LOG_USER("");
-    tab = mOmoteUI->addTab(this);
+    tab = mOmoteUI->addApp(this);
     //display->addApp(this);
 
     #ifdef OMOTE_ESP32

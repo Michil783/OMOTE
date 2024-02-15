@@ -9,13 +9,10 @@
  *
  */
 
-//#include <Arduino.h>
+#pragma once
 #include "HardwareAbstract.hpp"
 #include <DeviceInterface.hpp>
 #include <string>
-
-#ifndef _SAMSUNGTV_HPP_
-#define _SAMSUNGTV_HPP_
 
 class SamsungTV : public DeviceInterface {
     public:
@@ -41,5 +38,3 @@ private:
         };
     std::string ip = "192.168.178.43";
 };
-
-#endif

@@ -16,11 +16,9 @@ extern IRrecv IrReceiver;
 extern IRsend IrSender;
 #endif
 
-//extern Settings settings;
-
 SamsungTV::SamsungTV(std::shared_ptr<DisplayAbstract> display){
     mDisplay = display;
-    //settings.addDevice(this);    
+    UI::Basic::OmoteUI::getInstance()->addDevice(this);    
 }
 
 u_int64_t SamsungTV::getValue(char keyChar){
@@ -45,7 +43,7 @@ void SamsungTV::handleCustomKeypad(int keyCode, char keyChar){
 }
 
 void SamsungTV::displaySettings(lv_obj_t *parent){
-    LV_LOG_USER("");
+    LV_LOG_USER(">>> SamsungTV::displaySettings()");
     lv_color_t primary_color = lv_color_hex(0x303030); // mDisplay->getPrimaryColor();
 
     lv_obj_t *menuLabel;
@@ -64,5 +62,5 @@ void SamsungTV::displaySettings(lv_obj_t *parent){
     menuLabel = lv_label_create(menuBox);
     lv_label_set_text(menuLabel, this->ip.c_str());
     lv_obj_align(menuLabel, LV_ALIGN_TOP_RIGHT, 0, 3);
-
-}
+     LV_LOG_USER("<<< SamsungTV::displaySettings()");
+}   

@@ -9,12 +9,10 @@
  *
  */
 
+#pragma once
 #include "HardwareAbstract.hpp"
 #include <DeviceInterface.hpp>
 #include <string>
-
-#ifndef _MR401_HPP_
-#define _MR401_HPP_
 
 class MR401 : public DeviceInterface
 {
@@ -68,5 +66,3 @@ private:
             {'p', 25, {262, 663, 293, 314, 580, 354, 246, 650, 294, 312, 580, 632, 603, 649, 271, 336, 578, 351, 249, 622, 606, 350, 249, 648, 264}},
             {'r', 25, {259, 663, 296, 311, 583, 345, 250, 649, 294, 313, 579, 657, 579, 648, 271, 335, 579, 350, 249, 349, 250, 643, 296, 312, 577}}};
 };
-
-#endif
