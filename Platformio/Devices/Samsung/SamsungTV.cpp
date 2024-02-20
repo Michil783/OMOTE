@@ -26,7 +26,7 @@ u_int64_t SamsungTV::getValue(char keyChar){
   {
     if ( samsungKeys[i].key == keyChar )
     {
-      LV_LOG_USER("key %c found: data is %X", samsungKeys[i].key, samsungKeys[i].code);
+      LV_LOG_TRACE("key %c found: data is %X", samsungKeys[i].key, samsungKeys[i].code);
       return this->samsungKeys[i].code;
     }
   }
@@ -34,8 +34,8 @@ u_int64_t SamsungTV::getValue(char keyChar){
 }
 
 void SamsungTV::handleCustomKeypad(int keyCode, char keyChar){
-    LV_LOG_USER("SamsungTV");
-    LV_LOG_USER("handleCustomKeypad(%d, %c)", keyCode, keyChar);
+    LV_LOG_TRACE("SamsungTV");
+    LV_LOG_TRACE("handleCustomKeypad(%d, %c)", keyCode, keyChar);
     uint64_t code = getValue(keyChar);
     #ifdef OMOTE_ESP32
     if( code != -1 ) IrSender.sendSAMSUNG(code);
@@ -43,7 +43,7 @@ void SamsungTV::handleCustomKeypad(int keyCode, char keyChar){
 }
 
 void SamsungTV::displaySettings(lv_obj_t *parent){
-    LV_LOG_USER(">>> SamsungTV::displaySettings()");
+    LV_LOG_TRACE(">>> SamsungTV::displaySettings()");
     lv_color_t primary_color = lv_color_hex(0x303030); // mDisplay->getPrimaryColor();
 
     lv_obj_t *menuLabel;
@@ -62,5 +62,5 @@ void SamsungTV::displaySettings(lv_obj_t *parent){
     menuLabel = lv_label_create(menuBox);
     lv_label_set_text(menuLabel, this->ip.c_str());
     lv_obj_align(menuLabel, LV_ALIGN_TOP_RIGHT, 0, 3);
-     LV_LOG_USER("<<< SamsungTV::displaySettings()");
+     LV_LOG_TRACE("<<< SamsungTV::displaySettings()");
 }   

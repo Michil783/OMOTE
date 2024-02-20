@@ -13,7 +13,7 @@
 
 class HardwareAbstract {
 public:
-  HardwareAbstract();
+  HardwareAbstract() {};
   
   /// @brief Override in order to do setup of hardware devices post construction
   virtual void init() = 0;

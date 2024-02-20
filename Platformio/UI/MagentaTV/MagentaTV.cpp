@@ -79,47 +79,47 @@ std::shared_ptr<UI::Basic::OmoteUI> MagentaTV::mOmoteUI;
 // Virtual Keypad Event handler
 void MagentaTV::virtualKeypad_event_cb(lv_event_t *e)
 {
-    LV_LOG_USER("virtualKeypad_event_cb");
+    LV_LOG_TRACE("virtualKeypad_event_cb");
     lv_obj_t *target = lv_event_get_target(e);
     lv_obj_t *cont = lv_event_get_current_target(e);
     if (target == cont)
     {
-        LV_LOG_USER("virtualKeypad_event_cb - container was clicked");
+        LV_LOG_TRACE("virtualKeypad_event_cb - container was clicked");
         return; // stop if container was clicked
     }
-    LV_LOG_USER("button pressed %d", *((int*)target->user_data));
+    LV_LOG_TRACE("button pressed %d", *((int*)target->user_data));
     // Send IR command based on the button user data
     if (*((int*)target->user_data) < 10)
     {
-        LV_LOG_USER("Sender < 10");
+        LV_LOG_TRACE("Sender < 10");
         char value = (char)('0' + *((int*)target->user_data));
-        LV_LOG_USER("sending %c", value);
+        LV_LOG_TRACE("sending %c", value);
         mMR401->handleCustomKeypad(-1, value);
     }
     else if (*((int*)target->user_data) < 100)
     {
-        LV_LOG_USER("Sender < 100");
+        LV_LOG_TRACE("Sender < 100");
         char value = (char)('0' + (*((int*)target->user_data) / 10));
-        LV_LOG_USER("sending %c", value);
+        LV_LOG_TRACE("sending %c", value);
         mMR401->handleCustomKeypad(-1, value);
         value = (char)('0' + (*((int*)target->user_data) % 10));
-        LV_LOG_USER("sending %c", value);
+        LV_LOG_TRACE("sending %c", value);
         mMR401->handleCustomKeypad(-1, value);
     }
     else
     {
-        LV_LOG_USER("Sender >= 100");
+        LV_LOG_TRACE("Sender >= 100");
         char value = (char)('0' + (*((int*)target->user_data) / 100));
-        LV_LOG_USER("sending %c", value);
+        LV_LOG_TRACE("sending %c", value);
         mMR401->handleCustomKeypad(-1, value);
         value = (char)('0' + ((*((int*)target->user_data) % 100)) / 10);
-        LV_LOG_USER("sending %c", value);
+        LV_LOG_TRACE("sending %c", value);
         mMR401->handleCustomKeypad(-1, value);
         value = (char)('0' + ((*((int*)target->user_data) % 100)) % 10);
-        LV_LOG_USER("sending %c", value);
+        LV_LOG_TRACE("sending %c", value);
         mMR401->handleCustomKeypad(-1, value);
     }
-    LV_LOG_USER("sending OK");
+    LV_LOG_TRACE("sending OK");
     mMR401->handleCustomKeypad(-1, 'k');
     //standbyTimer = standbyTimerConfigured;
 }
@@ -129,7 +129,7 @@ void MagentaTV::fs_dropdown_event_cb(lv_event_t *e)
     lv_event_code_t code = lv_event_get_code(e);
     lv_obj_t *obj = lv_event_get_target(e);
     MagentaTV *mt = (MagentaTV*)lv_event_get_user_data(e);
-    //LV_LOG_USER("code: %d (%d)", code, LV_EVENT_VALUE_CHANGED);
+    //LV_LOG_TRACE("code: %d (%d)", code, LV_EVENT_VALUE_CHANGED);
     mt->setFontSize(lv_dropdown_get_selected(obj));
     LV_LOG_TRACE("new fontSize = %d\n", mt->getFontSize());
     mInstance->saveSettings();
@@ -143,7 +143,7 @@ void MagentaTV::fs_dropdown_event_cb(lv_event_t *e)
  */
 void MagentaTV::IconEnableSetting_event_cb(lv_event_t *e)
 {
-    // LV_LOG_USER("Settings - WakeEnableSetting_event_cb");
+    // LV_LOG_TRACE("Settings - WakeEnableSetting_event_cb");
     *(bool*)e->user_data = lv_obj_has_state(lv_event_get_target(e), LV_STATE_CHECKED);
     mInstance->saveSettings();
     mInstance->resetMagentaTVPage();
@@ -152,8 +152,8 @@ void MagentaTV::IconEnableSetting_event_cb(lv_event_t *e)
 }
 
 void MagentaTV::selectColor_event_cb(lv_event_t* e){
-    LV_LOG_USER("MagentaTV selectColor_ok_event");
-    LV_LOG_USER("event: %d", e->code);
+    LV_LOG_TRACE("MagentaTV selectColor_ok_event");
+    LV_LOG_TRACE("event: %d", e->code);
     lv_color_t* color = (lv_color_t*)(e->user_data);
     lv_obj_t* obj = lv_event_get_current_target(e);
     *color = lv_colorwheel_get_rgb(obj);
@@ -161,23 +161,23 @@ void MagentaTV::selectColor_event_cb(lv_event_t* e){
 }
 
 void MagentaTV::selectColor_ok_event_cb(lv_event_t* e){
-    LV_LOG_USER("MagentaTV selectColor_ok_event");
-    LV_LOG_USER("event: %d", e->code);
+    LV_LOG_TRACE("MagentaTV selectColor_ok_event");
+    LV_LOG_TRACE("event: %d", e->code);
     lv_obj_t *obj = (lv_obj_t*)e->user_data;
     lv_obj_del(obj);
 }
 
 void MagentaTV::selectColor_close_event_cb(lv_event_t *e)
 {
-    LV_LOG_USER("MagentaTV selectColor_close_event");
-    LV_LOG_USER("event: %d", e->code);
+    LV_LOG_TRACE("MagentaTV selectColor_close_event");
+    LV_LOG_TRACE("event: %d", e->code);
     lv_obj_t *obj = (lv_obj_t*)e->user_data;
     lv_obj_del(obj);
 }
 
 void MagentaTV::colorPicker_event_cb(lv_event_t *e)
 {
-    LV_LOG_USER("MagentaTV - colorPicker_event_cb");
+    LV_LOG_TRACE("MagentaTV - colorPicker_event_cb");
 
     lv_obj_t * win = lv_win_create(lv_scr_act(), 20);
     lv_obj_set_size(win, 200, 240);
@@ -211,7 +211,7 @@ void MagentaTV::colorPicker_event_cb(lv_event_t *e)
 
 void MagentaTV::resetMagentaTVPage()
 {
-    LV_LOG_USER("MagentaTV::resetMagentaTVPage()");
+    LV_LOG_TRACE("MagentaTV::resetMagentaTVPage()");
     lv_obj_clean(tab);
     mInstance->setup_MagentaTV(tab);
     //lv_obj_clean(mMenuBox);
@@ -220,7 +220,7 @@ void MagentaTV::resetMagentaTVPage()
 
 MagentaTV::MagentaTV(std::shared_ptr<DisplayAbstract> display)
 {
-    LV_LOG_USER(">>> MagentaTV::MagentaTV");
+    LV_LOG_TRACE(">>> MagentaTV::MagentaTV");
     mInstance = this;
     display = display;
     mMR401 = std::make_unique<MR401>(display);
@@ -230,12 +230,12 @@ MagentaTV::MagentaTV(std::shared_ptr<DisplayAbstract> display)
     mMenuBox = nullptr;
 
     setup();
-    LV_LOG_USER("<<< MagentaTV::MagentaTV");
+    LV_LOG_TRACE("<<< MagentaTV::MagentaTV");
 }
 
 void MagentaTV::setup()
 {
-    LV_LOG_USER("");
+    LV_LOG_TRACE("");
     tab = mOmoteUI->addApp(this);
     //display->addApp(this);
 
@@ -245,7 +245,7 @@ void MagentaTV::setup()
     mIconEnabled = preferences.getBool("MTVIcons", true);
     bgColor.full = preferences.getUShort("bgColor", lv_color_to16(lv_color_lighten(lv_color_hex(0x808080), 0)));
     textColor.full = preferences.getUShort("textColor", lv_color_to16(lv_color_black()));
-    LV_LOG_USER("mIconEnabled: %d, bgColor: 0x%0.4X(0x%0.4X), textColor: 0x%0.4X(0x%0.4X)", 
+    LV_LOG_TRACE("mIconEnabled: %d, bgColor: 0x%0.4X(0x%0.4X), textColor: 0x%0.4X(0x%0.4X)", 
         mIconEnabled, 
         lv_color_to16(bgColor), 
         preferences.getUShort("bgColor", lv_color_to16(lv_color_lighten(lv_color_hex(0x808080), 0))), 
@@ -258,7 +258,7 @@ void MagentaTV::setup()
     mIconEnabled = false;
     bgColor.full = lv_color_to16(lv_color_lighten(lv_color_hex(0x808080), 0));
     textColor.full = lv_color_to16(lv_color_black());
-    LV_LOG_USER("mIconEnabled: %d, bgColor: 0x%0.4X, textColor: 0x%0.4X", 
+    LV_LOG_TRACE("mIconEnabled: %d, bgColor: 0x%0.4X, textColor: 0x%0.4X", 
         mIconEnabled, 
         lv_color_to16(bgColor), 
         lv_color_to16(textColor));
@@ -271,7 +271,7 @@ void MagentaTV::setup()
 
 void MagentaTV::setup_MagentaTV(lv_obj_t *parent)
 {
-    LV_LOG_USER(">>> MagentaTV::setup_MagentaTV()");
+    LV_LOG_TRACE(">>> MagentaTV::setup_MagentaTV()");
     lv_color_t primary_color = mOmoteUI->getPrimaryColor();
     unsigned int *backlight_brightness = display->getBacklightBrightness();
 
@@ -331,7 +331,7 @@ void MagentaTV::setup_MagentaTV(lv_obj_t *parent)
         //lv_style_set_border_width(&btn_style, 1);
         //lv_style_set_border_post(&btn_style, true);
 
-    LV_LOG_USER("mIconEnabled %d", mIconEnabled);
+    LV_LOG_TRACE("mIconEnabled %d", mIconEnabled);
     for (int i = 0; i < SENDERICONS; i++)
     {
         uint8_t col = i % 2;
@@ -376,7 +376,7 @@ void MagentaTV::setup_MagentaTV(lv_obj_t *parent)
     // Create a shared event for all button inside container
     lv_obj_add_event_cb(cont, virtualKeypad_event_cb, LV_EVENT_CLICKED, NULL);
 
-    LV_LOG_USER("<<< MagentaTV::setup_MagentaTV()");
+    LV_LOG_TRACE("<<< MagentaTV::setup_MagentaTV()");
 }
 
 void MagentaTV::handleCustomKeypad(int keyCode, char keyChar)
@@ -397,7 +397,7 @@ void MagentaTV::handleCustomKeypad(int keyCode, char keyChar)
 
 void MagentaTV::displaySettings(lv_obj_t *parent)
 {
-    LV_LOG_USER(">>> MagentaTV::displaySettings()");
+    LV_LOG_TRACE(">>> MagentaTV::displaySettings()");
 
     mSettingsMenu = parent;
     lv_color_t primary_color = mOmoteUI->getPrimaryColor();
@@ -405,7 +405,7 @@ void MagentaTV::displaySettings(lv_obj_t *parent)
     lv_obj_t *menuLabel;
     if (!mMenuLabel)
     {
-        LV_LOG_USER("create menuLabel");
+        LV_LOG_TRACE("create menuLabel");
         menuLabel = lv_label_create(parent);
         mMenuLabel = menuLabel;
         lv_label_set_text(menuLabel, getName().c_str());
@@ -468,22 +468,22 @@ void MagentaTV::displaySettings(lv_obj_t *parent)
         lv_obj_add_state(iconToggle, LV_STATE_CHECKED); // set default state
     }
 
-    LV_LOG_USER("<<< MagentaTV::displaySettings()");
+    LV_LOG_TRACE("<<< MagentaTV::displaySettings()");
 }
 
 void MagentaTV::saveSettings()
 {
-    LV_LOG_USER("mIconEnabled: %d, bgColor: 0x%0.4X, textColor: 0x%0.4X", mIconEnabled, lv_color_to16(bgColor), lv_color_to16(textColor));
+    LV_LOG_TRACE("mIconEnabled: %d, bgColor: 0x%0.4X, textColor: 0x%0.4X", mIconEnabled, lv_color_to16(bgColor), lv_color_to16(textColor));
     #ifdef OMOTE_ESP32
     Preferences preferences;
     preferences.begin("MagentaTV", false);
     preferences.putBool("MTVIcons", mIconEnabled);
     preferences.putUShort("bgColor", lv_color_to16(bgColor));
-    LV_LOG_USER("saved bgColor: 0x%0.4X", preferences.getUShort("bgColor"));
+    LV_LOG_TRACE("saved bgColor: 0x%0.4X", preferences.getUShort("bgColor"));
     preferences.putUShort("textColor", lv_color_to16(textColor));
-    LV_LOG_USER("saved textColor: 0x%0.4X", preferences.getUShort("textColor"));
+    LV_LOG_TRACE("saved textColor: 0x%0.4X", preferences.getUShort("textColor"));
     preferences.putInt("fontSize", fontSize);
-    LV_LOG_USER("saved fontSize: %d", preferences.getInt("fontSize"));
+    LV_LOG_TRACE("saved fontSize: %d", preferences.getInt("fontSize"));
     preferences.end();
     #endif
 }

@@ -9,7 +9,7 @@ using namespace UI;
 
 poller::poller(std::function<void()> aOnPollCb, milliseconds aPollTime)
     : mIntermittentCallback(std::move(aOnPollCb)) {
-      LV_LOG_USER("");
+      LV_LOG_TRACE("");
   mTimer = lv_timer_create(poller::onPoll, aPollTime.count(), this);
   lv_timer_set_repeat_count(mTimer, -1); // Call forever
 }

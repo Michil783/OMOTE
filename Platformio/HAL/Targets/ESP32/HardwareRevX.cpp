@@ -75,7 +75,7 @@ void HardwareRevX::init() {
   Serial.printf("mDisplay %p\n", mDisplay);
   mBattery = std::make_shared<Battery>(ADC_BAT, CRG_STAT);
   Serial.printf("mBattery %p\n", mBattery);
-  mWifiHandler = WifiHandler::getInstance();
+  mWifiHandler = wifiHandler::getInstance();
   Serial.printf("mWifiHandler %p\n", mWifiHandler);
   mKeys = std::make_shared<Keys>();
   Serial.printf("mKeys %p\n", mKeys);
@@ -160,6 +160,7 @@ void HardwareRevX::setSleepTimeout(uint32_t sleepTimeout) {
 }
 
 void HardwareRevX::enterSleep() {
+  Serial.println("enterSleep()");
   // Save settings to internal flash memory
   preferences.putBool("wkpByIMU", wakeupByIMUEnabled);
   preferences.putUChar("blBrightness", mDisplay->getBrightness());

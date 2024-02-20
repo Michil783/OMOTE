@@ -1,0 +1,60 @@
+#include "wifiHandlerSim.hpp"
+
+using WifiInfo = wifiHandlerInterface::WifiInfo;
+
+wifiHandlerSim::wifiHandlerSim() {
+  printf("wifiHandlerSim::wifiHandlerSim()\n");
+}
+
+void wifiHandlerSim::begin() {
+  printf("wifiHandlerSim::begin()\n");
+}
+
+void wifiHandlerSim::connect(std::string ssid, std::string password) {
+  printf(">>> wifiHandlerSim::connect(%s, %s)\n", ssid.c_str(), password.c_str());
+  /*
+  if (mFakeStatusThread.joinable()) {
+    mFakeStatusThread.join();
+    mCurrentStatus.ssid = ssid;
+    mCurrentStatus.isConnected = true;
+    mFakeStatusThread = std::thread([this] {
+      std::this_thread::sleep_for(std::chrono::seconds(1));
+      mStatusUpdate->notify(mCurrentStatus);
+    });
+  }
+  */
+  printf("<<< wifiHandlerSim::connect()\n");
+}
+
+static const WifiInfo wifis[] = {
+    WifiInfo("High Signal Wifi", -49), WifiInfo("Mid Signal Wifi", -55),
+    WifiInfo("Low Signal Wifi", -65), WifiInfo("No Signal Wifi", -90)};
+
+void wifiHandlerSim::scan() {
+  printf(">>> wifiHandlerSim::scan()\n");
+  /*
+  if (mFakeScanThread.joinable()) {
+    mFakeScanThread.join();
+    mFakeScanThread = std::thread([this] {
+      std::vector<WifiInfo> info =
+          std::vector(std::begin(wifis), std::end(wifis));
+      std::this_thread::sleep_for(std::chrono::seconds(2));
+      mScanNotification->notify(info);
+    });
+  }
+  */
+  std::vector<WifiInfo> info =
+          std::vector(std::begin(wifis), std::end(wifis));
+  mScanNotification->notify(info);
+  printf("<<< wifiHandlerSim::scan()\n");
+}
+
+std::string wifiHandlerSim::getFoundSSID(unsigned int index) {
+  printf("wifiHandlerSim::getFoundSSID(%d)\n", index);
+  return wifis[index].ssid;
+};
+
+int wifiHandlerSim::getFoundRSSI(unsigned int index) {
+  printf("wifiHandlerSim::getFoundRSSI(%d)\n", index);
+  return wifis[index].rssi;
+};

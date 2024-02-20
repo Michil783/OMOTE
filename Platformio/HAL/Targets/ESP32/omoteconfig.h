@@ -1,5 +1,6 @@
 #pragma once
 #include "omote.hpp"
+#include <Preferences.h>
 
 #define IS_SIMULATOR false
 

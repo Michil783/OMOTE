@@ -37,7 +37,7 @@ IRHandler::IRHandler()
 
 void IRHandler::setup()
 {
-    LV_LOG_USER("IRHanlder::setup()");
+    LV_LOG_TRACE("IRHanlder::setup()");
     IrSender.begin();
     digitalWrite(IR_VCC, HIGH); // Turn on IR receiver
     IrReceiver.enableIRIn();
@@ -49,31 +49,31 @@ void IRHandler::setup()
     }
     Preferences preferences;
     this->IRReceiverEnabled = preferences.getBool("IRREnabled", false);
-    LV_LOG_USER("enabled: %d", this->IRReceiverEnabled);
+    LV_LOG_TRACE("enabled: %d", this->IRReceiverEnabled);
     this->IRReceiverEnable(this->IRReceiverEnabled);
 }
 
 bool IRHandler::IRReceiverEnable(bool onoff){
-    LV_LOG_USER("IRHandler::IRReceiverEnable(%d)", onoff);
+    LV_LOG_TRACE("IRHandler::IRReceiverEnable(%d)", onoff);
     if( onoff ){
-        LV_LOG_USER("enable IR Receiver");
+        LV_LOG_TRACE("enable IR Receiver");
         IrReceiver.enableIRIn();    // Start the receiver
         IrReceiver.setUnknownThreshold(kMinUnknownSize);
         IrReceiver.setTolerance(kTolerancePercentage); // Override the default tolerance.
     } else {
-        LV_LOG_USER("disable IR Receiver");
+        LV_LOG_TRACE("disable IR Receiver");
         IrReceiver.disableIRIn();    // Stop the receiver
     }
     this->IRReceiverEnabled = onoff;
-    LV_LOG_USER("save state in preferences %d", this->IRReceiverEnabled);
+    LV_LOG_TRACE("save state in preferences %d", this->IRReceiverEnabled);
     Preferences preferences;
     preferences.putBool("IRREnabled", this->IRReceiverEnabled);
-    LV_LOG_USER("saved state in preferences %d", preferences.getBool("IRREnabled"));
+    LV_LOG_TRACE("saved state in preferences %d", preferences.getBool("IRREnabled"));
     return this->IRReceiverEnabled;
 }
 
 bool IRHandler::IRReceiver(){
-    LV_LOG_USER("IRHandler::IRReceiver %d\n", this->IRReceiverEnabled);
+    LV_LOG_TRACE("IRHandler::IRReceiver %d\n", this->IRReceiverEnabled);
     return this->IRReceiverEnabled;
 }
 
@@ -94,5 +94,5 @@ void IRHandler::IRSender(int currentDevice, uint16_t data)
         (irp[currentDevice])(data);
     }
     else
-        LV_LOG_USER("no current device found for %d\n", currentDevice);
+        LV_LOG_TRACE("no current device found for %d\n", currentDevice);
 }

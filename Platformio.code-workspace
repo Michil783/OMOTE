@@ -71,7 +71,9 @@
 			"map": "cpp",
 			"queue": "cpp",
 			"thread": "cpp",
-			"appinterface.hpp": "c"
+			"appinterface.hpp": "c",
+			"functional": "cpp",
+			"memory": "cpp"
 		}
 	}
 }

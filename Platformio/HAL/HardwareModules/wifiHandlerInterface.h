@@ -37,16 +37,20 @@ public:
   /// @brief Get the status of the current wifi connection
   virtual wifiStatus GetStatus() = 0;
   virtual void turnOff() = 0;
-  virtual std::string getFoundSSID(unsigned int index) = 0;
-  virtual int getFoundRSSI(unsigned int index) = 0;
+
+  //virtual void setWiFiEvent(void* wifi_event_cb) = 0;
+  //virtual std::string getFoundSSID(unsigned int index) = 0;
+  //virtual int getFoundRSSI(unsigned int index) = 0;
   
   // Register for Scan Notification to handle when scans are completed
   std::shared_ptr<ScanNotificationTy> ScanCompleteNotification() {
+    printf("ScanCompleteNotification\n");
     return mScanNotification;
   };
 
   // Register for Status notifications to handle changes in status
   std::shared_ptr<Notification<wifiStatus>> WifiStatusNotification() {
+    printf("WifiStatusNotification()\n");
     return mStatusUpdate;
   };
 

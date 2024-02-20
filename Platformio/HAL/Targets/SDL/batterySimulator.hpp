@@ -6,7 +6,7 @@ class BatterySimulator: public BatteryInterface{
         BatterySimulator() : 
             mCreationTime(std::chrono::system_clock::now())
         {};
-        ~BatterySimulator(){}
+        //~BatterySimulator(){}
 
         virtual int getPercentage() override { 
             auto now = std::chrono::system_clock::now();

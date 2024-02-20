@@ -12,7 +12,7 @@
 class HardwareSimulator : public HardwareAbstract {
 public:
   HardwareSimulator();
-
+  
   void init() override{};
   void loopHandler() override{};
 

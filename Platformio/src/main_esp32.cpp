@@ -631,21 +631,21 @@ void setup()
   /* Print chip information */
   esp_chip_info_t chip_info;
   esp_chip_info(&chip_info);
-  LV_LOG_USER("This is %s chip with %d CPU cores, WiFi%s%s, ",
+  LV_LOG_TRACE("This is %s chip with %d CPU cores, WiFi%s%s, ",
           CONFIG_IDF_TARGET,
           chip_info.cores,
           (chip_info.features & CHIP_FEATURE_BT) ? "/BT" : "",
           (chip_info.features & CHIP_FEATURE_BLE) ? "/BLE" : "");
 
-  LV_LOG_USER("silicon revision %d, ", chip_info.revision);
+  LV_LOG_TRACE("silicon revision %d, ", chip_info.revision);
 
   uint32_t size_flash_chip = 0;
   esp_flash_get_size(NULL, &size_flash_chip);
-  LV_LOG_USER("%uMB %s flash\n", (unsigned int)size_flash_chip >> 20,
+  LV_LOG_TRACE("%uMB %s flash\n", (unsigned int)size_flash_chip >> 20,
           (chip_info.features & CHIP_FEATURE_EMB_FLASH) ? "embedded" : "external");
 #endif
 
-  LV_LOG_USER("starting setup");
+  LV_LOG_TRACE("starting setup");
 
   /*
   if(!LittleFS.begin(FORMAT_LITTLEFS_IF_FAILED)){
@@ -683,12 +683,12 @@ void setup()
   // lv_fs_file_t f;
   // lv_fs_res_t res;
   // res = lv_fs_open(&f, "L:/file.txt", LV_FS_MODE_RD);
-  // LV_LOG_USER("open file result: %d", res);
+  // LV_LOG_TRACE("open file result: %d", res);
   // uint32_t read_num;
   // char buf[8];
   // res = lv_fs_read(&f, buf, 8, &read_num);
-  // LV_LOG_USER("read file result: %d", res);
-  // LV_LOG_USER("buf: %s", String(buf));
+  // LV_LOG_TRACE("read file result: %d", res);
+  // LV_LOG_TRACE("buf: %s", String(buf));
 
   // --- LVGL UI Configuration ---
   display.setup_ui();
@@ -711,7 +711,7 @@ void setup()
 #ifdef ENABLE_WIFI
   // Setup WiFi
   Serial.println("init WIFI");
-  LV_LOG_USER("wifiEnable: %d wifiConnected: %d", settings.wifiEnabled(), wifihandler.isConnected());
+  LV_LOG_TRACE("wifiEnable: %d wifiConnected: %d", settings.wifiEnabled(), wifihandler.isConnected());
   if( settings.wifiEnabled() )
     wifihandler.begin();
 #endif
@@ -735,7 +735,7 @@ void setup()
   lv_timer_handler(); // Run the LVGL UI once before the loop takes over
   LV_LOG_TRACE("after first lv_timer_handler() call");
 
-  LV_LOG_USER("Setup finised in %dms", millis());
+  LV_LOG_TRACE("Setup finised in %dms", millis());
 }
 
 // Loop ------------------------------------------------------------------------------------------------------------------------------------
@@ -755,7 +755,7 @@ void loop()
     activityDetection();
     if (standbyTimer == 0)
     {
-      LV_LOG_USER("Entering Sleep Mode. Goodbye.");
+      LV_LOG_TRACE("Entering Sleep Mode. Goodbye.");
       enterSleep();
     }
     IMUTaskTimer = millis();
@@ -811,17 +811,17 @@ void loop()
   if (IrReceiver.decode(&results)) {
     // Display a crude timestamp.
     uint32_t now = millis();
-    LV_LOG_USER(D_STR_TIMESTAMP " : %06u.%03u\n", now / 1000, now % 1000);
+    LV_LOG_TRACE(D_STR_TIMESTAMP " : %06u.%03u\n", now / 1000, now % 1000);
     // Check if we got an IR message that was to big for our capture buffer.
     if (results.overflow)
-      LV_LOG_USER(D_WARN_BUFFERFULL "\n", kCaptureBufferSize);
+      LV_LOG_TRACE(D_WARN_BUFFERFULL "\n", kCaptureBufferSize);
     // Display the library version the message was captured with.
-    LV_LOG_USER(D_STR_LIBRARY "   : v" _IRREMOTEESP8266_VERSION_STR "\n");
+    LV_LOG_TRACE(D_STR_LIBRARY "   : v" _IRREMOTEESP8266_VERSION_STR "\n");
     // Display the tolerance percentage if it has been change from the default.
     if (kTolerancePercentage != kTolerance)
-      LV_LOG_USER(D_STR_TOLERANCE " : %d%%\n", kTolerancePercentage);
+      LV_LOG_TRACE(D_STR_TOLERANCE " : %d%%\n", kTolerancePercentage);
     // Display the basic output of what we found.
-    LV_LOG_USER("%s", resultToHumanReadableBasic(&results));
+    LV_LOG_TRACE("%s", resultToHumanReadableBasic(&results));
     // Display any extra A/C info if we have it.
     String description = IRAcUtils::resultAcToString(&results);
     if (description.length()) Serial.println(D_STR_MESGDESC ": " + description);
@@ -832,7 +832,7 @@ void loop()
     yield();  // Feed the WDT (again)
 #endif  // LEGACY_TIMING_INFO
     // Output the results as source code
-    LV_LOG_USER("%s", resultToSourceCode(&results));
+    LV_LOG_TRACE("%s", resultToSourceCode(&results));
     yield();             // Feed the WDT (again)
   }
 

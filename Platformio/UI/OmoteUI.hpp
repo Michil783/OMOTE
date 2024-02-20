@@ -92,7 +92,7 @@ namespace UI::Basic
   private:
     static void onPollCb();
 
-    //static std::shared_ptr<HardwareAbstract> mHardware;
+    static std::shared_ptr<HardwareAbstract> mHardware;
     static std::shared_ptr<OmoteUI> mInstance;
     static lv_obj_t *mPanel;
     static uint_fast8_t mCurrentDevice;

@@ -3,12 +3,12 @@
 #include "omoteconfig.h"
 #include <functional>
 #include "HardwareFactory.hpp"
-#include "HardwareAbstract.hpp"
+//#include "HardwareAbstract.hpp"
 
 using namespace UI::Basic;
 
 std::shared_ptr<OmoteUI> OmoteUI::mInstance = nullptr;
-//std::shared_ptr<HardwareAbstract> OmoteUI::mHardware = nullptr;
+std::shared_ptr<HardwareAbstract> OmoteUI::mHardware = nullptr;
 lv_obj_t *OmoteUI::mPanel = nullptr;
 uint_fast8_t OmoteUI::mCurrentDevice = 1;
 
@@ -36,7 +36,7 @@ OmoteUI::OmoteUI() : UIBase() {
   mInstance = std::shared_ptr<UI::Basic::OmoteUI>(this);
 
   setup_ui();
-  //mHardware = std::shared_ptr<HardwareAbstract> (&HardwareFactory::getAbstract());
+  mHardware = std::shared_ptr<HardwareAbstract> (&HardwareFactory::getAbstract());
 };
 
 // Set the page indicator scroll position relative to the tabview scroll
@@ -51,8 +51,10 @@ void OmoteUI::store_scroll_value_event_cb(lv_event_t *e) {
 
 // Update current device when the tabview page is changes
 void OmoteUI::tabview_device_event_cb(lv_event_t *e) {
+  LV_LOG_TRACE(">>> OmoteUI::tabview_device_event_cb()");
   currentDevice = lv_tabview_get_tab_act(lv_event_get_target(e));
-  //mHardware->setCurrentDevice(currentDevice);
+  mHardware->setCurrentDevice(currentDevice);
+  LV_LOG_TRACE("<<< OmoteUI::tabview_device_event_cb()");
 }
 
 void OmoteUI::onPollCb(){
@@ -105,7 +107,7 @@ void OmoteUI::create_status_bar() {
   lv_obj_align(mUSBIcon, LV_ALIGN_RIGHT_MID, -40, 0);
   lv_obj_set_style_text_font(mUSBIcon, &lv_font_montserrat_16, LV_PART_MAIN);
 
-  LV_LOG_USER("create poller");
+  LV_LOG_TRACE("create poller");
   mBatteryPoller = std::make_unique<poller>(onPollCb, ((std::chrono::seconds)(1)));
 }
 
@@ -158,14 +160,14 @@ void OmoteUI::hide_keyboard() {
 
 lv_obj_t *OmoteUI::addApp(AppInterface* app)
 {
-  LV_LOG_USER(">>> OmoteUI::addApp(%s)", app->getName().c_str());
+  LV_LOG_TRACE(">>> OmoteUI::addApp(%s)", app->getName().c_str());
   lv_obj_t *tab = nullptr;
   /* search free slot in app array */
   for (int i = 0; i < APPSLOTS; i++)
   {
     if (mApps[i] == nullptr)
     {
-      LV_LOG_USER("adding app");
+      LV_LOG_TRACE("adding app");
       //  Add tab (name is irrelevant since the labels are hidden and hidden buttons are used (below))
       tab = lv_tabview_add_tab(mTabView, app->getName().c_str());
       mApps[i] = app;
@@ -173,31 +175,31 @@ lv_obj_t *OmoteUI::addApp(AppInterface* app)
 
       // Initialize scroll position for the indicator
       lv_event_send(lv_tabview_get_content(mTabView), LV_EVENT_SCROLL, NULL);
-      LV_LOG_USER("<<< OmoteUI::addApp(%s)", app->getName().c_str());
+      LV_LOG_TRACE("<<< OmoteUI::addApp(%s)", app->getName().c_str());
       return tab;
     }
   }
-  LV_LOG_USER("<<< OmoteUI::addApp(%s)", app->getName().c_str());
+  LV_LOG_TRACE("<<< OmoteUI::addApp(%s)", app->getName().c_str());
   LV_LOG_ERROR("no free App slot");
   return nullptr;
 }
 
 lv_obj_t *OmoteUI::addDevice(DeviceInterface* device)
 {
-  LV_LOG_USER(">>> OmoteUI::addDevice(%s)", device->getName().c_str());
+  LV_LOG_TRACE(">>> OmoteUI::addDevice(%s)", device->getName().c_str());
   lv_obj_t *dev = nullptr;
   /* search free slot in device array */
   for (int i = 0; i < DEVICESLOTS; i++)
   {
     if (mApps[i] == nullptr)
     {
-      LV_LOG_USER("adding device");
+      LV_LOG_TRACE("adding device");
       mDevices[i] = device;
-      LV_LOG_USER("<<< OmoteUI::addDevice(%s)", device->getName().c_str());
+      LV_LOG_TRACE("<<< OmoteUI::addDevice(%s)", device->getName().c_str());
       return dev;
     }
   }
-  LV_LOG_USER("<<< OmoteUI::addDeviceTab(%s)", device->getName().c_str());
+  LV_LOG_TRACE("<<< OmoteUI::addDeviceTab(%s)", device->getName().c_str());
   LV_LOG_ERROR("no free Device slot");
   return nullptr;
 }
@@ -283,7 +285,7 @@ void OmoteUI::setup_ui()
   //lv_event_send(lv_tabview_get_content(mTabView), LV_EVENT_SCROLL, NULL);
 
   create_status_bar();
-  LV_LOG_USER("<<< OmoteUI::setup_ui()");
+  LV_LOG_TRACE("<<< OmoteUI::setup_ui()");
 }
 
 void OmoteUI::update_battery(int percentage, bool isCharging, bool isConnected)

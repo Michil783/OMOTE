@@ -25,8 +25,8 @@ int MR401::getValues(char keyChar){
   {
     if ( this->lircKeys[i].key == keyChar )
     {
-      LV_LOG_USER("key %c found: size of data is %d", this->lircKeys[i].key, this->lircKeys[i].size);
-      LV_LOG_USER("buffer: %p", this->lircKeys[i].buf);
+      LV_LOG_TRACE("key %c found: size of data is %d", this->lircKeys[i].key, this->lircKeys[i].size);
+      LV_LOG_TRACE("buffer: %p", this->lircKeys[i].buf);
       return i;
     }
   }
@@ -43,12 +43,12 @@ void MR401::dumpBuffer(uint16_t* buf, size_t size){
 }
 
 void MR401::handleCustomKeypad(int keyCode, char keyChar){
-    LV_LOG_USER("MR401");
-    LV_LOG_USER("handleCustomKeypad(%d, %c)", keyCode, keyChar);
+    LV_LOG_TRACE("MR401");
+    LV_LOG_TRACE("handleCustomKeypad(%d, %c)", keyCode, keyChar);
     
     int result = getValues(keyChar);
     if( result >= 0  ){
-        LV_LOG_USER("sending IR command %c size: %d buf: %p", keyChar, this->lircKeys[result].size, this->lircKeys[result].buf);
+        LV_LOG_TRACE("sending IR command %c size: %d buf: %p", keyChar, this->lircKeys[result].size, this->lircKeys[result].buf);
         //this->dumpBuffer(this->lircKeys[result].buf, this->lircKeys[result].size);
         #ifdef OMOTE_ESP32
         IrSender.sendRaw(this->lircKeys[result].buf, this->lircKeys[result].size, this->kFrequency);
