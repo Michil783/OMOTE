@@ -18,19 +18,56 @@ class MR401 : public DeviceInterface
 {
 public:
     MR401(std::shared_ptr<DisplayAbstract> display);
+    static std::shared_ptr<MR401> getInstance() {return std::shared_ptr<MR401>(MR401::mInstance);}
 
     /* DeviceInterface */
     std::string getName() override { return "MR401"; };
-    void displaySettings(lv_obj_t *parent) override {};
-    void saveSettings() override {};
+    void displaySettings(lv_obj_t *menu, lv_obj_t *parent) override;
+    void saveSettings() override{};
     void handleCustomKeypad(int keyCode, char keyChar) override;
 
 private:
+    static MR401 *mInstance;
     std::shared_ptr<DisplayAbstract> mDisplay;
     const uint16_t kFrequency = 38000; // in Hz. e.g. 38kHz.
     void dumpBuffer(uint16_t *buf, size_t size);
 
-    #define LIRCENTRIES 28
+    static void virtualKeypad_event_cb(lv_event_t *e);
+
+    static lv_obj_t *mControlPage;
+    lv_obj_t *createControlPage(lv_obj_t *menu);
+    lv_color_t mPrimaryColor;
+
+#define MR401KEYS 16
+std::string mRewind = std::string(LV_SYMBOL_LEFT) + std::string(LV_SYMBOL_LEFT);
+std::string mForward = std::string(LV_SYMBOL_RIGHT) + std::string(LV_SYMBOL_RIGHT);
+    struct keys
+    {
+        const std::string keySymbol;
+        char key;
+        int col;
+        int colSpan;
+        int row;
+        int rowSpan;
+    } keyInfo[MR401KEYS] = {
+        {"Suche", 'S', 0, 1, 0, 1},
+        {LV_SYMBOL_HOME, 'h', 1, 1, 0, 1},
+        {"Musik", 'M', 2, 1, 0, 1},
+        {"EPG", 'c', 0, 1, 1, 1},
+        {"Opt", 'O', 2, 1, 1, 1},
+        {"OK", 'k', 1, 1, 2, 1},
+        {"Back", 'b', 0, 1, 3, 1},
+        {"Exit", 'E', 2, 1, 3, 1},
+        {"Info", 'i', 1, 1, 4, 1},
+        {"Meine Aufnahmen", 'G', 0, 3, 5, 1},
+        {std::string(LV_SYMBOL_LEFT) + std::string(LV_SYMBOL_LEFT), '<', 0, 1, 6, 1},
+        {LV_SYMBOL_PLAY, 'p', 1, 1, 6, 1},
+        {std::string(LV_SYMBOL_RIGHT) + std::string(LV_SYMBOL_RIGHT), '>', 2, 1, 6, 1},
+        {LV_SYMBOL_PREV, 'R', 0, 1, 7, 1},
+        {"Rec", 'r', 1, 1, 7, 1},
+        {LV_SYMBOL_NEXT, 'F', 2, 1, 7, 1}
+    };
+#define LIRCENTRIES 34
     int getValues(char keyChar);
     struct LircKey
     {
@@ -64,5 +101,15 @@ private:
             {'<', 23, {256, 664, 297, 311, 579, 351, 248, 652, 295, 310, 579, 630, 605, 653, 578, 649, 296, 307, 294, 311, 578, 626, 606}},
             {'>', 25, {262, 668, 262, 340, 579, 350, 249, 652, 267, 336, 579, 654, 580, 653, 579, 647, 264, 337, 296, 311, 578, 350, 249, 623, 289}},
             {'p', 25, {262, 663, 293, 314, 580, 354, 246, 650, 294, 312, 580, 632, 603, 649, 271, 336, 578, 351, 249, 622, 606, 350, 249, 648, 264}},
-            {'r', 25, {259, 663, 296, 311, 583, 345, 250, 649, 294, 313, 579, 657, 579, 648, 271, 335, 579, 350, 249, 349, 250, 643, 296, 312, 577}}};
+            {'r', 25, {259, 663, 296, 311, 583, 345, 250, 649, 294, 313, 579, 657, 579, 648, 271, 335, 579, 350, 249, 349, 250, 643, 296, 312, 577}},
+            {'E', 25, {284, 665, 296, 309, 579, 350, 249, 649, 294, 313, 580, 630, 606, 647, 295, 311, 583, 345, 250, 347, 252, 344, 251, 623, 604}},
+            {'M', 23, {261, 664, 296, 311, 578, 351, 250, 649, 296, 311, 577, 659, 576, 651, 580, 622, 609, 351, 249, 644, 267, 339, 579}},
+            {'S', 25, {258, 665, 293, 312, 579, 351, 249, 650, 271, 336, 579, 654, 580, 628, 608, 346, 249, 649, 580, 375, 225, 371, 227, 370, 225}},
+            {'O', 23, {255, 666, 293, 311, 579, 350, 250, 655, 267, 336, 579, 657, 579, 652, 580, 652, 580, 653, 579, 350, 250, 647, 265}},
+            {'R', 25, {260, 663, 296, 311, 578, 351, 250, 649, 297, 310, 577, 655, 579, 654, 579, 653, 289, 309, 262, 337, 294, 313, 579, 652, 263}},
+            {'F', 23, {257, 664, 267, 340, 579, 349, 251, 654, 293, 310, 579, 628, 606, 626, 606, 648, 291, 314, 580, 647, 290, 316, 579}},
+            {'G', 23, {255, 666, 294, 311, 578, 351, 249, 650, 272, 336, 578, 655, 580, 652, 580, 648, 296, 311, 579, 350, 252, 647, 580}},
+            {'h', 23, {295, 659, 293, 314, 579, 350, 249, 649, 270, 337, 578, 629, 606, 652, 579, 652, 579, 350, 250, 649, 579, 655, 260}},
+        };
 };
+

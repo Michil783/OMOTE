@@ -20,7 +20,7 @@
 class DeviceInterface {
     public:
     virtual std::string getName() = 0;
-    virtual void displaySettings(lv_obj_t *parent) = 0;
+    virtual void displaySettings(lv_obj_t *menu, lv_obj_t *parent) = 0;
     virtual void saveSettings() = 0;
     virtual void handleCustomKeypad(int keyCode, char keyChar) = 0;
 };

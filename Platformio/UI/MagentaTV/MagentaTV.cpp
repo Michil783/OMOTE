@@ -284,7 +284,7 @@ void MagentaTV::setup_MagentaTV(lv_obj_t *parent)
     lv_obj_t *cont = lv_obj_create(parent);
     lv_obj_set_style_grid_column_dsc_array(cont, col_dsc, LV_STATE_DEFAULT);
     lv_obj_set_style_grid_row_dsc_array(cont, row_dsc, LV_STATE_DEFAULT);
-    lv_obj_set_size(cont, 240, 270);
+    lv_obj_set_size(cont, lv_pct(98), 270);
     lv_obj_center(cont);
     lv_obj_set_layout(cont, LV_LAYOUT_GRID);
 
@@ -295,21 +295,15 @@ void MagentaTV::setup_MagentaTV(lv_obj_t *parent)
 
         lv_style_init(&style);
         lv_style_set_bg_color(&style, bgColor);
-        //lv_style_set_text_font(&style, &usedFont[fontSize]);
-        //lv_style_set_text_color(&style, textColor);
-        //lv_style_set_text_align(&style, LV_ALIGN_CENTER);
-
         lv_style_set_shadow_width(&style, 8);
         lv_style_set_shadow_color(&style, lv_palette_main(LV_PALETTE_GREY));
         lv_style_set_shadow_ofs_y(&style, 8);
 
         /*Init the pressed style*/
         lv_style_init(&style_pr);
-
         /*Add a large outline when pressed*/
         lv_style_set_outline_width(&style_pr, 30);
         lv_style_set_outline_opa(&style_pr, LV_OPA_TRANSP);
-
         lv_style_set_translate_y(&style_pr, 5);
         lv_style_set_bg_color(&style_pr, bgColor);
         lv_style_set_bg_grad_color(&style_pr, lv_palette_darken(LV_PALETTE_BLUE, 4));
@@ -344,30 +338,13 @@ void MagentaTV::setup_MagentaTV(lv_obj_t *parent)
         }
         else
         {
-            // obj = lv_btn_create(cont);
-            // // Create Labels for each button
-            // //lv_obj_set_grid_cell(obj, LV_GRID_ALIGN_STRETCH, col, 1, LV_GRID_ALIGN_STRETCH, row, 1);
-            
-            // buttonLabel = lv_label_create(obj);
-            // lv_obj_set_width(buttonLabel, 98);
-            // lv_label_set_text(buttonLabel, channelInfo[i].channelName.c_str());
-            // lv_label_set_long_mode(buttonLabel, LV_LABEL_LONG_WRAP);
-
-            // lv_obj_add_style(buttonLabel, &btn_style, LV_STATE_DEFAULT);
-
             obj = lv_btn_create(cont);
-
+            lv_obj_set_style_bg_color(obj, bgColor, LV_PART_MAIN);
             // Create Labels for each button
             buttonLabel = lv_label_create(obj);
-            //lv_obj_set_width(buttonLabel, 98);
-            lv_obj_set_style_bg_color(obj, bgColor, LV_PART_MAIN);
             lv_label_set_text(buttonLabel, channelInfo[i].channelName.c_str());
-            //lv_label_set_long_mode(buttonLabel, LV_LABEL_LONG_WRAP);
             lv_obj_add_style(buttonLabel, &btn_style, 0);
-            //lv_obj_align(buttonLabel, LV_ALIGN_CENTER, 0, 0);
         }
-        //lv_obj_add_style(obj, &style, LV_STATE_DEFAULT);
-        //lv_obj_add_style(obj, &style_pr, LV_STATE_PRESSED);
         lv_obj_set_grid_cell(obj, LV_GRID_ALIGN_STRETCH, col, 1, LV_GRID_ALIGN_STRETCH, row, 1);
         lv_obj_add_flag(obj, LV_OBJ_FLAG_EVENT_BUBBLE); // Clicking a button causes a event in its container
         lv_obj_set_user_data(obj, (void *)&(channelInfo[i].channel));

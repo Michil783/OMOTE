@@ -191,7 +191,8 @@ lv_obj_t *OmoteUI::addDevice(DeviceInterface* device)
   /* search free slot in device array */
   for (int i = 0; i < DEVICESLOTS; i++)
   {
-    if (mApps[i] == nullptr)
+    LV_LOG_TRACE("device index %d", i);
+    if (mDevices[i] == nullptr)
     {
       LV_LOG_TRACE("adding device");
       mDevices[i] = device;
@@ -199,8 +200,8 @@ lv_obj_t *OmoteUI::addDevice(DeviceInterface* device)
       return dev;
     }
   }
-  LV_LOG_TRACE("<<< OmoteUI::addDeviceTab(%s)", device->getName().c_str());
   LV_LOG_ERROR("no free Device slot");
+  LV_LOG_TRACE("<<< OmoteUI::addDeviceTab(%s)", device->getName().c_str());
   return nullptr;
 }
 

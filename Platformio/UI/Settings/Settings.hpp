@@ -27,6 +27,7 @@ public:
     void update_wifi(bool connected);
     bool isWifiEnabled();
 
+    lv_obj_t *getMainPage() { return mSettingsMainPage; };
 private:
     static HardwareAbstract* mHardware;
     static Settings* mInstance;
