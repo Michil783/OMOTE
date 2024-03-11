@@ -39,28 +39,28 @@ std::shared_ptr<WifiHandler> WifiHandler::getInstance() {
 // WiFi status event
 //void WifiHandler::WiFiEvent(WiFiEvent_t event, WiFiEventInfo_t aEventInfo){
 void WifiHandler::WiFiEvent(WiFiEvent_t event){
-  LV_LOG_USER("WifiHandler::WifiEvent()");
+  LV_LOG_TRACE("WifiHandler::WifiEvent()");
   int no_networks = 0;
   switch (event)
   {
     case ARDUINO_EVENT_WIFI_SCAN_DONE:
-      LV_LOG_USER("WIFI scan done");
+      LV_LOG_TRACE("WIFI scan done");
       no_networks = WiFi.scanComplete();
       if (no_networks < 0)
       {
-        LV_LOG_USER("Scan failed");
+        LV_LOG_TRACE("Scan failed");
       }
       else
       {
         //settings.clear_wifi_networks();
-        LV_LOG_USER("%d found", no_networks);
+        LV_LOG_TRACE("%d found", no_networks);
         //settings.wifi_scan_complete( no_networks);
       }
       break;
     case ARDUINO_EVENT_WIFI_STA_GOT_IP:
       //client.setServer(MQTT_SERVER, 1883); // MQTT initialization
       //client.connect("OMOTE"); ‚// Connect using a client id
-      LV_LOG_USER("ARDUINO_EVENT_WIFI_STA_GOT_IP");
+      LV_LOG_TRACE("ARDUINO_EVENT_WIFI_STA_GOT_IP");
     case ARDUINO_EVENT_WIFI_STA_GOT_IP6:
       //settings.update_wifi(true);
       //wifihandler.update_credetials(temporary_ssid, temporary_password);
@@ -69,32 +69,32 @@ void WifiHandler::WiFiEvent(WiFiEvent_t event){
       WifiHandler::getInstance()->UpdateStatus();
       break;
     case ARDUINO_EVENT_WIFI_STA_DISCONNECTED:
-      LV_LOG_USER("ARDUINO_EVENT_WIFI_STA_DISCONNECTED");
+      LV_LOG_TRACE("ARDUINO_EVENT_WIFI_STA_DISCONNECTED");
       //settings.update_wifi(false);
       break;
     case ARDUINO_EVENT_WIFI_STA_LOST_IP:
-      LV_LOG_USER("ARDUINO_EVENT_WIFI_STA_LOST_IP");
+      LV_LOG_TRACE("ARDUINO_EVENT_WIFI_STA_LOST_IP");
       //settings.update_wifi(false);
       break;
     case ARDUINO_EVENT_WIFI_STA_STOP:
-      LV_LOG_USER("ARDUINO_EVENT_WIFI_STA_STOP");
+      LV_LOG_TRACE("ARDUINO_EVENT_WIFI_STA_STOP");
       //settings.update_wifi(false);
       break;
     default:
-      LV_LOG_USER("ARDUINO_EVENT_WIFI default");
+      LV_LOG_TRACE("ARDUINO_EVENT_WIFI default");
       break;
   }
 }
 
 std::string WifiHandler::getFoundSSID(unsigned int index)
 {
-  LV_LOG_USER("WifiHandler::getFoundSSID()");
+  LV_LOG_TRACE("WifiHandler::getFoundSSID()");
   return WiFi.SSID(index).c_str();
 }
 
 int WifiHandler::getFoundRSSI(unsigned int index)
 {
-  LV_LOG_USER("WifiHandler::getFoundRSSI()");
+  LV_LOG_TRACE("WifiHandler::getFoundRSSI()");
   return WiFi.RSSI(index);
 }
 
@@ -143,7 +143,7 @@ void WifiHandler::scan()
 }
 
 void WifiHandler::UpdateStatus() {
-  LV_LOG_USER("UpdateStatus");
+  LV_LOG_TRACE("UpdateStatus");
   mCurrentStatus.isConnected = WiFi.isConnected();
   mCurrentStatus.IP = WiFi.localIP().toString().c_str();
   mCurrentStatus.ssid =
@@ -153,16 +153,16 @@ void WifiHandler::UpdateStatus() {
 }
 
 void WifiHandler::setWiFiEvent(void *wifi_event_cb) {
-  LV_LOG_USER("WiFi.onEvent() returned %d", WiFi.onEvent((WiFiEventCb)wifi_event_cb));
+  LV_LOG_TRACE("WiFi.onEvent() returned %d", WiFi.onEvent((WiFiEventCb)wifi_event_cb));
 }
 
 void WifiHandler::begin()
 {
-  LV_LOG_USER(">>> WifiHandler::begin()");
+  LV_LOG_TRACE(">>> WifiHandler::begin()");
     WiFi.setHostname("OMOTE");
     WiFi.mode(WIFI_STA);
     //WiFi.onEvent(WiFiEvent);
-    //LV_LOG_USER("WiFi.onEvent() returned %d", WiFi.onEvent(WiFiEvent));
+    //LV_LOG_TRACE("WiFi.onEvent() returned %d", WiFi.onEvent(WiFiEvent));
 
     // Preferences preferences;
     // preferences.begin("wifiSettings", false);
@@ -170,20 +170,20 @@ void WifiHandler::begin()
     // String password = preferences.getString("password");
     // bool wifiEnabled = preferences.getBool("enabled", false);
     // preferences.end();
-    // LV_LOG_USER("ssid: \"%s\" (%d,%d), password: \"%s\"", ssid.c_str(), ssid.length(), ssid.isEmpty(), password.c_str());
+    // LV_LOG_TRACE("ssid: \"%s\" (%d,%d), password: \"%s\"", ssid.c_str(), ssid.length(), ssid.isEmpty(), password.c_str());
 
     // /* If the SSID is not empty, there was a value stored in the preferences and we try to use it.*/
     // if (!ssid.empty())
     // {
-    //     LV_LOG_USER("Connecting to wifi: %s", ssid);
+    //     LV_LOG_TRACE("Connecting to wifi: %s", ssid);
     //     strcpy(this->SSID,  ssid.c_str());
     //     strcpy(this->password, password.c_str());
-    //     LV_LOG_USER("this->SSID: \"%s\" (%d, %d), this->password: \"%s\"", this->SSID, std::string(this->SSID).length(), !(std::string(this->SSID).empty()), this->password);
+    //     LV_LOG_TRACE("this->SSID: \"%s\" (%d, %d), this->password: \"%s\"", this->SSID, std::string(this->SSID).length(), !(std::string(this->SSID).empty()), this->password);
     //     this->connect(this->SSID, this->password);
     // }
     // else
     // {
-    //     LV_LOG_USER("no SSID or password stored");
+    //     LV_LOG_TRACE("no SSID or password stored");
     //     //Set first character to \0 indicates an empty string
     //     this->SSID[0] = '\0';
     //     this->password[0] = '\0';
@@ -191,25 +191,25 @@ void WifiHandler::begin()
     // }
     // Attempt Connection with stored Credentials
     // if( !wifiEnabled ) {
-    //   LV_LOG_USER("WiFi not enabled");
+    //   LV_LOG_TRACE("WiFi not enabled");
     // } else if (!ssid.isEmpty() ) {
     //   this->connect(ssid.c_str(), password.c_str());
     // } else {
-    //   LV_LOG_USER("no SSID or password stored");
+    //   LV_LOG_TRACE("no SSID or password stored");
     //   WiFi.disconnect();
     // }
 
     WiFi.setSleep(true);
-  LV_LOG_USER("<<< WifiHandler::begin()");
+  LV_LOG_TRACE("<<< WifiHandler::begin()");
 }
 
 // void WifiHandler::connect(const char* SSID, const char* password)
 // {
-//     LV_LOG_USER("ssid: \"%s\", password: \"%s\"", SSID, password);
+//     LV_LOG_TRACE("ssid: \"%s\", password: \"%s\"", SSID, password);
 //     temporary_password = password;
 //     temporary_ssid = SSID;
 //     WiFi.begin(SSID, password);
-//     LV_LOG_USER("finished");
+//     LV_LOG_TRACE("finished");
 // }
 void WifiHandler::connect(std::string ssid, std::string password) {
     Serial.printf("Attempting Wifi Connection To %s \n", ssid.c_str());

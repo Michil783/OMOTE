@@ -11,13 +11,13 @@ LV_IMG_DECLARE(lightbulb);
 static lv_disp_drv_t disp_drv;
 
 std::shared_ptr<Display> Display::getInstance() {
-  Serial.printf("Display::getInstance()\n");
-  if (DisplayAbstract::mInstance == nullptr) {
-    Serial.printf("no instance\n");
-    DisplayAbstract::mInstance =
+  //Serial.printf("Display::getInstance()\n");
+  if (mInstance == nullptr) {
+    //Serial.printf("no instance\n");
+    mInstance =
         std::shared_ptr<Display>(new Display(LCD_BL, LCD_EN));
   }
-  Serial.printf("return Display Instance %p\n", std::static_pointer_cast<Display>(mInstance));
+  //Serial.printf("return Display Instance %p\n", std::static_pointer_cast<Display>(mInstance));
   return std::static_pointer_cast<Display>(mInstance);
 }
 
@@ -150,6 +150,7 @@ void Display::setupTouchScreen() {
 void Display::setupBacklight() {
   // Configure the backlight PWM
   // Manual setup because ledcSetup() briefly turns on the backlight
+  LV_LOG_TRACE(">>> Display::setupBacklight()");
   ledc_channel_config_t ledc_channel_left;
   ledc_channel_left.gpio_num = (gpio_num_t)mBacklightPin;
   ledc_channel_left.speed_mode = LEDC_HIGH_SPEED_MODE;
@@ -167,6 +168,7 @@ void Display::setupBacklight() {
   ledc_timer.freq_hz = 640;
   ledc_channel_config(&ledc_channel_left);
   ledc_timer_config(&ledc_timer);
+  LV_LOG_TRACE("<<< Display::setupBacklight()");
 }
 
 void Display::fadeImpl(void *) {
@@ -189,25 +191,42 @@ void Display::setBrightness(uint8_t brightness) {
   Serial.print("Set Brightness:");
   Serial.println(mAwakeBrightness);
   startFade();
+  Serial.printf("after startFade(): %d\n", mBrightness);
 }
 
 uint8_t Display::getBrightness() { return mAwakeBrightness; }
 
+// long Display::map(long x, long in_min, long in_max, long out_min, long out_max) {
+//     const long run = in_max - in_min;
+//     if(run == 0){
+//         log_e("map(): Invalid input range, min == max");
+//         return -1; // AVR returns -1, SAM returns 0
+//     }
+//     const long rise = out_max - out_min;
+//     const long delta = x - in_min;
+//     return (delta * rise) / run + out_min;
+// }
+
 void Display::setCurrentBrightness(uint8_t brightness) {
   mBrightness = brightness;
-  auto duty = static_cast<int>(mBrightness);
+  auto duty = static_cast<int>(map(constrain(mBrightness, 30, 240), 30, 240, 240, 30)); //(mBrightness);
+
   ledcWrite(LCD_BACKLIGHT_LEDC_CHANNEL, duty);
-  // Serial.print("Current Brightness:");
-  // Serial.println(mBrightness);
+  //ledcWrite(LCD_BACKLIGHT_LEDC_CHANNEL, 30);
+  //Serial.print("Current Brightness:");
+  //Serial.println(mBrightness);
 }
 
 bool Display::fade() {
   // Early return no fade needed.
   if (mBrightness == mAwakeBrightness || isAsleep && mBrightness == 0) {
+    //Serial.println("no fade needed");
     return true;
   }
 
   bool fadeDown = isAsleep || mBrightness > mAwakeBrightness;
+  fadeDown = false;
+  //Serial.printf("Display::fade() fadeDown: %d\n", fadeDown);
   if (fadeDown) {
     setCurrentBrightness(mBrightness - 1);
     auto setPoint = isAsleep ? 0 : mAwakeBrightness;
@@ -219,6 +238,8 @@ bool Display::fade() {
 }
 
 void Display::startFade() {
+  LV_LOG_USER(">>> Display::startFade(): %d", mBrightness);
+
   xSemaphoreTake(mFadeTaskMutex, portMAX_DELAY);
   // Only Create Task if it is needed
   if (mDisplayFadeTask == nullptr) {
@@ -226,6 +247,8 @@ void Display::startFade() {
                 &mDisplayFadeTask);
   }
   xSemaphoreGive(mFadeTaskMutex);
+
+  LV_LOG_USER("<<< Display::startFade(): %d", mBrightness);
 }
 
 void Display::turnOff()

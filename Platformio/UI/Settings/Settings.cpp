@@ -28,6 +28,7 @@ static const char *password;
 // extern Preferences preferences;
 
 // #include "Display.hpp"
+std::shared_ptr<DisplayAbstract> Settings::mDisplay;
 
 /**
  * @brief Textarea callback function for the password field. In case the enter key is pressed in the text area, the
@@ -93,7 +94,7 @@ void bl_slider_event_cb(lv_event_t *e)
 #ifdef OMOTE_ESP32
     *backlight_brightness = map(constrain(lv_slider_get_value(slider), 30, 240), 30, 240, 240, 30);
 #endif
-    // LV_LOG_TRACE("Settings - bl_slider_event_cb(%d) - %d", constrain(lv_slider_get_value(slider), 30, 240), *backlight_brightness);
+    LV_LOG_USER("Settings - bl_slider_event_cb(%d) - %d", constrain(lv_slider_get_value(slider), 30, 240), *backlight_brightness);
 }
 
 void Settings::wifiEnableSetting_event_cb(lv_event_t *e)
@@ -379,7 +380,7 @@ void Settings::setup()
  */
 void Settings::setup_settings(lv_obj_t *parent)
 {
-    LV_LOG_USER(">>> Settings::setup_settings()");
+    LV_LOG_TRACE(">>> Settings::setup_settings()");
     // Add content to the settings mTab
     // With a flex layout, setting groups/boxes will position themselves automatically
     lv_obj_set_layout(parent, LV_LAYOUT_FLEX);
@@ -404,7 +405,7 @@ void Settings::setup_settings(lv_obj_t *parent)
 
     lv_menu_set_page(mSettingsMenu, mSettingsMainPage);
 
-    LV_LOG_USER("<<< Settings::setup_settings()");
+    LV_LOG_TRACE("<<< Settings::setup_settings()");
 }
 
 /**

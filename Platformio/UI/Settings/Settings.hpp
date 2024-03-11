@@ -12,6 +12,7 @@ using WifiInfo = wifiHandlerInterface::WifiInfo;
 public:
     static std::shared_ptr<Settings> getInstance() {return std::shared_ptr<Settings>(Settings::mInstance);}
     Settings(std::shared_ptr<DisplayAbstract> display);
+    static std::shared_ptr<DisplayAbstract> mDisplay;
 
     /* App Interface */
     //void addAppSettings(std::shared_ptr<void> settings) override {};
@@ -28,6 +29,7 @@ public:
     bool isWifiEnabled();
 
     lv_obj_t *getMainPage() { return mSettingsMainPage; };
+
 private:
     static HardwareAbstract* mHardware;
     static Settings* mInstance;
@@ -48,8 +50,6 @@ private:
 
     void setup();
 
-
-    std::shared_ptr<DisplayAbstract> mDisplay;
     lv_obj_t *mTab;
     lv_obj_t *mSettingsMenu;
     lv_obj_t *mSettingsMainPage;

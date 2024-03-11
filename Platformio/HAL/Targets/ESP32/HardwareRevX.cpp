@@ -72,6 +72,7 @@ void HardwareRevX::init() {
   initIO();
 
   mDisplay = Display::getInstance();
+  //mDisplay = std::make_shared<Display>(LCD_BL, LCD_EN);
   Serial.printf("mDisplay %p\n", mDisplay);
   mBattery = std::make_shared<Battery>(ADC_BAT, CRG_STAT);
   Serial.printf("mBattery %p\n", mBattery);

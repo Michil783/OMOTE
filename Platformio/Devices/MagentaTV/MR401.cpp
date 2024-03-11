@@ -18,15 +18,15 @@ extern IRsend IrSender;
 
 void MR401::virtualKeypad_event_cb(lv_event_t *e)
 {
-    LV_LOG_USER("virtualKeypad_event_cb");
+    LV_LOG_TRACE("virtualKeypad_event_cb");
     lv_obj_t *target = lv_event_get_target(e);
     lv_obj_t *cont = lv_event_get_current_target(e);
     if (target == cont)
     {
-        LV_LOG_USER("virtualKeypad_event_cb - container was clicked");
+        LV_LOG_TRACE("virtualKeypad_event_cb - container was clicked");
         return; // stop if container was clicked
     }
-    LV_LOG_USER("button pressed %c", *((char*)target->user_data));
+    LV_LOG_TRACE("button pressed %c", *((char*)target->user_data));
     // Send IR command based on the button user data
     mInstance->handleCustomKeypad(-1, *((char*)target->user_data));
 }
@@ -35,11 +35,11 @@ MR401 *MR401::mInstance;
 
 MR401::MR401(std::shared_ptr<DisplayAbstract> display)
 {
-  LV_LOG_USER(">>> MR401::MR401()");
+  LV_LOG_TRACE(">>> MR401::MR401()");
   mDisplay = display;
   mInstance = this;
   UI::Basic::OmoteUI::getInstance()->addDevice(this);
-  LV_LOG_USER("<<< MR401::MR401()");
+  LV_LOG_TRACE("<<< MR401::MR401()");
 }
 
 int MR401::getValues(char keyChar)
@@ -88,7 +88,7 @@ lv_obj_t *MR401::mControlPage;
 
 void MR401::displaySettings(lv_obj_t *menu, lv_obj_t *parent)
 {
-  LV_LOG_USER(">>> MR401::displaySettings()");
+  LV_LOG_TRACE(">>> MR401::displaySettings()");
   mPrimaryColor = UI::Basic::OmoteUI::getInstance()->getPrimaryColor();
   lv_obj_t *menuLabel;
 
@@ -118,12 +118,12 @@ void MR401::displaySettings(lv_obj_t *menu, lv_obj_t *parent)
   mControlPage = createControlPage(menu);
   lv_menu_set_load_page_event(menu, button, mControlPage);
 
-  LV_LOG_USER("<<< MR401::displaySettings()");
+  LV_LOG_TRACE("<<< MR401::displaySettings()");
 }
 
 lv_obj_t *MR401::createControlPage(lv_obj_t *menu)
 {
-  LV_LOG_USER(">>> MR401::createControlPage()");
+  LV_LOG_TRACE(">>> MR401::createControlPage()");
   lv_obj_t *menuLabel;
 
   lv_obj_t *ret_val = lv_menu_page_create(menu, NULL);
@@ -160,7 +160,7 @@ lv_obj_t *MR401::createControlPage(lv_obj_t *menu)
 
   for (int i = 0; i < MR401KEYS; i++)
   {
-    LV_LOG_USER("key: %d col: %d, row: %d", i, keyInfo[i].col, keyInfo[i].row);
+    LV_LOG_TRACE("key: %d col: %d, row: %d", i, keyInfo[i].col, keyInfo[i].row);
     obj = lv_btn_create(cont);
     lv_obj_set_style_bg_color(obj, lv_color_make(120, 120, 120), LV_PART_MAIN);
     // Create Labels for each button
@@ -175,6 +175,6 @@ lv_obj_t *MR401::createControlPage(lv_obj_t *menu)
   // Create a shared event for all button inside container
   lv_obj_add_event_cb(cont, virtualKeypad_event_cb, LV_EVENT_CLICKED, NULL);
 
-  LV_LOG_USER("<<< MR401::createControlPage()");
+  LV_LOG_TRACE("<<< MR401::createControlPage()");
   return ret_val;
 }

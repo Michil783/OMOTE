@@ -53,6 +53,7 @@ public:
 
     inline void wake()
     {
+        // LV_LOG_USER("Display::wake() %d", mBrightness);
         if (isAsleep)
         {
             isAsleep = false;
@@ -61,6 +62,7 @@ public:
     }
     inline void sleep()
     {
+        // LV_LOG_USER("Display::sleep() %d", mBrightness);
         if (!isAsleep)
         {
             isAsleep = true;
@@ -77,6 +79,9 @@ protected:
                               lv_color_t *color_p);
     virtual void screenInput(lv_indev_drv_t *indev_driver,
                              lv_indev_data_t *data) override;
+    
+    // long map(long x, long in_min, long in_max, long out_min, long out_max);
+    
     /// @brief Fade toward brightness based on isAwake
     /// @return True - Fade complete
     ///         False - Fade set point not reached

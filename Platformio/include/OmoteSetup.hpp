@@ -14,7 +14,9 @@ void setup() {
   ui = std::make_unique<UI::Basic::OmoteUI>();
   magentaTV = std::make_unique<MagentaTV>(HardwareFactory::getAbstract().display());
   settings = std::make_unique<Settings>(HardwareFactory::getAbstract().display());
+  #ifdef OMOTE_SIM
   UI::Basic::OmoteUI::getInstance()->setActiveTab(2);
+  #endif
   lv_timer_handler(); // Run the LVGL UI once before the loop takes over
 }
 
